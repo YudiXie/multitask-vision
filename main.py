@@ -38,17 +38,43 @@ if __name__ == '__main__':
     # Train the model
     model.train()
     i_batch = 0
-    for data in train_loader:
-        inputs = data['image'].to(device)
-        labels = data['category_label'].to(device)
+    max_batch = 10000
+    eval_per = 10
 
-        optimizer.zero_grad()
+    while i_batch <= max_batch:
+        for data in train_loader:
+            print(f'Batch: {i_batch}')
 
-        outputs = model(inputs)
-        _, preds = torch.max(outputs, 1)
-        loss = criterion(outputs, labels)
+            if i_batch % eval_per == 0:
+                model.eval()
+                with torch.no_grad():
+                    running_loss = 0.0
+                    running_corrects = 0
+                    for data in val_loader:
+                        inputs = data['image'].to(device)
+                        labels = data['category_label'].to(device)
 
-        loss.backward()
-        optimizer.step()
+                        outputs = model(inputs)
+                        _, preds = torch.max(outputs, 1)
+                        loss = criterion(outputs, labels)
+                        
+                        running_loss += loss.item() * inputs.size(0)
+                        running_corrects += torch.sum(preds == labels.data)
 
-        print('Train loss: {}', loss.item())
+                    print(f'Val loss: {running_loss / len(val_dataset)}')
+                    print(f'Val acc: {running_corrects / len(val_dataset)}')
+                model.train()
+
+            inputs = data['image'].to(device)
+            labels = data['category_label'].to(device)
+
+            optimizer.zero_grad()
+
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            optimizer.step()
+
+            i_batch += 1

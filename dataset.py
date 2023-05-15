@@ -67,7 +67,7 @@ class HVMDataset(Dataset):
         if split == 'train':
             self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * 0.8)]
         elif split == 'val':
-            self.normed_data_frame = normed_data_frame[int(len(normed_data_frame) * 0.8):]
+            self.normed_data_frame = normed_data_frame[int(len(normed_data_frame) * 0.8):].reset_index(drop=True)
         else:
             raise ValueError('split must be either train or val')
 
