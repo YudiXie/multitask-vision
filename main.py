@@ -40,6 +40,7 @@ if __name__ == '__main__':
     i_batch = 0
     max_batch = 10000
     eval_per = 10
+    best_acc = 0.0
 
     while i_batch <= max_batch:
         for data in train_loader:
@@ -60,9 +61,16 @@ if __name__ == '__main__':
                         
                         running_loss += loss.item() * inputs.size(0)
                         running_corrects += torch.sum(preds == labels.data)
+                    
+                    val_loss = running_loss / len(val_dataset)
+                    val_acc = running_corrects / len(val_dataset)
+                    if val_acc >= best_acc:
+                        best_acc = val_acc
+                        torch.save(model.state_dict(), 'best_model.pth')
+                    
+                    print(f'Val loss: {val_loss}')
+                    print(f'Val acc: {val_acc}')
 
-                    print(f'Val loss: {running_loss / len(val_dataset)}')
-                    print(f'Val acc: {running_corrects / len(val_dataset)}')
                 model.train()
 
             inputs = data['image'].to(device)
