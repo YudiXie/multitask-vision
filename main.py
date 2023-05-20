@@ -170,6 +170,10 @@ def train_model(lr=1e-3):
     
     # log a Summary metric
     wandb.summary['best_test_accuracy'] = best_acc
+    wandb.alert(
+            title='Run Finished',
+            text=f'Run Finished, Best Accuracy: {accuracy:.2f}',
+        )
     wandb.finish()
 
 
