@@ -165,3 +165,4 @@ data/
 .DS_Store
 *.pth
 wandb/
+.vscode/

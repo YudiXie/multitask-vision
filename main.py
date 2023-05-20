@@ -8,6 +8,10 @@ import wandb
 
 from dataset import HVMDataset
 
+# device to run algorithm on
+USE_CUDA = torch.cuda.is_available()
+DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
+
 
 def get_dataloader(is_train, batch_size):
     "Get a training dataloader"
@@ -31,7 +35,6 @@ def get_dataloader(is_train, batch_size):
     return loader
 
 
-# TODO: need to check if this is correct
 def validate_model(model, valid_dl, loss_func, log_images=False, batch_idx=0):
     "Compute performance of the model on the validation dataset and log a wandb.Table"
     val_loss = 0.0
@@ -42,47 +45,68 @@ def validate_model(model, valid_dl, loss_func, log_images=False, batch_idx=0):
             inputs = data['image'].to(DEVICE)
             labels = data['category_label'].to(DEVICE)
 
-            # Forward pass ➡
+            # Forward pass
             outputs = model(inputs)
             val_loss += loss_func(outputs, labels).item() * labels.size(0)
 
             # Compute accuracy and accumulate
-            _, predicted = torch.max(outputs.data, 1)
+            _, predicted = torch.max(outputs, 1)
             correct += (predicted == labels).sum().item()
 
             # Log one batch of images to the dashboard, always same batch_idx.
             if i==batch_idx and log_images:
-                log_image_table(inputs, predicted, labels, outputs.softmax(dim=1))
+                log_image_table(inputs, 
+                                predicted, 
+                                labels, 
+                                outputs.softmax(dim=1),
+                                valid_dl.dataset.category_int2str,
+                                )
     return val_loss / len(valid_dl.dataset), correct / len(valid_dl.dataset)
 
 
-# TODO: need to check if this is correct
-def log_image_table(images, predicted, labels, probs):
-    "Log a wandb.Table with (img, pred, target, scores)"
-    # 🐝 Create a wandb Table to log images, labels and predictions to
-    table = wandb.Table(columns=["image", "pred", "target"]+[f"score_{i}" for i in range(10)])
-    for img, pred, targ, prob in zip(images.to("cpu"), predicted.to("cpu"), labels.to("cpu"), probs.to("cpu")):
-        table.add_data(wandb.Image(img[0].numpy()*255), pred, targ, *prob.numpy())
+def log_image_table(images, predicted, labels, probs, label2str):
+    """
+    Log a batch of data to wandb.Table
+    img, pred, target, scores
+    args:
+        images: torch.Tensor of shape (batch_size, C, H, W)
+        predicted: torch.Tensor of shape (batch_size,)
+        labels: torch.Tensor of shape (batch_size,)
+        probs: torch.Tensor of shape (batch_size, len(label2str))
+        label2str: a dict mapping label int to label string
+    """
+    # Create a wandb Table to log images, labels and predictions to
+    table = wandb.Table(columns=["image", "pred", "target"]
+                        + [f"score_{label2str[i]}" for i in range(len(label2str))])
+
+    images = images.detach().cpu().numpy()
+    predicted = predicted.detach().cpu().numpy()
+    labels = labels.detach().cpu().numpy()
+    probs = probs.detach().cpu().numpy()
+
+    for img, pred, targ, prob in zip(images, predicted, labels, probs):
+        table.add_data(wandb.Image(img.transpose((1, 2, 0)) * 255), 
+                       label2str[pred], 
+                       label2str[targ], 
+                       *prob)
     wandb.log({"predictions_table":table}, commit=False)
 
 
-if __name__ == '__main__':
+def train_model(lr=1e-3):
     wandb.init(
         project="multi-task-vision",
         config={
             "batch_size": 32,
-            "lr": 1e-3,
+            "lr": lr,
             "max_batch": 500,
             "eval_per": 10,
-            })
+            },
+        # mode="disabled",
+        )
     
     # Copy your config 
     config = wandb.config
     assert config.max_batch % config.eval_per == 0
-
-    # device to run algorithm on
-    USE_CUDA = torch.cuda.is_available()
-    DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
     
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     # Replace the last layer with a linear layer for ImageNet classification
@@ -126,7 +150,7 @@ if __name__ == '__main__':
                 wandb.log(metrics)
             # validate model
             else:
-                val_loss, accuracy = validate_model(model, val_loader, criterion, 
+                val_loss, accuracy = validate_model(model, val_loader, criterion,
                                                     log_images=(batch_n==config.max_batch))
                 model.train()
                 # Log train and validation metrics to wandb
@@ -147,3 +171,9 @@ if __name__ == '__main__':
     # log a Summary metric
     # wandb.summary['test_accuracy'] = 0.8
     wandb.finish()
+
+
+if __name__ == '__main__':
+    lr_list = [0.4 * 1e-3, 0.7 * 1e-3, 1e-3, 1.3 * 1e-3, 1.6 * 1e-3]
+    for lr in lr_list:
+        train_model(lr)

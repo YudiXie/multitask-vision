@@ -47,18 +47,20 @@ class HVMDataset(Dataset):
         self.transform = transform
       
         # create a map from category name to category label
-        self.category_map = {}
+        self.category_str2int = {}
         cat_list = list(data_frame['category_name'].unique())
         cat_list.sort()
         for i, category_name in enumerate(cat_list):
-            self.category_map[category_name] = i
+            self.category_str2int[category_name] = i
+        self.category_int2str = {v: k for k, v in self.category_str2int.items()}
         
         # create a map from object name to object label
-        self.object_map = {}
+        self.object_str2int = {}
         object_list = list(data_frame['object_name'].unique())
         object_list.sort()
         for i, object_name in enumerate(object_list):
-            self.object_map[object_name] = i
+            self.object_str2int[object_name] = i
+        self.object_int2str = {v: k for k, v in self.object_str2int.items()}
 
         # normalize the data
         for collum in self.norm_collums:
@@ -84,8 +86,8 @@ class HVMDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}
-        sample['category_label'] = self.category_map[self.normed_data_frame.loc[idx, 'category_name']]
-        sample['object_label'] = self.object_map[self.normed_data_frame.loc[idx, 'object_name']]
+        sample['category_label'] = self.category_str2int[self.normed_data_frame.loc[idx, 'category_name']]
+        sample['object_label'] = self.object_str2int[self.normed_data_frame.loc[idx, 'object_name']]
 
         for collum in self.norm_collums:
             sample[collum] = self.normed_data_frame.loc[idx, collum]
