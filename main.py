@@ -169,7 +169,7 @@ def train_model(lr=1e-3):
                 break
     
     # log a Summary metric
-    # wandb.summary['test_accuracy'] = 0.8
+    wandb.summary['best_test_accuracy'] = best_acc
     wandb.finish()
 
 
