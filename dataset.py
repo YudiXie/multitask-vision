@@ -65,6 +65,7 @@ class HVMDataset(Dataset):
         # normalize the data
         for collum in self.norm_collums:
             normed_data_frame[collum] = (data_frame[collum] - data_frame[collum].mean()) / data_frame[collum].std()
+            normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
         
         if split == 'train':
             self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * 0.8)]

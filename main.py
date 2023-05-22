@@ -13,6 +13,39 @@ USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
 
+task2targets_name = {
+    'category_class': ['category_label'],
+    'object_class': ['object_label'],
+    'rotation_reg': ['rxy', 'rxz', 'ryz'],
+    'size_reg': ['s'],
+    'translation_reg': ['ty', 'tz'],
+}
+
+task2loss_func = {
+    'category_class': nn.CrossEntropyLoss(),
+    'object_class': nn.CrossEntropyLoss(),
+    'rotation_reg': nn.MSELoss(),
+    'size_reg': nn.MSELoss(),
+    'translation_reg': nn.MSELoss(),
+}
+
+task2output_range = {
+    'category_class': (0, 8),
+    'object_class': (8, 72),
+    'rotation_reg': [72, 75],
+    'size_reg': [75, 76],
+    'translation_reg': [76, 78],
+}
+
+task2weights = {
+    'category_class': 0.2,
+    'object_class': 0.2,
+    'rotation_reg': 0.2,
+    'size_reg': 0.2,
+    'translation_reg': 0.2,
+}
+
+
 def get_dataloader(is_train, batch_size):
     "Get a training dataloader"
     # Data preprocessing
@@ -35,33 +68,70 @@ def get_dataloader(is_train, batch_size):
     return loader
 
 
-def validate_model(model, valid_dl, loss_func, log_images=False, batch_idx=0):
+def validate_model(model,
+                   valid_dl,
+                   task_list,
+                   log_images=False,
+                   batch_idx=0):
     "Compute performance of the model on the validation dataset and log a wandb.Table"
     val_loss = 0.0
-    correct = 0
+    val_task_loss = {task: 0.0 for task in task_list}
+    category_correct = 0
+    object_correct = 0
+    image_ct = 0
     model.eval()
     with torch.inference_mode():
         for i, data in enumerate(valid_dl):
             inputs = data['image'].to(DEVICE)
-            labels = data['category_label'].to(DEVICE)
-
-            # Forward pass
             outputs = model(inputs)
-            val_loss += loss_func(outputs, labels).item() * labels.size(0)
+            batch_size = len(inputs)
+            image_ct += batch_size
+
+            batch_loss_dict = {}
+            for task in task_list:
+                task_targets = []
+                for target_name in task2targets_name[task]:
+                    task_targets.append(data[target_name].unsqueeze(-1).to(DEVICE))
+                task_targets = torch.cat(task_targets, dim=-1)
+                if task[-5:] == 'class':
+                    task_targets = task_targets.squeeze(-1)
+
+                out_range = task2output_range[task]
+                task_outputs = outputs[:, out_range[0]:out_range[1]]
+                task_loss = task2loss_func[task](task_outputs, task_targets)
+                batch_loss_dict[task] = task_loss
+                val_task_loss[task] += task_loss.item() * batch_size
+            
+            batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
+            val_loss += sum(batch_val_loss) * batch_size
 
             # Compute accuracy and accumulate
-            _, predicted = torch.max(outputs, 1)
-            correct += (predicted == labels).sum().item()
+            if 'category_class' in task_list:
+                _, predicted = torch.max(outputs[:, 0:8], 1)
+                category_correct += (predicted == data['category_label']).sum().item()
+                
+                # Log one batch of images to the dashboard, always same batch_idx.
+                if i==batch_idx and log_images:
+                    log_image_table(inputs, 
+                                    predicted, 
+                                    data['category_label'], 
+                                    outputs[:, 0:8].softmax(dim=1),
+                                    valid_dl.dataset.category_int2str,
+                                    )
+            
+            if 'object_class' in task_list:
+                _, predicted = torch.max(outputs[:, 8:72], 1)
+                object_correct += (predicted == data['object_label']).sum().item()
+        
+        return_dict = {}
+        for task in task_list:
+            return_dict[f'val_{task}_loss'] = val_task_loss[task] / image_ct
+        if 'category_class' in task_list:
+            return_dict['val_category_acc'] = category_correct / image_ct
+        if 'object_class' in task_list:
+            return_dict['val_object_acc'] = object_correct / image_ct
 
-            # Log one batch of images to the dashboard, always same batch_idx.
-            if i==batch_idx and log_images:
-                log_image_table(inputs, 
-                                predicted, 
-                                labels, 
-                                outputs.softmax(dim=1),
-                                valid_dl.dataset.category_int2str,
-                                )
-    return val_loss / len(valid_dl.dataset), correct / len(valid_dl.dataset)
+    return val_loss / image_ct, return_dict
 
 
 def log_image_table(images, predicted, labels, probs, label2str):
@@ -100,9 +170,16 @@ def train_model(lr=1e-3):
             "lr": lr,
             "max_batch": 500,
             "eval_per": 10,
+            "tasks": ['category_class', 
+                      'object_class', 
+                      'rotation_reg', 
+                      'size_reg', 
+                      'translation_reg',
+                      ],
             },
         # mode="disabled",
         )
+    run_name = wandb.run.name if wandb.run.name else 'test'
     
     # Copy your config 
     config = wandb.config
@@ -110,31 +187,43 @@ def train_model(lr=1e-3):
     
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     # Replace the last layer with a linear layer for ImageNet classification
-    # num_objects = 8
-    # num_categories = 8
-    # num_predict = 6
-    # num_output = num_objects + num_categories + num_predict
-    model.fc = nn.Linear(model.fc.in_features, 8)
+    model.fc = nn.Linear(model.fc.in_features, 78)
     model = model.to(DEVICE)
 
     train_loader = get_dataloader(is_train=True, batch_size=config.batch_size)
     val_loader = get_dataloader(is_train=False, batch_size=config.batch_size)
 
-    criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
 
     # Train the model
     model.train()
     batch_n = 1
     example_ct = 0
-    best_acc = 0.0
+    best_category_acc = 0.0
+    best_object_acc = 0.0
     while batch_n < config.max_batch + 1:
         for data in train_loader:
             inputs = data['image'].to(DEVICE)
-            labels = data['category_label'].to(DEVICE)
-
             outputs = model(inputs)
-            train_loss = criterion(outputs, labels)
+
+            task_loss_dict = {}
+            for task in config.tasks:
+                task_targets = []
+                for target_name in task2targets_name[task]:
+                    # data[target_name] is a tensor of shape (batch_size, )
+                    task_targets.append(data[target_name].unsqueeze(-1).to(DEVICE))
+                task_targets = torch.cat(task_targets, dim=-1)
+                if task[-5:] == 'class':
+                    task_targets = task_targets.squeeze(-1)
+
+                out_range = task2output_range[task]
+                task_outputs = outputs[:, out_range[0]:out_range[1]]
+                task_loss_dict[task] = task2loss_func[task](task_outputs, task_targets)
+            
+            weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
+            train_loss = 0.0
+            for loss in weighted_loss:
+                train_loss += loss
             
             optimizer.zero_grad()
             train_loss.backward()
@@ -144,37 +233,50 @@ def train_model(lr=1e-3):
             metrics = {"train/batch_n": batch_n,
                        "train/example_ct": example_ct,
                        "train/train_loss": train_loss.item()}
+            metrics.update({f"train/train_{k}_loss": v.item() for k, v in task_loss_dict.items()})
             
             # Log train metrics to wandb (last batch maybe smaller)
             if batch_n % config.eval_per != 0:
                 wandb.log(metrics)
             # validate model
             else:
-                val_loss, accuracy = validate_model(model, val_loader, criterion,
-                                                    log_images=(batch_n==config.max_batch))
+                val_loss, val_results = validate_model(model, val_loader, config.tasks,
+                                                       log_images=(batch_n==config.max_batch))
                 model.train()
                 # Log train and validation metrics to wandb
-                val_metrics = {"val/val_loss": val_loss, 
-                               "val/val_accuracy": accuracy}
+                val_metrics = {"val/val_loss": val_loss}
+                val_metrics.update({f"val/{k}": v for k, v in val_results.items()})
                 wandb.log({**metrics, **val_metrics})
-                print(f"Batch Number: {batch_n:4d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:3f}, Valid Accuracy: {accuracy:.2f}")
 
-                # save best model
-                if accuracy >= best_acc:
-                    best_acc = accuracy
-                    torch.save(model.state_dict(), 'best_model.pth')
+                out_string = f"Batch Number: {batch_n:4d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:3f}"
+                if 'category_class' in config.tasks:
+                    category_acc = val_results['val_category_acc']
+                    if category_acc > best_category_acc:
+                        best_category_acc = category_acc
+                    out_string += f", Valid Category Accuracy: {category_acc:.2f}"
+                if 'object_class' in config.tasks:
+                    object_acc = val_results['val_object_acc']
+                    if object_acc > best_object_acc:
+                        best_object_acc = object_acc
+                    out_string += f", Valid Object Accuracy: {object_acc:.2f}"
+                print(out_string)
 
             batch_n += 1
             if batch_n > config.max_batch:
                 break
     
+    # save the model
+    torch.save(model.state_dict(), run_name + 'model.pth')
+
     # log a Summary metric
-    wandb.summary['best_test_accuracy'] = best_acc
+    wandb.summary['best_category_accuracy'] = best_category_acc
+    wandb.summary['best_object_accuracy'] = best_object_acc
     wandb.alert(
             title='Run Finished',
-            text=f'Run Finished, Best Accuracy: {accuracy:.2f}',
+            text=f'Run Finished, Best Category Accuracy: {best_category_acc:.2f}'
         )
     wandb.finish()
+    return model
 
 
 if __name__ == '__main__':
