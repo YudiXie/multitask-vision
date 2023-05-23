@@ -5,7 +5,7 @@ import argparse
 import yaml
 
 from train import train_model
-from config_global import ROOT_DIR, CONDA_ENV, CUDA_VERSION, EXP_DIR
+from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, EXP_DIR
 from utils import save_config
 
 
@@ -20,7 +20,7 @@ def get_jobfile(cmd,
                 cpu=4,
                 mem=32,
                 gpu_constraint='high-capacity',
-                cuda_version='11.3',
+                cuda_module='openmind8/cuda/11.7',
                 conda_env='base',
                 work_dir='./',
                 ):
@@ -39,7 +39,7 @@ def get_jobfile(cmd,
         cpu : int, number of cpu cores to use
         mem : int, number of memory to use in GB
         gpu_constraint : str, gpu constraint to use
-        cuda_version : str, cuda version to use
+        cuda_module : str, cuda module to load
         conda_env : str, conda environment to use
         work_dir : str, working directory to execute the command
     Returns:
@@ -83,7 +83,7 @@ def get_jobfile(cmd,
             + email_line
             + '\n'
             + 'source ~/.bashrc\n'
-            + 'module load openmind/cuda/{}\n'.format(cuda_version)
+            + 'module load {}\n'.format(cuda_module)
             + 'conda activate {}\n'.format(conda_env)
             + 'cd {}\n'.format(work_dir)
             + cmd + '\n'
@@ -150,7 +150,7 @@ if __name__ == '__main__':
                                          sbatch_path=config['save_path'],
                                          output_path=output_path,
                                          partition=args.partition,
-                                         cuda_version=CUDA_VERSION,
+                                         cuda_module=CUDA_MODULE,
                                          conda_env=CONDA_ENV,
                                          )
             cp_process = subprocess.run(['sbatch', slurm_job_file],
