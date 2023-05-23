@@ -2,7 +2,6 @@ import os
 import subprocess
 import copy
 import argparse
-import yaml
 
 from train import train_model
 from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, EXP_DIR

@@ -91,7 +91,7 @@ def validate_model(model,
             for task in task_list:
                 task_targets = []
                 for target_name in task2targets_name[task]:
-                    task_targets.append(data[target_name].unsqueeze(-1).to(DEVICE))
+                    task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
                 if task[-5:] == 'class':
                     task_targets = task_targets.squeeze(-1)
@@ -108,20 +108,22 @@ def validate_model(model,
             # Compute accuracy and accumulate
             if 'category_class' in task_list:
                 _, predicted = torch.max(outputs[:, 0:8], 1)
-                category_correct += (predicted == data['category_label']).sum().item()
+                category_label = data['category_label'].to(DEVICE)
+                category_correct += (predicted == category_label).sum().item()
                 
                 # Log one batch of images to the dashboard, always same batch_idx.
                 if i==batch_idx and log_images:
                     log_image_table(inputs, 
                                     predicted, 
-                                    data['category_label'], 
+                                    category_label, 
                                     outputs[:, 0:8].softmax(dim=1),
                                     valid_dl.dataset.category_int2str,
                                     )
             
             if 'object_class' in task_list:
                 _, predicted = torch.max(outputs[:, 8:72], 1)
-                object_correct += (predicted == data['object_label']).sum().item()
+                object_label = data['object_label'].to(DEVICE)
+                object_correct += (predicted == object_label).sum().item()
         
         return_dict = {}
         for task in task_list:
@@ -208,7 +210,7 @@ def train_model(config):
                 task_targets = []
                 for target_name in task2targets_name[task]:
                     # data[target_name] is a tensor of shape (batch_size, )
-                    task_targets.append(data[target_name].unsqueeze(-1).to(DEVICE))
+                    task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
                 if task[-5:] == 'class':
                     task_targets = task_targets.squeeze(-1)
