@@ -168,17 +168,18 @@ def train_slurm(config_path):
 
 
 def train_model(config):
-    np.random.seed(NP_SEED + config.seed)
-    torch.manual_seed(TCH_SEED + config.seed)
-
     wandb.init(
         project="multi-task-vision",
         config=config,
         # mode="disabled",
         )
     run_name = wandb.run.name if wandb.run.name else 'test'
-    
     config = wandb.config
+
+    # set up random seeds
+    np.random.seed(NP_SEED + config.seed)
+    torch.manual_seed(TCH_SEED + config.seed)
+    
     assert config.max_batch % config.eval_per == 0
     
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)

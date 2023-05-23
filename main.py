@@ -136,12 +136,12 @@ if __name__ == '__main__':
             run_id += 1
     
     for config in config_list:
+        config_file_path = save_config(config, config['save_path'])
         if not args.cluster:
             # run it on the local machine
             train_model(config)
         else:
             # submit jobs to the cluster
-            config_file_path = save_config(config, config['save_path'])
             python_cmd = f'python -c "import train; train.train_slurm(\'{config_file_path}\')"'
             job_n = config['experiment_name'] + '_' + config['model_name']
             output_path = os.path.join(ROOT_DIR, 'slurm_output')
