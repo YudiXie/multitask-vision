@@ -1,3 +1,5 @@
+import copy
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -162,26 +164,14 @@ def log_image_table(images, predicted, labels, probs, label2str):
     wandb.log({"predictions_table":table}, commit=False)
 
 
-def train_model(lr=1e-3):
+def train_model(config):
     wandb.init(
         project="multi-task-vision",
-        config={
-            "batch_size": 32,
-            "lr": lr,
-            "max_batch": 500,
-            "eval_per": 10,
-            "tasks": ['category_class', 
-                      'object_class', 
-                      'rotation_reg', 
-                      'size_reg', 
-                      'translation_reg',
-                      ],
-            },
+        config=config,
         # mode="disabled",
         )
     run_name = wandb.run.name if wandb.run.name else 'test'
     
-    # Copy your config 
     config = wandb.config
     assert config.max_batch % config.eval_per == 0
     
@@ -280,6 +270,23 @@ def train_model(lr=1e-3):
 
 
 if __name__ == '__main__':
+
+    config={
+        "batch_size": 32,
+        "lr": 1e-3,
+        "max_batch": 500,
+        "eval_per": 10,
+        "tasks": [
+            'category_class',
+            'object_class',
+            'rotation_reg',
+            'size_reg',
+            'translation_reg',
+            ],
+        }
+    
     lr_list = [0.4 * 1e-3, 0.7 * 1e-3, 1e-3, 1.3 * 1e-3, 1.6 * 1e-3]
     for lr in lr_list:
-        train_model(lr)
+        train_config = copy.deepcopy(config)
+        train_config['lr'] = lr
+        train_model(train_config)
