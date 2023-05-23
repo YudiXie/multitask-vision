@@ -166,3 +166,5 @@ data/
 *.pth
 wandb/
 .vscode/
+slurm_output/
+experiments/

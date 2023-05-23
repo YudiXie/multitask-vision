@@ -1,3 +1,6 @@
+import os
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -5,11 +8,9 @@ import torchvision.transforms as transforms
 from torchvision.models import resnet18, ResNet18_Weights
 import wandb
 
+from config_global import DEVICE, NP_SEED, TCH_SEED
 from dataset import HVMDataset
-
-# device to run algorithm on
-USE_CUDA = torch.cuda.is_available()
-DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
+from utils import load_config
 
 
 task2targets_name = {
@@ -161,7 +162,15 @@ def log_image_table(images, predicted, labels, probs, label2str):
     wandb.log({"predictions_table":table}, commit=False)
 
 
+def train_slurm(config_path):
+    config = load_config(config_path)
+    train_model(config)
+
+
 def train_model(config):
+    np.random.seed(NP_SEED + config.seed)
+    torch.manual_seed(TCH_SEED + config.seed)
+
     wandb.init(
         project="multi-task-vision",
         config=config,
@@ -235,7 +244,7 @@ def train_model(config):
                 val_metrics.update({f"val/{k}": v for k, v in val_results.items()})
                 wandb.log({**metrics, **val_metrics})
 
-                out_string = f"Batch Number: {batch_n:4d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:3f}"
+                out_string = f"Batch Number: {batch_n:4d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:.3f}"
                 if 'category_class' in config.tasks:
                     category_acc = val_results['val_category_acc']
                     if category_acc > best_category_acc:
@@ -253,7 +262,7 @@ def train_model(config):
                 break
     
     # save the model
-    torch.save(model.state_dict(), run_name + 'model.pth')
+    torch.save(model.state_dict(), os.path.join(config.save_path, 'model.pth'))
 
     # log a Summary metric
     wandb.summary['best_category_accuracy'] = best_category_acc
