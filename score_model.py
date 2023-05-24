@@ -11,7 +11,7 @@ from model_tools.activations.pytorch import load_preprocess_images
 from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
-from config_global import DEVICE
+from config_global import DEVICE, EXP_DIR
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -44,8 +44,7 @@ if __name__ == '__main__':
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 
-    save_path = './experiments/multi_task_vs_categorization/run_0000'
-    save_path = os.path.join(save_path, 'model.pth')
+    save_path = os.path.join(EXP_DIR, 'multi_task_vs_categorization/run_0000', 'model.pth')
 
     model = resnet18()
     model.fc = nn.Linear(model.fc.in_features, 78)
