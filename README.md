@@ -2,7 +2,8 @@
 A repo for training vision models with multiple tasks
 
 Installing environment:
-"""
+
+```
 # not tested
 conda create -n multitask-vision python
 conda activate multitask-vision
@@ -15,5 +16,5 @@ pip install wandb
 
 # then wandb login
 wandb login
-"""
+```
 
