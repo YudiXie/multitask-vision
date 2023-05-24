@@ -7,9 +7,9 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 from brainscore import score_model
 from brainscore.benchmarks import public_benchmark_pool
-# from model_tools.activations.pytorch import load_preprocess_images
-# from model_tools.activations.pytorch import PytorchWrapper
-# from model_tools.brain_transformation import ModelCommitment
+from model_tools.activations.pytorch import load_preprocess_images
+from model_tools.activations.pytorch import PytorchWrapper
+from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE
 
@@ -65,4 +65,3 @@ if __name__ == '__main__':
     score = score_model(model_identifier=model.identifier, model=model,
                         benchmark_identifier='dicarlo.MajajHong2015public.IT-pls')
     print(score)
-    
