@@ -38,32 +38,33 @@ resnet18layerlist = [
     'layer4.0.conv2',
     'layer4.1.conv1',
     'layer4.1.conv2',
+    'avgpool'
+    'fc'
 ]
 
 if __name__ == '__main__':
-    start_time = time.time()
-
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    for run_id in range(10):
+        start_time = time.time()
+        save_path = os.path.join(EXP_DIR, f'multi_task_vs_categorization/run_000{run_id}', 'model.pth')
 
-    save_path = os.path.join(EXP_DIR, 'multi_task_vs_categorization/run_0000', 'model.pth')
+        model = resnet18()
+        model.fc = nn.Linear(model.fc.in_features, 78)
+        model.load_state_dict(torch.load(save_path, map_location=DEVICE), strict=True)
 
-    model = resnet18()
-    model.fc = nn.Linear(model.fc.in_features, 78)
-    model.load_state_dict(torch.load(save_path, map_location=DEVICE), strict=True)
+        preprocessing = functools.partial(load_preprocess_images, image_size=224)
+        activations_model = PytorchWrapper(identifier=f'mt-resnet18-{run_id}', model=model, preprocessing=preprocessing)
 
-    preprocessing = functools.partial(load_preprocess_images, image_size=224)
-    activations_model = PytorchWrapper(identifier='my-model', model=model, preprocessing=preprocessing)
-
-    model = ModelCommitment(identifier='my-model',
-                            activations_model=activations_model,
-                            # specify layers to consider
-                            layers=resnet18layerlist)
-    
-    # The score_model will score the model on the specified benchmark.
-    # When the model is asked to output activations for the IT region, it will first search for the best layer
-    # and then only output this layer's activations.
-    score = score_model(model_identifier=model.identifier, model=model,
-                        benchmark_identifier='dicarlo.MajajHong2015public.IT-pls')
-    print(score)
-    print("Run time %.2f mins" % ((time.time() - start_time) / 60))
+        model = ModelCommitment(identifier=f'mt-resnet18-{run_id}',
+                                activations_model=activations_model,
+                                # specify layers to consider
+                                layers=resnet18layerlist)
+        
+        # The score_model will score the model on the specified benchmark.
+        # When the model is asked to output activations for the IT region, it will first search for the best layer
+        # and then only output this layer's activations.
+        score = score_model(model_identifier=model.identifier, model=model,
+                            benchmark_identifier='dicarlo.MajajHong2015public.IT-pls')
+        print(score)
+        print("Run time %.2f mins" % ((time.time() - start_time) / 60))
