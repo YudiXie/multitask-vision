@@ -38,8 +38,8 @@ resnet18layerlist = [
     'layer4.0.conv2',
     'layer4.1.conv1',
     'layer4.1.conv2',
-    'avgpool'
-    'fc'
+    'avgpool',
+    'fc',
 ]
 
 if __name__ == '__main__':
