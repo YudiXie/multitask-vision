@@ -1,5 +1,6 @@
 import os
 import functools
+import time
 
 import torch
 import torch.nn as nn
@@ -40,6 +41,7 @@ resnet18layerlist = [
 ]
 
 if __name__ == '__main__':
+    start_time = time.time()
 
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
@@ -64,3 +66,4 @@ if __name__ == '__main__':
     score = score_model(model_identifier=model.identifier, model=model,
                         benchmark_identifier='dicarlo.MajajHong2015public.IT-pls')
     print(score)
+    print("Run time %.2f mins" % ((time.time() - start_time) / 60))
