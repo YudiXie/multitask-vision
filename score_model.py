@@ -42,11 +42,19 @@ resnet18layerlist = [
     'fc',
 ]
 
+benchmark_list = [
+    # 'movshon.FreemanZiemba2013public.V1-pls',
+    # 'movshon.FreemanZiemba2013public.V2-pls',
+    'dicarlo.MajajHong2015public.V4-pls',
+    'dicarlo.MajajHong2015public.IT-pls',
+    'dicarlo.Rajalingham2018public-i2n',
+    ]
+
 if __name__ == '__main__':
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+
     for run_id in range(10):
-        start_time = time.time()
         save_path = os.path.join(EXP_DIR, f'multi_task_vs_categorization/run_000{run_id}', 'model.pth')
 
         model = resnet18()
@@ -61,10 +69,12 @@ if __name__ == '__main__':
                                 # specify layers to consider
                                 layers=resnet18layerlist)
         
-        # The score_model will score the model on the specified benchmark.
-        # When the model is asked to output activations for the IT region, it will first search for the best layer
-        # and then only output this layer's activations.
-        score = score_model(model_identifier=model.identifier, model=model,
-                            benchmark_identifier='dicarlo.MajajHong2015public.IT-pls')
-        print(score)
-        print("Run time %.2f mins" % ((time.time() - start_time) / 60))
+        for benchmark in benchmark_list:
+            # The score_model will score the model on the specified benchmark.
+            # When the model is asked to output activations for the IT region, it will first search for the best layer
+            # and then only output this layer's activations.
+            start_time = time.time()
+            score = score_model(model_identifier=model.identifier, model=model,
+                                benchmark_identifier=benchmark)
+            print(score)
+            print("Run time %.2f mins" % ((time.time() - start_time) / 60))
