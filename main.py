@@ -100,9 +100,9 @@ if __name__ == '__main__':
 
     base_config = {
         'seed': 0,
-        'batch_size': 32,
+        'batch_size': 64,
         'lr': 1e-3,
-        'max_batch': 500,
+        'max_batch': 1000,
         'eval_per': 10,
         'tasks': [
             'category_class',
