@@ -11,6 +11,23 @@ import torch
 from torch.utils.data import Dataset
 
 
+def load_image(image_filepath):
+    """Load an image from disk and return a PIL.Image object.
+    from https://github.com/brain-score/model-tools/blob/75365b54670d3f6f63dcdf88395c0a07d6b286fc/model_tools/activations/pytorch.py#L118
+    """
+    with Image.open(image_filepath) as pil_image:
+        if 'L' not in pil_image.mode.upper() and 'A' not in pil_image.mode.upper() \
+                and 'P' not in pil_image.mode.upper():  # not binary and not alpha and not palletized
+            # work around to https://github.com/python-pillow/Pillow/issues/1144,
+            # see https://stackoverflow.com/a/30376272/2225200
+            return pil_image.copy()
+        else:  # make sure potential binary images are in RGB
+            rgb_image = Image.new("RGB", pil_image.size)
+            rgb_image.paste(pil_image)
+            return rgb_image
+
+
+
 class HVMDataset(Dataset):
     """hvm-public dataset."""
     # my guess about the meaning of the collums
@@ -83,7 +100,7 @@ class HVMDataset(Dataset):
 
         img_name = os.path.join(self.root_dir,
                                 self.normed_data_frame.loc[idx, 'image_file_name'])
-        image = Image.open(img_name)
+        image = load_image(img_name)
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}

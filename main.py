@@ -112,7 +112,7 @@ if __name__ == '__main__':
             'translation_reg',
             ],
         'model_name': 'resnet18',
-        'experiment_name': 'multi_task_vs_categorization',
+        'experiment_name': 'multi_task_vs_categorization0527',
         'save_path': './experiments/',
         }
 

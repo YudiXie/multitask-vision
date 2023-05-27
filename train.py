@@ -46,14 +46,8 @@ task2weights = {
 }
 
 
-def get_dataloader(is_train, batch_size):
-    "Get a training dataloader"
-    # Data preprocessing
-    transform = transforms.Compose([
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-    ])
-    
+def get_dataloader(is_train, batch_size, transform):
+    "Get a training dataloader"    
     if is_train:
         split = 'train'
     else:
@@ -64,7 +58,7 @@ def get_dataloader(is_train, batch_size):
                                          batch_size=batch_size, 
                                          shuffle=True if is_train else False, 
                                          pin_memory=True, 
-                                         num_workers=2)
+                                         num_workers=4)
     return loader
 
 
@@ -184,14 +178,26 @@ def train_model(config):
     
     assert config.max_batch % config.eval_per == 0
     
+    # initialize the model
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    # Replace the last layer with a linear layer for ImageNet classification
+    # Replace the last layer with a linear layer for multi-task learning
     model.fc = nn.Linear(model.fc.in_features, 78)
     model = model.to(DEVICE)
 
-    train_loader = get_dataloader(is_train=True, batch_size=config.batch_size)
-    val_loader = get_dataloader(is_train=False, batch_size=config.batch_size)
+    # Data preprocessing
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    ])
 
+    # Get dataloaders
+    train_loader = get_dataloader(is_train=True, batch_size=config.batch_size,
+                                  transform=transform)
+    val_loader = get_dataloader(is_train=False, batch_size=config.batch_size,
+                                transform=transform)
+
+    # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
 
     # Train the model
