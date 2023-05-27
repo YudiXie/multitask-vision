@@ -25,7 +25,7 @@ resnet18layerlist = [
     'layer2.0.relu',
     'layer2.1.relu',
     'layer3.0.relu',
-    'layer3.0.relu',
+    'layer3.1.relu',
     'layer4.0.relu',
     'layer4.1.relu',
     'avgpool',
