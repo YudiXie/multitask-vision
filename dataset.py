@@ -48,8 +48,8 @@ class HVMDataset(Dataset):
     norm_collums = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz']
 
     def __init__(self, 
-                 csv_file='./data/image_dicarlo_hvm-public.csv', 
-                 root_dir='./data/image_dicarlo_hvm-public', 
+                 csv_file='./data/image_dicarlo_hvm.csv', 
+                 root_dir='./data/image_dicarlo_hvm', 
                  split='train',
                  transform=None,
                  ):
