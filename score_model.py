@@ -48,7 +48,7 @@ if __name__ == '__main__':
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 
-    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error'])
+    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
 
     # score pre-trained baseline model
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
@@ -75,7 +75,8 @@ if __name__ == '__main__':
         save_df = save_df.append({'model': model.identifier, 
                                   'benchmark': benchmark, 
                                   'score': center.values, 
-                                  'error': error.values}, ignore_index=True)
+                                  'error': error.values,
+                                  'exp_group': 'Pre-trained'}, ignore_index=True)
 
 
     # score experiments models
@@ -110,6 +111,8 @@ if __name__ == '__main__':
             save_df = save_df.append({'model': model.identifier, 
                                       'benchmark': benchmark, 
                                       'score': center.values, 
-                                      'error': error.values}, ignore_index=True)
+                                      'error': error.values,
+                                      'exp_group': 'multi-task' if run_id < 5 else 'Categorization'},
+                                      ignore_index=True)
             
     save_df.to_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'))
