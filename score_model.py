@@ -2,6 +2,8 @@ import os
 import functools
 import time
 
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
@@ -46,6 +48,8 @@ if __name__ == '__main__':
     # ImageNet pretrained model
     # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 
+    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error'])
+
     # score pre-trained baseline model
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model = model.to(DEVICE)
@@ -67,6 +71,11 @@ if __name__ == '__main__':
         center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
         print(f"Score: {center.values:.3f}+-{error.values:.3f}")
         print("Run time %.2f mins" % ((time.time() - start_time) / 60))
+
+        save_df = save_df.append({'model': model.identifier, 
+                                  'benchmark': benchmark, 
+                                  'score': center.values, 
+                                  'error': error.values}, ignore_index=True)
 
 
     # score experiments models
@@ -97,3 +106,10 @@ if __name__ == '__main__':
             center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
             print(f"Score: {center.values:.3f}+-{error.values:.3f}")
             print("Run time %.2f mins" % ((time.time() - start_time) / 60))
+            
+            save_df = save_df.append({'model': model.identifier, 
+                                      'benchmark': benchmark, 
+                                      'score': center.values, 
+                                      'error': error.values}, ignore_index=True)
+            
+    save_df.to_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'))
