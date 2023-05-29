@@ -112,7 +112,7 @@ if __name__ == '__main__':
                                       'benchmark': benchmark, 
                                       'score': center.values, 
                                       'error': error.values,
-                                      'exp_group': 'multi-task' if run_id < 5 else 'Categorization'},
+                                      'exp_group': 'Multi-task' if run_id < 5 else 'Categorization'},
                                       ignore_index=True)
             
     save_df.to_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'))
