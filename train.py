@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import numpy as np
 import torch
@@ -44,6 +45,22 @@ task2weights = {
     'size_reg': 0.2,
     'translation_reg': 0.2,
 }
+
+
+def log_complete(exp_path: str, start_time=None):
+    """
+    create a file to indicate the training is finished
+    """
+    if not os.path.exists(exp_path):
+        os.makedirs(exp_path)
+    
+    complete_time = datetime.now()
+    with open(os.path.join(exp_path, 'train_complete.txt'), 'w') as f:
+        f.write(f'Training is complete at: {complete_time.strftime("%Y-%m-%d %H:%M:%S")}')
+        if start_time is not None:
+            f.write(f'\nTraining time: {str(complete_time - start_time)}')
+    
+    print(f'Training is complete at: {complete_time.strftime("%Y-%m-%d %H:%M:%S")}')
 
 
 def get_dataloader(is_train, batch_size, transform):
@@ -175,6 +192,8 @@ def train_model(config):
     # set up random seeds
     np.random.seed(NP_SEED + config.seed)
     torch.manual_seed(TCH_SEED + config.seed)
+
+    start_time = datetime.now()
     
     assert config.max_batch % config.eval_per == 0
     
@@ -274,6 +293,7 @@ def train_model(config):
     torch.save(model.state_dict(), os.path.join(config.save_path, 'model.pth'))
 
     # log a Summary metric
+    log_complete(config.save_path, start_time)
     wandb.summary['best_category_accuracy'] = best_category_acc
     wandb.summary['best_object_accuracy'] = best_object_acc
     wandb.alert(

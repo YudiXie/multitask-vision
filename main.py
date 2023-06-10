@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import copy
 import argparse
@@ -6,6 +7,37 @@ import argparse
 from train import train_model
 from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, EXP_DIR
 from utils import save_config
+
+
+def check_run_complete(cfg) -> bool:
+    """
+    Check if the run is complete by checking the complete file
+    :param cfg: config
+    :return: True if train is complete, False otherwise
+    """
+
+    exp_str = cfg['save_path'].split('/')[-1]
+    complete_path = os.path.join(cfg['save_path'], 'train_complete.txt')
+    
+    if not os.path.exists(complete_path):
+        print('No complete record for: ' + exp_str)
+        run_complete = False
+    else:
+        run_complete = True
+    
+    return run_complete
+
+
+def get_missing_runs(config_list: list) -> list:
+    """
+    Check if there are any missing runs in the experiments
+    :param config_list: a list of experimental configs
+    :return: mis_config_list, a list of missing runs
+    """
+    run_n_cmplt = [not check_run_complete(cfg) for cfg in config_list]
+    if all([not val for val in run_n_cmplt]):
+        print('All runs completed!')
+    return [config_list[i] for i in range(len(config_list)) if run_n_cmplt[i]]
 
 
 def get_jobfile(cmd,
@@ -96,6 +128,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--cluster', action='store_true', help='Use batch submission on cluster')
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
+    parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
     base_config = {
@@ -141,6 +174,11 @@ if __name__ == '__main__':
             cfg['run_id'] = run_id
             config_list.append(cfg)
             run_id += 1
+    
+    if args.missing:
+        config_list = get_missing_runs(config_list)
+        if input('Continue to submit? (yes/no): ') != 'yes':
+            sys.exit("exit program.")
     
     for config in config_list:
         config_file_path = save_config(config, config['save_path'])
