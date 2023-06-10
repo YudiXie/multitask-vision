@@ -60,6 +60,12 @@ if __name__ == '__main__':
                             layers=resnet18layerlist,
                             behavioral_readout_layer='avgpool')
     
+    print(f'model_name: {model.identifier}')
+    print('V1 region:', model.layer_model.region_layer_map['V1'])
+    print('V2 region:', model.layer_model.region_layer_map['V2'])
+    print('V4 region:', model.layer_model.region_layer_map['V4'])
+    print('IT region:', model.layer_model.region_layer_map['IT'])
+    
     for benchmark in benchmark_list:
         # The score_model will score the model on the specified benchmark.
         # When the model is asked to output activations for the IT region, it will first search for the best layer
@@ -95,6 +101,12 @@ if __name__ == '__main__':
                                 activations_model=activations_model,
                                 layers=resnet18layerlist,
                                 behavioral_readout_layer='avgpool')
+        
+        print(f'model_name: {model.identifier}')
+        print('V1 region:', model.layer_model.region_layer_map['V1'])
+        print('V2 region:', model.layer_model.region_layer_map['V2'])
+        print('V4 region:', model.layer_model.region_layer_map['V4'])
+        print('IT region:', model.layer_model.region_layer_map['IT'])
         
         for benchmark in benchmark_list:
             # The score_model will score the model on the specified benchmark.
