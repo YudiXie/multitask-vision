@@ -44,9 +44,6 @@ benchmark_list = [
     ]
 
 
-# 'mt0527-resnet18-pret'
-# f'mt0527-resnet18-{run_id}'
-
 def prepare_model(model_identifier, load_path=None):
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model.fc = nn.Linear(model.fc.in_features, 78)
@@ -71,15 +68,7 @@ def prepare_model(model_identifier, load_path=None):
     return model
 
 
-def score_model_on_benchmarks():
-    pass
-
-
-if __name__ == '__main__':
-    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
-
-    model = prepare_model('mt0527-resnet18-pret')
-
+def score_model_on_benchmarks(model, save_df, exp_group):
     for benchmark in benchmark_list:
         # The score_model will score the model on the specified benchmark.
         # When the model is asked to output activations for the IT region, it will first search for the best layer
@@ -96,32 +85,22 @@ if __name__ == '__main__':
                                   'benchmark': benchmark, 
                                   'score': center.values, 
                                   'error': error.values,
-                                  'exp_group': 'Pre-trained'}, ignore_index=True)
+                                  'exp_group': exp_group}, ignore_index=True)
+    return save_df
 
+
+if __name__ == '__main__':
+    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
+
+    # score pre-trained model
+    model = prepare_model('mt0527-resnet18-pret')
+    save_df = score_model_on_benchmarks(model, save_df, exp_group='Pre-trained')
 
     # score experiments models
     for run_id in range(10):
         load_path = os.path.join(EXP_DIR, f'multi_task_vs_categorization0527/run_000{run_id}', 'model.pth')
         model = prepare_model(model_identifier=f'mt0527-resnet18-{run_id}', 
                               load_path=load_path)
-        
-        for benchmark in benchmark_list:
-            # The score_model will score the model on the specified benchmark.
-            # When the model is asked to output activations for the IT region, it will first search for the best layer
-            # and then only output this layer's activations.
-            start_time = time.time()
-            score = score_model(model_identifier=model.identifier, model=model,
-                                benchmark_identifier=benchmark)
-            print(score)
-            center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
-            print(f"Score: {center.values:.3f}+-{error.values:.3f}")
-            print("Run time %.2f mins" % ((time.time() - start_time) / 60))
-            
-            save_df = save_df.append({'model': model.identifier, 
-                                      'benchmark': benchmark, 
-                                      'score': center.values, 
-                                      'error': error.values,
-                                      'exp_group': 'Multi-task' if run_id < 5 else 'Categorization'},
-                                      ignore_index=True)
+        save_df = score_model_on_benchmarks(model, save_df, exp_group='Multi-task' if run_id < 5 else 'Categorization')
             
     save_df.to_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'))
