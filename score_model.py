@@ -90,17 +90,35 @@ def score_model_on_benchmarks(model, save_df, exp_group):
 
 
 if __name__ == '__main__':
-    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
+    exp_name = 'multi_task_0610'
+    number_runs = 30
 
+    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
+    
     # score pre-trained model
-    model = prepare_model('mt0527-resnet18-pret')
+    model = prepare_model(f'{exp_name}-resnet18-pret')
     save_df = score_model_on_benchmarks(model, save_df, exp_group='Pre-trained')
 
     # score experiments models
-    for run_id in range(10):
-        load_path = os.path.join(EXP_DIR, f'multi_task_vs_categorization0527/run_000{run_id}', 'model.pth')
-        model = prepare_model(model_identifier=f'mt0527-resnet18-{run_id}', 
+    for run_id in range(number_runs):
+        load_path = os.path.join(EXP_DIR, f'{exp_name}', f'run_{run_id:04d}', 'model.pth')
+        model = prepare_model(model_identifier=f'{exp_name}-resnet18-{run_id}', 
                               load_path=load_path)
-        save_df = score_model_on_benchmarks(model, save_df, exp_group='Multi-task' if run_id < 5 else 'Categorization')
+        
+        if run_id < 5:
+            exp_group = 'Multi-task'
+        elif run_id < 10:
+            exp_group = 'Categorization'
+        elif run_id < 15:
+            exp_group = 'Multi_task_wo_object_class'
+        elif run_id < 20:
+            exp_group = 'Size_reg'
+        elif run_id < 25:
+            exp_group = 'Translation_reg'
+        else:
+            exp_group = 'Rotation_reg'
+
+        save_df = score_model_on_benchmarks(model, save_df, exp_group=exp_group)
+        
             
-    save_df.to_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'))
+    save_df.to_csv(os.path.join(EXP_DIR, exp_name, 'resnet18_brainscore_results.csv'))
