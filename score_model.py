@@ -44,11 +44,26 @@ benchmark_list = [
     ]
 
 
-def prepare_model(model_identifier, load_path=None):
+def get_layer_commitment(model: ModelCommitment):
+    """
+    at first run, this run benchmark to finish layer commitment and print results 
+    subsequent runs will load the layer commitment from the saved file
+    args:
+        model: ModelCommitment object
+    """
+    print(f'model_name: {model.identifier}')
+    print('V1 region:', model.layer_model.region_layer_map['V1'])
+    print('V2 region:', model.layer_model.region_layer_map['V2'])
+    print('V4 region:', model.layer_model.region_layer_map['V4'])
+    print('IT region:', model.layer_model.region_layer_map['IT'])
+
+
+def prepare_model(model_identifier: str, load_path: str = '') -> ModelCommitment:
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model.fc = nn.Linear(model.fc.in_features, 78)
     model = model.to(DEVICE)
-    if load_path is not None:
+    if load_path != '':
+        print(f'loading model from {load_path}')
         model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
 
     preprocessing = functools.partial(load_preprocess_images, image_size=224)
@@ -57,18 +72,10 @@ def prepare_model(model_identifier, load_path=None):
                             activations_model=activations_model,
                             layers=resnet18layerlist,
                             behavioral_readout_layer='avgpool')
-    
-    # this run benchmark to finish layer commitment and print results
-    print(f'model_name: {model.identifier}')
-    print('V1 region:', model.layer_model.region_layer_map['V1'])
-    print('V2 region:', model.layer_model.region_layer_map['V2'])
-    print('V4 region:', model.layer_model.region_layer_map['V4'])
-    print('IT region:', model.layer_model.region_layer_map['IT'])
-
     return model
 
 
-def score_model_on_benchmarks(model, save_df, exp_group):
+def score_model_on_benchmarks(model: ModelCommitment, save_df, exp_group):
     for benchmark in benchmark_list:
         # The score_model will score the model on the specified benchmark.
         # When the model is asked to output activations for the IT region, it will first search for the best layer
@@ -97,14 +104,12 @@ if __name__ == '__main__':
     
     # score pre-trained model
     model = prepare_model(f'{exp_name}-resnet18-pret')
+    get_layer_commitment(model)
     save_df = score_model_on_benchmarks(model, save_df, exp_group='Pre-trained')
 
     # score experiments models
     for run_id in range(number_runs):
-        load_path = os.path.join(EXP_DIR, f'{exp_name}', f'run_{run_id:04d}', 'model.pth')
-        model = prepare_model(model_identifier=f'{exp_name}-resnet18-{run_id}', 
-                              load_path=load_path)
-        
+
         if run_id < 5:
             exp_group = 'Multi-task'
         elif run_id < 10:
@@ -118,6 +123,10 @@ if __name__ == '__main__':
         else:
             exp_group = 'Rotation_reg'
 
+        load_path = os.path.join(EXP_DIR, f'{exp_name}', f'run_{run_id:04d}', 'model.pth')
+        model = prepare_model(model_identifier=f'{exp_name}-resnet18-{run_id}', 
+                              load_path=load_path)
+        get_layer_commitment(model)
         save_df = score_model_on_benchmarks(model, save_df, exp_group=exp_group)
         
             
