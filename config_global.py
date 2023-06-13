@@ -15,3 +15,4 @@ DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
 CUDA_MODULE = 'openmind8/cuda/11.7'
 CONDA_ENV = 'multitask-vision'
+CONDA_SCORE_ENV = 'brainscore'

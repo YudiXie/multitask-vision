@@ -1,6 +1,7 @@
 import os
 import functools
 import time
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE, EXP_DIR
+from train import log_complete
+from utils import load_config
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -51,7 +54,7 @@ def get_layer_commitment(model: ModelCommitment):
     args:
         model: ModelCommitment object
     """
-    print(f'model_name: {model.identifier}')
+    print(f'model_identifier: {model.identifier}')
     print('V1 region:', model.layer_model.region_layer_map['V1'])
     print('V2 region:', model.layer_model.region_layer_map['V2'])
     print('V4 region:', model.layer_model.region_layer_map['V4'])
@@ -59,6 +62,15 @@ def get_layer_commitment(model: ModelCommitment):
 
 
 def prepare_model(model_identifier: str, load_path: str = '') -> ModelCommitment:
+    """
+    prepare model for benchmarking
+    args:
+        model_identifier: str, unique model identifier for benchmarking
+        load_path: str, path to load model weights, 
+            if provided load weights, otherwise use pretrained weights
+    return:
+        model: ModelCommitment object
+    """
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     model.fc = nn.Linear(model.fc.in_features, 78)
     model = model.to(DEVICE)
@@ -75,23 +87,60 @@ def prepare_model(model_identifier: str, load_path: str = '') -> ModelCommitment
     return model
 
 
-def score_model_on_benchmarks(model: ModelCommitment, save_df, exp_group):
-    for benchmark in benchmark_list:
-        # The score_model will score the model on the specified benchmark.
-        # When the model is asked to output activations for the IT region, it will first search for the best layer
-        # and then only output this layer's activations.
-        start_time = time.time()
-        score = score_model(model_identifier=model.identifier, model=model,
-                            benchmark_identifier=benchmark)
-        print(score)
-        center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
-        print(f"Score: {center.values:.3f}+-{error.values:.3f}")
-        print("Run time %.2f mins" % ((time.time() - start_time) / 60))
+def score_model_on_a_benchmark(model: ModelCommitment, 
+                               benchmark: str,
+                               log_path: str = ''):
+    """
+    score model on a benchmark
+    args:
+        model: ModelCommitment object
+        benchmark: str, benchmark name
+        log_path: str, path to save log file, if provided, otherwise not save
+    return:
+        score: xarray DataArray, the model score on that benchmark
+    """
+    start_time = datetime.now()
 
+    score = score_model(model_identifier=model.identifier, model=model,
+                        benchmark_identifier=benchmark)
+    print(score)
+    center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
+    print(f"Score: {center.values:.3f}+-{error.values:.3f}")
+
+    complete_time = datetime.now()
+    print(f'Scoring time: {str(complete_time - start_time)}')
+    if log_path != '':
+        log_complete(log_path, start_time, 'score')
+    return score
+
+
+def prepare_and_score_model(config):
+    """
+    prepare and score model on all benchmarks
+    args:
+        config: dict, an experimental config specifying a model
+    """
+    model_id = '-'.join([config['experiment_name'], 
+                         config['model_archi'], str(config['run_id'])])
+    model_save_path = os.path.join(config['save_path'], 'model.pth')
+    
+    model = prepare_model(model_id, model_save_path)
+    for benchmark in benchmark_list:
+        score_model_on_a_benchmark(model, benchmark, config['save_path'])
+
+
+def prepare_and_score_model_slurm(config_path):
+    config = load_config(config_path)
+    prepare_and_score_model(config)
+
+
+def score_model_on_benchmarks_save(model: ModelCommitment, save_df, exp_group):
+    for benchmark in benchmark_list:
+        score = score_model_on_a_benchmark(model, benchmark)
         save_df = save_df.append({'model': model.identifier, 
                                   'benchmark': benchmark, 
-                                  'score': center.values, 
-                                  'error': error.values,
+                                  'score': score.sel(aggregation='center').values, 
+                                  'error': score.sel(aggregation='error').values,
                                   'exp_group': exp_group}, ignore_index=True)
     return save_df
 
@@ -105,7 +154,7 @@ if __name__ == '__main__':
     # score pre-trained model
     model = prepare_model(f'{exp_name}-resnet18-pret')
     get_layer_commitment(model)
-    save_df = score_model_on_benchmarks(model, save_df, exp_group='Pre-trained')
+    save_df = score_model_on_benchmarks_save(model, save_df, exp_group='Pre-trained')
 
     # score experiments models
     for run_id in range(number_runs):
@@ -127,7 +176,7 @@ if __name__ == '__main__':
         model = prepare_model(model_identifier=f'{exp_name}-resnet18-{run_id}', 
                               load_path=load_path)
         get_layer_commitment(model)
-        save_df = score_model_on_benchmarks(model, save_df, exp_group=exp_group)
+        save_df = score_model_on_benchmarks_save(model, save_df, exp_group=exp_group)
         
             
     save_df.to_csv(os.path.join(EXP_DIR, exp_name, 'resnet18_brainscore_results.csv'))

@@ -1,26 +1,28 @@
 import os
 import sys
 import subprocess
-import copy
 import argparse
 
 from train import train_model
-from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, EXP_DIR
+from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, CONDA_SCORE_ENV
 from utils import save_config
+from exp_config_list import setup_config_list
+from score_model import prepare_and_score_model
 
 
-def check_run_complete(cfg) -> bool:
+def check_run_complete(cfg, mode) -> bool:
     """
     Check if the run is complete by checking the complete file
     :param cfg: config
-    :return: True if train is complete, False otherwise
+    :param mode: 'train' or 'eval' or other operations
+    :return: True if the operation is complete, False otherwise
     """
 
     exp_str = cfg['save_path'].split('/')[-1]
-    complete_path = os.path.join(cfg['save_path'], 'train_complete.txt')
+    complete_path = os.path.join(cfg['save_path'], f'{mode}_complete.txt')
     
     if not os.path.exists(complete_path):
-        print('No complete record for: ' + exp_str)
+        print(f'No {mode} complete record for: ' + exp_str)
         run_complete = False
     else:
         run_complete = True
@@ -28,15 +30,17 @@ def check_run_complete(cfg) -> bool:
     return run_complete
 
 
-def get_missing_runs(config_list: list) -> list:
+def get_missing_runs(config_list: list, mode: str) -> list:
     """
     Check if there are any missing runs in the experiments
     :param config_list: a list of experimental configs
+    :param mode: 'train' or 'eval' or other operations
     :return: mis_config_list, a list of missing runs
     """
-    run_n_cmplt = [not check_run_complete(cfg) for cfg in config_list]
+    print(f'Checking {mode} runs:')
+    run_n_cmplt = [not check_run_complete(cfg, mode) for cfg in config_list]
     if all([not val for val in run_n_cmplt]):
-        print('All runs completed!')
+        print(f'All {mode} runs completed!')
     return [config_list[i] for i in range(len(config_list)) if run_n_cmplt[i]]
 
 
@@ -60,11 +64,12 @@ def get_jobfile(cmd,
 
     Args:
         cmd: python command to be execute by the cluster
-        job_name: str, name of the job file
+        job_name: str, name of the .sh file to submit a job and identify
+            the .out file which store the terminal output
         dep_ids: None or a list of job ids used for job dependency
         email: str, email to send about job status
         sbatch_path : str, Directory to store the .sh file for sbatch
-        output_path : str, Directory to store output of runs
+        output_path : str, Directory to store terminal output of runs
         hours : int, number of hours to train
         partition : list, a list of cluster partition to use
         cpu : int, number of cpu cores to use
@@ -125,70 +130,44 @@ def get_jobfile(cmd,
 
 
 if __name__ == '__main__':
+    # parse arguments
     parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--do', help='Kind of operation to do')
+
     parser.add_argument('-c', '--cluster', action='store_true', help='Use batch submission on cluster')
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
-    base_config = {
-        'seed': 0,
-        'run_id': 0,
-        'batch_size': 64,
-        'lr': 1e-3,
-        'max_batch': 1000,
-        'eval_per': 10,
-        'group_name': 'multi_task',
-        'tasks': [
-            'category_class',
-            'object_class',
-            'rotation_reg',
-            'size_reg',
-            'translation_reg',
-            ],
-        'model_name': 'resnet18',
-        'experiment_name': 'multi_task_0610',
-        'save_path': './experiments/',
-        }
+    assert args.do in ['train', 'score'], 'Unknown operation: ' + args.do
 
-    task_set_dict = {
-        'multi_task': ['category_class', 'object_class', 'rotation_reg', 'size_reg', 'translation_reg'],
-        'categorization': ['category_class'],
-        'multi_task_wo_object_class': ['category_class', 'rotation_reg', 'size_reg', 'translation_reg'],
-        'size_reg': ['size_reg'],
-        'translation_reg': ['translation_reg'],
-        'rotation_reg': ['rotation_reg'],
-    }
-    seed_list = [0, 1, 2, 3, 4]
-    
-    config_list = []
-    run_id = 0
-    for group_n, task_set in task_set_dict.items():
-        for seed in seed_list:
-            cfg = copy.deepcopy(base_config)
-            cfg['group_name'] = group_n
-            cfg['tasks'] = task_set
-            cfg['seed'] = seed
+    config_list = setup_config_list()
 
-            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
-            cfg['run_id'] = run_id
-            config_list.append(cfg)
-            run_id += 1
-    
+    # check if experiments are finished
     if args.missing:
-        config_list = get_missing_runs(config_list)
+        config_list = get_missing_runs(config_list, args.do)
         if input('Continue to submit? (yes/no): ') != 'yes':
             sys.exit("exit program.")
     
+    # start training or submit jobs
     for config in config_list:
         config_file_path = save_config(config, config['save_path'])
         if not args.cluster:
             # run it on the local machine
-            train_model(config)
+            if args.do == 'train':
+                train_model(config)
+            elif args.do == 'score':
+                prepare_and_score_model(config)
         else:
             # submit jobs to the cluster
-            python_cmd = f'python -c "import train; train.train_slurm(\'{config_file_path}\')"'
-            job_n = config['experiment_name'] + '_' + config['model_name']
+            if args.do == 'train':
+                python_cmd = f'python -c "import train; train.train_slurm(\'{config_file_path}\')"'
+                conda_env = CONDA_ENV
+            elif args.do == 'score':
+                python_cmd = f'python -c "import score_model; score_model.prepare_and_score_model_slurm(\'{config_file_path}\')"'
+                conda_env = CONDA_SCORE_ENV
+
+            job_n = '-'.join([config['experiment_name'], args.do, config['model_archi'], f'run_{config["run_id"]:04d}'])
             output_path = os.path.join(ROOT_DIR, 'slurm_output')
             slurm_job_file = get_jobfile(python_cmd,
                                          job_n,
@@ -196,10 +175,9 @@ if __name__ == '__main__':
                                          output_path=output_path,
                                          partition=args.partition,
                                          cuda_module=CUDA_MODULE,
-                                         conda_env=CONDA_ENV,
+                                         conda_env=conda_env,
                                          )
             cp_process = subprocess.run(['sbatch', slurm_job_file],
                                         capture_output=True, check=True)
             cp_stdout = cp_process.stdout.decode()
             print(cp_stdout)
-
