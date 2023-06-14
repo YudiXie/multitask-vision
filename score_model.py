@@ -15,8 +15,7 @@ from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE, EXP_DIR
-from train import log_complete
-from utils import load_config
+from utils import load_config, log_complete
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -108,9 +107,9 @@ def score_model_on_a_benchmark(model: ModelCommitment,
     print(f"Score: {center.values:.3f}+-{error.values:.3f}")
 
     complete_time = datetime.now()
-    print(f'Scoring time: {str(complete_time - start_time)}')
+    print(f'Scoring time for {benchmark}: {str(complete_time - start_time)}')
     if log_path != '':
-        log_complete(log_path, start_time, 'score')
+        log_complete(log_path, start_time, f'score_{benchmark}')
     return score
 
 
@@ -125,8 +124,14 @@ def prepare_and_score_model(config):
     model_save_path = os.path.join(config['save_path'], 'model.pth')
     
     model = prepare_model(model_id, model_save_path)
+
+    start_time = datetime.now()
     for benchmark in benchmark_list:
-        score_model_on_a_benchmark(model, benchmark, config['save_path'])
+        score_model_on_a_benchmark(model, benchmark)
+    
+    complete_time = datetime.now()
+    print(f'Scoring time for all benchmarks: {str(complete_time - start_time)}')
+    log_complete(config['save_path'], start_time, 'score')
 
 
 def prepare_and_score_model_slurm(config_path):

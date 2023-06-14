@@ -11,7 +11,7 @@ import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
 from dataset import HVMDataset
-from utils import load_config
+from utils import load_config, log_complete
 
 
 task2targets_name = {
@@ -45,23 +45,6 @@ task2weights = {
     'size_reg': 0.2,
     'translation_reg': 0.2,
 }
-
-
-def log_complete(exp_path: str, start_time=None, mode='train'):
-    """
-    create a file to indicate the operation is finished
-    operation could be 'train' or 'score' or many others
-    """
-    if not os.path.exists(exp_path):
-        os.makedirs(exp_path)
-    
-    complete_time = datetime.now()
-    with open(os.path.join(exp_path, f'{mode}_complete.txt'), 'w') as f:
-        f.write(f'{mode} is complete at: {complete_time.strftime("%Y-%m-%d %H:%M:%S")}')
-        if start_time is not None:
-            f.write(f'\n{mode} time: {str(complete_time - start_time)}')
-    
-    print(f'{mode} is complete at: {complete_time.strftime("%Y-%m-%d %H:%M:%S")}')
 
 
 def get_dataloader(is_train, batch_size, transform):
