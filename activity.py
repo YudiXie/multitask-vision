@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torchvision.models import resnet18, ResNet18_Weights
 from collections import defaultdict
@@ -5,7 +6,18 @@ import torchvision.transforms as transforms
 
 from dataset import HVMDataset
 
+
 def append_tuple(name, activity_dict, output):
+    """
+    append a tuple of output to activity_dict
+    the names in the tuple are automatically generated as 
+    name_1, name_2, name_3, ...
+    args:
+        name: the name of module to record activities
+        activity_dict: a collection.defaultdict with default factory function set to list
+            the activities will be stored in activity_dict[name]
+        output: a tuple of torch.Tensor
+    """
     for i_, otp in enumerate(output):
         new_name = name + '_' + str(i_ + 1)
         if isinstance(otp, tuple):
@@ -18,10 +30,12 @@ def append_tuple(name, activity_dict, output):
 
 def append_activations(name, activity_dict):
     """
-    Returns a hook function that can be registered with model layers
-        to obtain and store the output history of hidden activations in activation_dict
-    name: the name of module to record activities
-    activity_dict: a collection.defaultdict with default factory function set to list
+    Returns a hook function that can be registered with model layer
+    to obtain and store the output history of hidden activations in activation_dict
+    args:
+        name: the name of module to record activities
+        activity_dict: a collection.defaultdict with default factory function set to list
+            the activities will be stored in activity_dict[name]
     """
     assert isinstance(activity_dict, defaultdict) \
         and activity_dict.default_factory == list, 'activity_dict must be default dict'
@@ -37,8 +51,7 @@ def append_activations(name, activity_dict):
     return hook
 
 
-if __name__ == '__main__':
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+def get_activity(model, layers, remove_duplicates=lambda x: x):
 
     # Data preprocessing
     transform = transforms.Compose([
@@ -48,22 +61,44 @@ if __name__ == '__main__':
     ])
     dataset = HVMDataset(split='train', transform=transform)
 
-
-    layers = ['layer4.1.relu', 'avgpool']
-
-    batch_activity = defaultdict(list)
     all_activity = defaultdict(list)
 
     for name, m in model.named_modules():
-        if layers is None or name in layers:
-            m.register_forward_hook(append_activations(name, batch_activity))
+        if name in layers:
+            m.register_forward_hook(append_activations(name, all_activity))
 
-    for i in range(10):
-        sample = dataset[i]
-        image = sample['image']
-        print(image)
-        image = image.unsqueeze(0)
-        output = model(image)
-        for k, v in batch_activity.items():
-            all_activity[k].append(np.concatenate(v, axis=0))
-        batch_activity = defaultdict(list)
+    model.eval()
+    with torch.inference_mode():
+        for i in range(10):
+            sample = dataset[i]
+            image = sample['image']
+            image = image.unsqueeze(0)
+            output = model(image)
+            remove_duplicates(all_activity)
+
+    for k, v in all_activity.items():
+        activity = np.concatenate(v, axis=0)
+        # reduce extra dimensions
+        # so that the dimensions are (num_samples, num_neurons)
+        all_activity[k] = np.reshape(activity, (activity.shape[0], -1))
+        
+    return all_activity
+
+
+if __name__ == '__main__':
+
+    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    record_layers = ['layer4.1.relu', 'avgpool']
+    
+    def remove_resnet_duplicates(activity_dict):
+        # reduce the duplicate activations in resnet
+        # because the relu layer are used twice in resnet,
+        for k, v in activity_dict.items():
+            if '.relu' in k:
+                v.pop(-2)
+    remove_func = remove_resnet_duplicates
+
+    activations = get_activity(model=model, layers=record_layers,
+                               remove_duplicates=remove_func)
+
+    print(activations)
