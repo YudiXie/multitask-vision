@@ -69,10 +69,11 @@ def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
             (num_samples, num_neurons)
     """
     all_activity = defaultdict(list)
+    handles = defaultdict(list)
 
     for name, m in model.named_modules():
         if name in layers:
-            m.register_forward_hook(append_activations(name, all_activity))
+            handles[name] = m.register_forward_hook(append_activations(name, all_activity))
 
     model = model.to(DEVICE)
     model.eval()
@@ -88,6 +89,10 @@ def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
         # reduce extra dimensions
         # so that the dimensions are (num_samples, num_neurons)
         all_activity[k] = np.reshape(activity, (activity.shape[0], -1))
+    
+    # remove hooks
+    for k, v in handles.items():
+        v.remove()
         
     return all_activity
 
