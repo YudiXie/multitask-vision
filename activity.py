@@ -5,6 +5,7 @@ from collections import defaultdict
 import torchvision.transforms as transforms
 
 from dataset import HVMDataset
+from config_global import DEVICE
 
 
 def append_tuple(name, activity_dict, output):
@@ -51,29 +52,35 @@ def append_activations(name, activity_dict):
     return hook
 
 
-def get_activity(model, layers, remove_duplicates=lambda x: x):
-
-    # Data preprocessing
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    ])
-    dataset = HVMDataset(split='train', transform=transform)
-
+def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
+    """
+    get the activations of the model on the dataset
+    args:
+        dataset: a torch.utils.data.Dataset object,
+            input of the model is accessed by dataset[i]['image']
+        model: a torch.nn.Module object
+        layers: a list of layer names to record activations
+        remove_duplicates: a function that removes duplicate activations
+            default is identity function that do nothing
+    returns:
+        all_activity: a dict of activations 
+            for each specified layer (key in the dict)
+            all_activity[layer_name] is a numpy array of shape
+            (num_samples, num_neurons)
+    """
     all_activity = defaultdict(list)
 
     for name, m in model.named_modules():
         if name in layers:
             m.register_forward_hook(append_activations(name, all_activity))
 
+    model = model.to(DEVICE)
     model.eval()
     with torch.inference_mode():
-        for i in range(10):
-            sample = dataset[i]
-            image = sample['image']
+        for i in range(len(dataset)):
+            image = dataset[i]['image'].to(DEVICE)
             image = image.unsqueeze(0)
-            output = model(image)
+            _ignore = model(image)
             remove_duplicates(all_activity)
 
     for k, v in all_activity.items():
@@ -87,18 +94,27 @@ def get_activity(model, layers, remove_duplicates=lambda x: x):
 
 if __name__ == '__main__':
 
+    # Data preprocessing
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    ])
+    dataset = HVMDataset(split='train', transform=transform)
+
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     record_layers = ['layer4.1.relu', 'avgpool']
     
     def remove_resnet_duplicates(activity_dict):
         # reduce the duplicate activations in resnet
-        # because the relu layer are used twice in resnet,
+        # because the later relu layer are used twice in resnet,
         for k, v in activity_dict.items():
             if '.relu' in k:
                 v.pop(-2)
     remove_func = remove_resnet_duplicates
 
-    activations = get_activity(model=model, layers=record_layers,
+    activations = get_activity(dataset=dataset, model=model,
+                               layers=record_layers,
                                remove_duplicates=remove_func)
 
     print(activations)
