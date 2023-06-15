@@ -3,6 +3,7 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights
 from collections import defaultdict
 import torchvision.transforms as transforms
+from sklearn.linear_model import LinearRegression
 
 from dataset import HVMDataset
 from config_global import DEVICE
@@ -122,4 +123,17 @@ if __name__ == '__main__':
                                layers=record_layers,
                                remove_duplicates=remove_func)
 
-    print(activations)
+    
+    X = activations['avgpool']
+    y = np.array(dataset.normed_data_frame['s'])
+    reg = LinearRegression().fit(X, y)
+    print(reg.score(X, y))
+
+    val_dataset = HVMDataset(split='val', transform=transform)
+    val_activations = get_activity(dataset=val_dataset, model=model,
+                                   layers=record_layers,
+                                   remove_duplicates=remove_func)
+    X_val = val_activations['avgpool']
+    y_val = np.array(val_dataset.normed_data_frame['s'])
+
+    print((y_val - reg.predict(X_val)).mean())
