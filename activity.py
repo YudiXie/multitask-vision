@@ -10,6 +10,7 @@ from config_global import DEVICE
 from scipy import stats
 
 from brainio import get_assembly, get_stimulus_set
+from tqdm import tqdm
 
 
 def append_tuple(name, activity_dict, output):
@@ -155,7 +156,8 @@ def get_neural_activity(dataset, record_layers):
     activations = defaultdict(list)
     image_id_list = dataset.normed_data_frame['image_id']
     for layer in record_layers:
-        for image_id in image_id_list:
+        print(f'getting data for layer: {layer}')
+        for image_id in tqdm(image_id_list):
             act = dataassy_mean.sel(region=layer, stimulus_id=image_id).values.squeeze()
             activations[layer].append(act)
         activations[layer] = np.stack(activations[layer], axis=0) 
