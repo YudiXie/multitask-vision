@@ -1,12 +1,13 @@
 import numpy as np
 import torch
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet18, ResNet18_Weights, ResNet
 from collections import defaultdict
 import torchvision.transforms as transforms
 from sklearn.linear_model import LinearRegression
 
 from dataset import HVMDataset
 from config_global import DEVICE
+from scipy import stats
 
 
 def append_tuple(name, activity_dict, output):
@@ -98,7 +99,15 @@ def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
     return all_activity
 
 
-if __name__ == '__main__':
+def get_activity_on_dataset(model, record_layers: list):
+    """
+    get the activations of the model on the dataset
+    args:
+        model: a torch.nn.Module object
+        record_layers: a list of layer names to record activations
+    returns:
+        data: a dict of activations and datasets
+    """
 
     # Data preprocessing
     transform = transforms.Compose([
@@ -106,11 +115,8 @@ if __name__ == '__main__':
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     ])
-    dataset = HVMDataset(split='train', transform=transform)
-
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    record_layers = ['layer4.1.relu', 'avgpool']
     
+    assert isinstance(model, ResNet), 'model must be a resnet'
     def remove_resnet_duplicates(activity_dict):
         # reduce the duplicate activations in resnet
         # because the later relu layer are used twice in resnet,
@@ -119,21 +125,45 @@ if __name__ == '__main__':
                 v.pop(-2)
     remove_func = remove_resnet_duplicates
 
-    activations = get_activity(dataset=dataset, model=model,
-                               layers=record_layers,
-                               remove_duplicates=remove_func)
+    # train a linear regression model
+    train_dataset = HVMDataset(split='train', transform=transform)
+    train_activations = get_activity(dataset=train_dataset, model=model,
+                                     layers=record_layers,
+                                     remove_duplicates=remove_func)
 
-    
-    X = activations['avgpool']
-    y = np.array(dataset.normed_data_frame['s'])
-    reg = LinearRegression().fit(X, y)
-    print(reg.score(X, y))
-
+    # validate regression model
     val_dataset = HVMDataset(split='val', transform=transform)
     val_activations = get_activity(dataset=val_dataset, model=model,
                                    layers=record_layers,
                                    remove_duplicates=remove_func)
-    X_val = val_activations['avgpool']
-    y_val = np.array(val_dataset.normed_data_frame['s'])
+    
+    data = {}
+    data['train_activations'] = train_activations
+    data['val_activations'] = val_activations
+    data['train_dataset'] = train_dataset
+    data['val_dataset'] = val_dataset
+    
+    return data
 
-    print((y_val - reg.predict(X_val)).mean())
+
+def evaluate_regression(layer, target, 
+                        train_activations, val_activations, 
+                        train_dataset, val_dataset):
+    X_train = train_activations[layer]
+    y_train = np.array(train_dataset.normed_data_frame[target])
+
+    # fit regression model
+    reg = LinearRegression().fit(X_train, y_train)
+    # print(reg.score(X, y))
+
+    X_val = val_activations[layer]
+    y_val = np.array(val_dataset.normed_data_frame[target])
+
+    return stats.pearsonr(reg.predict(X_val), y_val)
+
+
+if __name__ == '__main__':
+    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    data = get_activity_on_dataset(model, ['layer3.1.relu', 'avgpool'])
+    evaluate_regression('layer3.1.relu', 's', **data)
+    evaluate_regression('avgpool', 's', **data)
