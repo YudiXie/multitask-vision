@@ -9,6 +9,8 @@ from dataset import HVMDataset
 from config_global import DEVICE
 from scipy import stats
 
+from brainio import get_assembly, get_stimulus_set
+
 
 def append_tuple(name, activity_dict, output):
     """
@@ -125,17 +127,58 @@ def get_activity_on_dataset(model, record_layers: list):
                 v.pop(-2)
     remove_func = remove_resnet_duplicates
 
-    # train a linear regression model
+    # train data
     train_dataset = HVMDataset(split='train', transform=transform)
     train_activations = get_activity(dataset=train_dataset, model=model,
                                      layers=record_layers,
                                      remove_duplicates=remove_func)
 
-    # validate regression model
+    # validation data
     val_dataset = HVMDataset(split='val', transform=transform)
     val_activations = get_activity(dataset=val_dataset, model=model,
                                    layers=record_layers,
                                    remove_duplicates=remove_func)
+    
+    data = {}
+    data['train_activations'] = train_activations
+    data['val_activations'] = val_activations
+    data['train_dataset'] = train_dataset
+    data['val_dataset'] = val_dataset
+    
+    return data
+
+
+def get_neural_activity(dataset, record_layers):
+    hvm_assy = get_assembly(identifier="dicarlo.MajajHong2015")
+    dataassy_mean = hvm_assy.groupby('stimulus_id').mean()
+
+    activations = defaultdict(list)
+    image_id_list = dataset.normed_data_frame['image_id']
+    for layer in record_layers:
+        for image_id in image_id_list:
+            act = dataassy_mean.sel(region=layer, stimulus_id=image_id).values.squeeze()
+            activations[layer].append(act)
+        activations[layer] = np.stack(activations[layer], axis=0) 
+
+    return activations
+
+
+def get_neural_activity_on_dataset(record_layers: list):
+    """
+    get the neural activations of the dataset
+    args:
+        record_layers: a list of layer names to record activations
+    returns:
+        data: a dict of activations and datasets
+    """
+
+    # train data
+    train_dataset = HVMDataset(split='train')
+    train_activations = get_neural_activity(train_dataset, record_layers)
+
+    # validation data
+    val_dataset = HVMDataset(split='val')
+    val_activations = get_neural_activity(val_dataset, record_layers)
     
     data = {}
     data['train_activations'] = train_activations
