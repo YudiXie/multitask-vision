@@ -194,23 +194,24 @@ def get_neural_activity_on_dataset(record_layers: list):
 def evaluate_regression(layer, target, 
                         train_activations, val_activations, 
                         train_dataset, val_dataset,
-                        downsample_number=128):
+                        downsample_number=None):
     
     X_train = train_activations[layer]
-    # downsample to have equal number of neurons
-    print(f'Downsampling to have {downsample_number} neurons')
-    sample_idx = np.random.choice(X_train.shape[1], downsample_number, replace=False)
-    X_train = X_train[:, sample_idx]
+    X_val = val_activations[layer]
+
     y_train = np.array(train_dataset.normed_data_frame[target])
+    y_val = np.array(val_dataset.normed_data_frame[target])
+
+    if downsample_number is not None:
+        print(f'Downsampling to have {downsample_number} neurons')
+        sample_idx = np.random.choice(X_train.shape[1], downsample_number, 
+                                      replace=False)
+        X_train = X_train[:, sample_idx]
+        X_val = X_val[:, sample_idx]
 
     # fit regression model
     reg = LinearRegression().fit(X_train, y_train)
     # print(reg.score(X, y))
-
-    X_val = val_activations[layer]
-    X_val = X_val[:, sample_idx]
-    y_val = np.array(val_dataset.normed_data_frame[target])
-
     return stats.pearsonr(reg.predict(X_val), y_val)
 
 
