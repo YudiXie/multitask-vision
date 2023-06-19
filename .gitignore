@@ -170,3 +170,4 @@ slurm_output/
 experiments/
 .idea/
 *.pdf
+test_debug.py
