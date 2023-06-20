@@ -3,7 +3,7 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights, ResNet
 from collections import defaultdict
 import torchvision.transforms as transforms
-from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
 
 from dataset import HVMDataset
 from config_global import DEVICE
@@ -210,7 +210,8 @@ def evaluate_regression(layer, target,
         X_val = X_val[:, sample_idx]
 
     # fit regression model
-    reg = LinearRegression().fit(X_train, y_train)
+    alphas = [1e-4, 1e-3, 1e-2, 5e-2, 1e-1, 2.5e-1, 5e-1, .75e-1, 1e0, 2.5e0, 5e0, 1e1, 25, 1e2, 1e3]
+    reg = linear_model.RidgeCV(alphas=alphas).fit(X_train, y_train)
     # print(reg.score(X, y))
     return stats.pearsonr(reg.predict(X_val), y_val)
 
