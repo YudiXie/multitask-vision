@@ -17,7 +17,7 @@ from utils import load_config, log_complete
 task2targets_name = {
     'category_class': ['category_label'],
     'object_class': ['object_label'],
-    'rotation_reg': ['rxy', 'rxz', 'ryz'],
+    'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
     'size_reg': ['s'],
     'translation_reg': ['ty', 'tz'],
 }

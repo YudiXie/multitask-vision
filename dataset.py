@@ -42,10 +42,8 @@ class HVMDataset(Dataset):
 
     # all collums in the stimulus set
     all_collums = ['id', 'background_id', 's', 'image_id', 'image_file_name', 'filename', 'rxy', 'tz', 'category_name', 'rxz_semantic', 'ty', 'ryz', 'object_name', 'variation', 'size', 'rxy_semantic', 'ryz_semantic', 'rxz']
-    # collums that need to be predicted
-    pred_collums = ['category_name', 'object_name', 's', 'ty', 'tz', 'rxy', 'rxz', 'ryz']
     # collums that need to be normalized
-    norm_collums = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz']
+    norm_collums = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz', 'rxy_semantic', 'rxz_semantic', 'ryz_semantic']
 
     def __init__(self, 
                  csv_file='./data/image_dicarlo_hvm.csv', 
