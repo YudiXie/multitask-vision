@@ -38,13 +38,16 @@ task2output_range = {
     'translation_reg': [76, 78],
 }
 
-task2weights = {
-    'category_class': 0.2,
-    'object_class': 0.2,
-    'rotation_reg': 0.2,
-    'size_reg': 0.2,
-    'translation_reg': 0.2,
-}
+# used to set the weights of the different tasks by hand
+# note that when less than 5 tasks are used, the weights should be adjusted
+# so that they sum to 1
+# task2weights = {
+#     'category_class': 0.2,
+#     'object_class': 0.2,
+#     'rotation_reg': 0.2,
+#     'size_reg': 0.2,
+#     'translation_reg': 0.2,
+# }
 
 
 def get_dataloader(is_train, batch_size, transform):
@@ -97,7 +100,10 @@ def validate_model(model,
                 batch_loss_dict[task] = task_loss
                 val_task_loss[task] += task_loss.item() * batch_size
             
-            batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
+            task_weight = 1 / len(task_list)
+            batch_val_loss = [v.item() * task_weight for k, v in batch_loss_dict.items()]
+            # used to calculate weighted loss specified by hand
+            # batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
             val_loss += sum(batch_val_loss) * batch_size
 
             # Compute accuracy and accumulate
@@ -228,7 +234,10 @@ def train_model(config):
                 task_outputs = outputs[:, out_range[0]:out_range[1]]
                 task_loss_dict[task] = task2loss_func[task](task_outputs, task_targets)
             
-            weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
+            task_weight = 1.0 / len(config.tasks)
+            weighted_loss = [v * task_weight for k, v in task_loss_dict.items()]
+            # used to calculate weighted loss specified by hand
+            # weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
             train_loss = 0.0
             for loss in weighted_loss:
                 train_loss += loss
