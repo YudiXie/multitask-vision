@@ -20,17 +20,24 @@ def setup_config_list():
             'translation_reg',
             ],
         'model_archi': 'resnet18',
-        'experiment_name': 'multi_task_0610',
+        'experiment_name': 'multi_task_0620',
         'save_path': './experiments/',
         }
 
     task_set_dict = {
-        'multi_task': ['category_class', 'object_class', 'rotation_reg', 'size_reg', 'translation_reg'],
-        'categorization': ['category_class'],
-        'multi_task_wo_object_class': ['category_class', 'rotation_reg', 'size_reg', 'translation_reg'],
         'size_reg': ['size_reg'],
         'translation_reg': ['translation_reg'],
         'rotation_reg': ['rotation_reg'],
+
+        'size_translation': ['size_reg', 'translation_reg'],
+        'size_rotation': ['size_reg', 'rotation_reg'],
+        'translation_rotation': ['translation_reg', 'rotation_reg'],
+
+        'size_translation_rotation': ['size_reg', 'translation_reg', 'rotation_reg'],
+
+        'categorization': ['category_class'],
+        'multi_task_wo_object_class': ['category_class', 'rotation_reg', 'size_reg', 'translation_reg'],
+        'multi_task': ['category_class', 'object_class', 'rotation_reg', 'size_reg', 'translation_reg'],
     }
     seed_list = [0, 1, 2, 3, 4]
     
