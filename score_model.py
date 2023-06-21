@@ -16,6 +16,7 @@ from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE, EXP_DIR
 from utils import load_config, log_complete
+from exp_config_list import setup_config_list
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -37,13 +38,13 @@ resnet18layerlist = [
 ]
 
 
-benchmark_list = [
-    'movshon.FreemanZiemba2013public.V1-pls',
-    'movshon.FreemanZiemba2013public.V2-pls',
-    'dicarlo.MajajHong2015public.V4-pls',
-    'dicarlo.MajajHong2015public.IT-pls',
-    'dicarlo.Rajalingham2018public-i2n',
-    ]
+benchmark_dict = {
+    'V1': 'movshon.FreemanZiemba2013public.V1-pls',
+    'V2': 'movshon.FreemanZiemba2013public.V2-pls',
+    'V4': 'dicarlo.MajajHong2015public.V4-pls',
+    'IT': 'dicarlo.MajajHong2015public.IT-pls',
+    'Behavior': 'dicarlo.Rajalingham2018public-i2n',
+    }
 
 
 def get_layer_commitment(model: ModelCommitment):
@@ -53,11 +54,13 @@ def get_layer_commitment(model: ModelCommitment):
     args:
         model: ModelCommitment object
     """
-    print(f'model_identifier: {model.identifier}')
-    print('V1 region:', model.layer_model.region_layer_map['V1'])
-    print('V2 region:', model.layer_model.region_layer_map['V2'])
-    print('V4 region:', model.layer_model.region_layer_map['V4'])
-    print('IT region:', model.layer_model.region_layer_map['IT'])
+    layer_map = {}
+    layer_map['V1'] = model.layer_model.region_layer_map['V1']
+    layer_map['V2'] = model.layer_model.region_layer_map['V2']
+    layer_map['V4'] = model.layer_model.region_layer_map['V4']
+    layer_map['IT'] = model.layer_model.region_layer_map['IT']
+    # layer_map['Behavior']
+    return layer_map
 
 
 def prepare_model(model_identifier: str, load_path: str = '') -> ModelCommitment:
@@ -126,8 +129,8 @@ def prepare_and_score_model(config):
     model = prepare_model(model_id, model_save_path)
 
     start_time = datetime.now()
-    for benchmark in benchmark_list:
-        score_model_on_a_benchmark(model, benchmark)
+    for region, benchmark_id in benchmark_dict.items():
+        score_model_on_a_benchmark(model, benchmark_id)
     
     complete_time = datetime.now()
     print(f'Scoring time for all benchmarks: {str(complete_time - start_time)}')
@@ -139,49 +142,44 @@ def prepare_and_score_model_slurm(config_path):
     prepare_and_score_model(config)
 
 
-def score_model_on_benchmarks_save(model: ModelCommitment, save_df, exp_group):
-    for benchmark in benchmark_list:
-        score = score_model_on_a_benchmark(model, benchmark)
+def save_model_scores(model: ModelCommitment, save_df, exp_group):
+    layer_map = get_layer_commitment(model)
+    layer_map['Behavior'] = 'avgpool'
+    for region, benchmark_id in benchmark_dict.items():
+        score = score_model_on_a_benchmark(model, benchmark_id)
         save_df = save_df.append({'model': model.identifier, 
-                                  'benchmark': benchmark, 
+                                  'benchmark_region': region, 
+                                  'benchmark_id': benchmark_id,
+                                  'mapped_layer': layer_map[region],
                                   'score': score.sel(aggregation='center').values, 
                                   'error': score.sel(aggregation='error').values,
-                                  'exp_group': exp_group}, ignore_index=True)
+                                  'exp_group': exp_group,
+                                  }, 
+                                  ignore_index=True)
     return save_df
 
 
 if __name__ == '__main__':
-    exp_name = 'multi_task_0610'
-    number_runs = 30
-
-    save_df = pd.DataFrame(columns=['model', 'benchmark', 'score', 'error', 'exp_group'])
+    save_df = pd.DataFrame(columns=['model',
+                                    'benchmark_region',
+                                    'benchmark_id',
+                                    'mapped_layer',
+                                    'score',
+                                    'error',
+                                    'exp_group',
+                                    ])
     
     # score pre-trained model
-    model = prepare_model(f'{exp_name}-resnet18-pret')
-    get_layer_commitment(model)
-    save_df = score_model_on_benchmarks_save(model, save_df, exp_group='Pre-trained')
+    model = prepare_model('mt0527-resnet18-pret')
+    save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
-    # score experiments models
-    for run_id in range(number_runs):
+    config_list = setup_config_list()
+    for config in config_list:
+        model_id = '-'.join([config['experiment_name'], 
+                             config['model_archi'], str(config['run_id'])])
+        model_save_path = os.path.join(config['save_path'], 'model.pth')
 
-        if run_id < 5:
-            exp_group = 'Multi-task'
-        elif run_id < 10:
-            exp_group = 'Categorization'
-        elif run_id < 15:
-            exp_group = 'Multi_task_wo_object_class'
-        elif run_id < 20:
-            exp_group = 'Size_reg'
-        elif run_id < 25:
-            exp_group = 'Translation_reg'
-        else:
-            exp_group = 'Rotation_reg'
-
-        load_path = os.path.join(EXP_DIR, f'{exp_name}', f'run_{run_id:04d}', 'model.pth')
-        model = prepare_model(model_identifier=f'{exp_name}-resnet18-{run_id}', 
-                              load_path=load_path)
-        get_layer_commitment(model)
-        save_df = score_model_on_benchmarks_save(model, save_df, exp_group=exp_group)
-        
-            
-    save_df.to_csv(os.path.join(EXP_DIR, exp_name, 'resnet18_brainscore_results.csv'))
+        model = prepare_model(model_identifier=model_id, load_path=model_save_path)
+        save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
+    
+    save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
