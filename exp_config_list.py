@@ -3,27 +3,28 @@ import copy
 from config_global import EXP_DIR
 
 
-def setup_config_list():
-    base_config = {
-        'seed': 0,
-        'run_id': 0,
-        'batch_size': 64,
-        'lr': 1e-3,
-        'max_batch': 1000,
-        'eval_per': 10,
-        'group_name': 'multi_task',
-        'tasks': [
-            'category_class',
-            'object_class',
-            'rotation_reg',
-            'size_reg',
-            'translation_reg',
-            ],
-        'model_archi': 'resnet18',
-        'experiment_name': 'multi_task_0620',
-        'save_path': './experiments/',
-        }
+base_config = {
+    'seed': 0,
+    'run_id': 0,
+    'batch_size': 64,
+    'lr': 1e-3,
+    'max_batch': 1000,
+    'eval_per': 10,
+    'group_name': 'multi_task',
+    'tasks': [
+        'category_class',
+        'object_class',
+        'rotation_reg',
+        'size_reg',
+        'translation_reg',
+        ],
+    'model_archi': 'resnet18',
+    'experiment_name': 'multi_task_0620',
+    'save_path': './experiments/',
+    }
 
+
+def multi_task_0620():
     task_set_dict = {
         'size_reg': ['size_reg'],
         'translation_reg': ['translation_reg'],
@@ -55,5 +56,4 @@ def setup_config_list():
             cfg['run_id'] = run_id
             config_list.append(cfg)
             run_id += 1
-    
     return config_list

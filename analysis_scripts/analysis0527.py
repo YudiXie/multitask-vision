@@ -1,7 +1,6 @@
 import os
 from config_global import EXP_DIR
 import pandas as pd
-from exp_config_list import setup_config_list
 from analysis import bar_2par, two_set_scatter_plot
 
 df = pd.read_csv(os.path.join(EXP_DIR, 'multi_task_vs_categorization0527', 'mt0527_resnet18.csv'), index_col=0)

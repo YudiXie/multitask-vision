@@ -6,7 +6,7 @@ import argparse
 from train import train_model
 from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, CONDA_SCORE_ENV
 from utils import save_config
-from exp_config_list import setup_config_list
+import exp_config_list
 from score_model import prepare_and_score_model
 
 
@@ -133,6 +133,7 @@ if __name__ == '__main__':
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--do', help='Kind of operation to do')
+    parser.add_argument('-n', '--name', help='Name of the experiment')
 
     parser.add_argument('-c', '--cluster', action='store_true', help='Use batch submission on cluster')
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 
     assert args.do in ['train', 'score'], 'Unknown operation: ' + args.do
 
-    config_list = setup_config_list()
+    config_list = getattr(exp_config_list, args.name)()
 
     # check if experiments are finished
     if args.missing:

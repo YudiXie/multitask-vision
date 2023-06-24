@@ -16,7 +16,7 @@ from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE, EXP_DIR
 from utils import load_config, log_complete
-from exp_config_list import setup_config_list
+from exp_config_list import multi_task_0620
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     model = prepare_model('mt0527-resnet18-pret')
     save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
-    config_list = setup_config_list()
+    config_list = multi_task_0620()
     for config in config_list:
         model_id = '-'.join([config['experiment_name'], 
                              config['model_archi'], str(config['run_id'])])
