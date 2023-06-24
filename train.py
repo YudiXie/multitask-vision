@@ -14,6 +14,8 @@ from dataset import HVMDataset
 from utils import load_config, log_complete
 
 
+cat_reduced_tasks = ['cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8']
+
 task2targets_name = {
     'cat2': ['cat_label_reduce2'],
     'cat3': ['cat_label_reduce3'],
@@ -97,6 +99,7 @@ def validate_model(model,
     val_task_loss = {task: 0.0 for task in task_list}
     category_correct = 0
     object_correct = 0
+    cat_red_correct = 0  # assumes that only one reduece categorization task is used
     image_ct = 0
     model.eval()
     with torch.inference_mode():
@@ -149,10 +152,22 @@ def validate_model(model,
                 _, predicted = torch.max(outputs[:, 8:72], 1)
                 object_label = data['object_label'].to(DEVICE)
                 object_correct += (predicted == object_label).sum().item()
+            
+            for task in task_list:
+                if task in cat_reduced_tasks:
+                    reduced_index = task[-1]
+                    out_range = task2output_range[task]
+                    _, predicted = torch.max(outputs[:, out_range[0]:out_range[1]], 1)
+                    cat_red_label = data['cat_label_reduce' + reduced_index].to(DEVICE)
+                    cat_red_correct += (predicted == cat_red_label).sum().item()
         
         return_dict = {}
         for task in task_list:
             return_dict[f'val_{task}_loss'] = val_task_loss[task] / image_ct
+            
+            if task in cat_reduced_tasks:
+                return_dict['val_' + task + '_acc'] = cat_red_correct / image_ct
+            
         if 'category_class' in task_list:
             return_dict['val_category_acc'] = category_correct / image_ct
         if 'object_class' in task_list:
