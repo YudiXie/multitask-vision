@@ -15,6 +15,13 @@ from utils import load_config, log_complete
 
 
 task2targets_name = {
+    'cat2': ['cat_label_reduce2'],
+    'cat3': ['cat_label_reduce3'],
+    'cat4': ['cat_label_reduce4'],
+    'cat5': ['cat_label_reduce5'],
+    'cat6': ['cat_label_reduce6'],
+    'cat7': ['cat_label_reduce7'],
+    'cat8': ['cat_label_reduce8'],
     'category_class': ['category_label'],
     'object_class': ['object_label'],
     'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
@@ -23,6 +30,13 @@ task2targets_name = {
 }
 
 task2loss_func = {
+    'cat2': nn.CrossEntropyLoss(),
+    'cat3': nn.CrossEntropyLoss(),
+    'cat4': nn.CrossEntropyLoss(),
+    'cat5': nn.CrossEntropyLoss(),
+    'cat6': nn.CrossEntropyLoss(),
+    'cat7': nn.CrossEntropyLoss(),
+    'cat8': nn.CrossEntropyLoss(),
     'category_class': nn.CrossEntropyLoss(),
     'object_class': nn.CrossEntropyLoss(),
     'rotation_reg': nn.MSELoss(),
@@ -31,6 +45,13 @@ task2loss_func = {
 }
 
 task2output_range = {
+    'cat2': (0, 2),
+    'cat3': (0, 3),
+    'cat4': (0, 4),
+    'cat5': (0, 5),
+    'cat6': (0, 6),
+    'cat7': (0, 7),
+    'cat8': (0, 8), # equvalent to category_class
     'category_class': (0, 8),
     'object_class': (8, 72),
     'rotation_reg': [72, 75],
@@ -91,12 +112,15 @@ def validate_model(model,
                 for target_name in task2targets_name[task]:
                     task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
-                if task[-5:] == 'class':
+                
+                task_loss_func = task2loss_func[task]
+                if isinstance(task_loss_func, nn.CrossEntropyLoss):
                     task_targets = task_targets.squeeze(-1)
 
                 out_range = task2output_range[task]
                 task_outputs = outputs[:, out_range[0]:out_range[1]]
-                task_loss = task2loss_func[task](task_outputs, task_targets)
+
+                task_loss = task_loss_func(task_outputs, task_targets)
                 batch_loss_dict[task] = task_loss
                 val_task_loss[task] += task_loss.item() * batch_size
             
@@ -227,12 +251,15 @@ def train_model(config):
                     # data[target_name] is a tensor of shape (batch_size, )
                     task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
-                if task[-5:] == 'class':
+
+                task_loss_func = task2loss_func[task]
+                if isinstance(task_loss_func, nn.CrossEntropyLoss):
                     task_targets = task_targets.squeeze(-1)
 
                 out_range = task2output_range[task]
                 task_outputs = outputs[:, out_range[0]:out_range[1]]
-                task_loss_dict[task] = task2loss_func[task](task_outputs, task_targets)
+
+                task_loss_dict[task] = task_loss_func(task_outputs, task_targets)
             
             task_weight = 1.0 / len(config.tasks)
             weighted_loss = [v * task_weight for k, v in task_loss_dict.items()]

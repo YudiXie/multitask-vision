@@ -104,6 +104,10 @@ class HVMDataset(Dataset):
         sample = {'image': image}
         sample['category_label'] = self.category_str2int[self.normed_data_frame.loc[idx, 'category_name']]
         sample['object_label'] = self.object_str2int[self.normed_data_frame.loc[idx, 'object_name']]
+        
+        for i in range(2, 9):
+            # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
+            sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
 
         for collum in self.norm_collums:
             sample[collum] = self.normed_data_frame.loc[idx, collum]
