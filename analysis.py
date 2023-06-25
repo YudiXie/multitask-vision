@@ -187,20 +187,27 @@ def bar_2par(data,
              show=True,
              ):
     """
-        make a bar plot of the performance from a config_df
-        that has two varying parameters and different random seeds.
+        make a bar plot of the performance with error bars
+        that has two varying parameters
         each first variable parameter dimension is a group of bars with the same color
         second variable parameters are different bars on the x axis
 
         args:
-            data: dict, the data to plot, keys are the group names, values are the data
+            data: dict, the data to plot, 
+                each key is one elements in group_names
+                each value is a list or array that determine the heights of bars
+                assume values are all lists of the same length
             x_axis_labels: list, the labels for the x axis
-            group_names: list, a list of strings that are the names of the groups 
-                each group has many bars with the same color, 
+                len(x_axis_labels) is the same as the length of the lists in data
+            group_names: list, a list of strings that are the names of the groups
+                each group has many bars with the same color,
+                this determines the order of colors in the plot
                 shown from left to right in the order of the groups
+                assume all elements in group_names are keys in data
             data_err: dict, the error bar data, keys are the group names,
                 not all keys in the data is required to have error bar data
                 values are the error bar data
+            fig_name: str, the name of the figure to be saved
     """
     num_groups = len(group_names)
     width = 0.7 / num_groups  # the width of the bars
