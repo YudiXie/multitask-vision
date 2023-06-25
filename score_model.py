@@ -2,6 +2,7 @@ import os
 import functools
 import time
 from datetime import datetime
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -16,7 +17,7 @@ from model_tools.brain_transformation import ModelCommitment
 
 from config_global import DEVICE, EXP_DIR
 from utils import load_config, log_complete
-from exp_config_list import multi_task_0620
+import exp_config_list
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -143,6 +144,9 @@ def prepare_and_score_model_slurm(config_path):
 
 
 def save_model_scores(model: ModelCommitment, save_df, exp_group):
+    """
+    read model score on benchmarks and append to save_df
+    """
     layer_map = get_layer_commitment(model)
     layer_map['Behavior'] = 'avgpool'
     for region, benchmark_id in benchmark_dict.items():
@@ -159,7 +163,14 @@ def save_model_scores(model: ModelCommitment, save_df, exp_group):
     return save_df
 
 
-if __name__ == '__main__':
+def save_exp_scores(exp_name):
+    """
+    save model scores for all models in an experiment
+    alone with pre-trained models
+    to brainscore_results.csv in the experiment folder
+    """
+    config_list = getattr(exp_config_list, exp_name)()
+
     save_df = pd.DataFrame(columns=['model',
                                     'benchmark_region',
                                     'benchmark_id',
@@ -169,11 +180,11 @@ if __name__ == '__main__':
                                     'exp_group',
                                     ])
     
-    # score pre-trained model
+    # save score for pre-trained model
     model = prepare_model('mt0527-resnet18-pret')
     save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
-    config_list = multi_task_0620()
+    # save score for models specified by experiment config list
     for config in config_list:
         model_id = '-'.join([config['experiment_name'], 
                              config['model_archi'], str(config['run_id'])])
@@ -183,3 +194,12 @@ if __name__ == '__main__':
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
+
+
+if __name__ == '__main__':
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--name', help='Name of the experiment')
+    args = parser.parse_args()
+
+    save_exp_scores(args.name)
