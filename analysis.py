@@ -175,7 +175,7 @@ def bar_2par(data,
              x_axis_labels,
              group_names,
              data_err={},
-             exp_name='exp',
+             folder_name='exp',
              fig_name='fig',
              legend_title="Groups:",
              x_label=None,
@@ -207,6 +207,7 @@ def bar_2par(data,
             data_err: dict, the error bar data, keys are the group names,
                 not all keys in the data is required to have error bar data
                 values are the error bar data
+            folder_name: str, the name of the folder to save the figure
             fig_name: str, the name of the figure to be saved
     """
     num_groups = len(group_names)
@@ -247,8 +248,8 @@ def bar_2par(data,
     plt.title(fig_title)
 
     adjust_figure()
-    os.makedirs(os.path.join(FIG_DIR, exp_name), exist_ok=True)
-    plt.savefig(os.path.join(FIG_DIR, exp_name, fig_name + '.pdf'), transparent=True)
+    os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
+    plt.savefig(os.path.join(FIG_DIR, folder_name, fig_name + '.pdf'), transparent=True)
     if show:
         plt.show()
     plt.close()
@@ -257,7 +258,11 @@ def bar_2par(data,
 def scatter_errorbar(data_dict,
                      x_label=None,
                      y_label='Performance',
-                     additional_plots=None):
+                     additional_plots=None,
+                     folder_name='exp',
+                     fig_name='fig',
+                     show=True,
+                     ):
     """
         make a scatter plot with error bars
         args:
@@ -287,7 +292,10 @@ def scatter_errorbar(data_dict,
         for plot in additional_plots:
             plot()
     
-    adjust_figure()
     plt.legend()
-    plt.show()
+    adjust_figure()
+    os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
+    plt.savefig(os.path.join(FIG_DIR, folder_name, fig_name + '.pdf'), transparent=True)
+    if show:
+        plt.show()
     plt.close()
