@@ -254,6 +254,40 @@ def bar_2par(data,
     plt.close()
 
 
-if __name__ == '__main__':
-    pass
+def scatter_errorbar(data_dict,
+                     x_label=None,
+                     y_label='Performance',
+                     additional_plots=None):
+    """
+        make a scatter plot with error bars
+        args:
+            data_dict: dict, the data to plot,
+                each key is the group label of a set of points
+                each value is a dict with keys 'x', 'y', 'error'
+                they are list or array of the same length
+                'x' is the x axis data
+                'y' is the y axis data
+                'error' is the error bar data, which is optional
+            additional_plots: list, a list of functions that plot additional 
+                things on the same figure, functions will be called without arguements
+    """
+    for key, value in data_dict.items():
+        kwargs = {}
+        if 'error' in value:
+            kwargs.update({'yerr': value['error']})
+        plt.errorbar(value['x'], value['y'], fmt="o", label=key, **kwargs)
+    
+    if x_label is not None:
+        plt.xlabel(x_label)
 
+    if y_label is not None:
+        plt.ylabel(y_label)
+    
+    if additional_plots is not None:
+        for plot in additional_plots:
+            plot()
+    
+    adjust_figure()
+    plt.legend()
+    plt.show()
+    plt.close()
