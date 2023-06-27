@@ -148,18 +148,18 @@ def get_activity_on_dataset(model, record_layers: list):
     return data
 
 
-def get_neural_activity(dataset, record_layers):
+def get_neural_activity(image_id_list, record_regions):
     """
     get the neural activity of the dataset
     args:
-        dataset: a torch.utils.data.Dataset object,
-            input of the model is accessed by dataset[i]['image']
-        record_layers: a list of layer names to record activations
+        image_id_list: a list of image id to record activations
+        record_regions: a list of region names to record activations
+            eg. ['V4', 'IT']
     returns:
         activations: a dict of activations
-            for each specified layer (key in the dict)
-            activations[layer_name] is a numpy array of shape
-            (num_samples, num_neurons)
+            each key is the region names
+            each value is a numpy array of shape (num_images, num_neurons)
+                that are the activations of the images in image_id_list
     """
     # 128 V4 neurons, 168 IT neurons, 5760 images
     # (296, 268800, 1) arrary (neuroid, presentation, time_bin)
@@ -168,66 +168,88 @@ def get_neural_activity(dataset, record_layers):
     dataassy_mean = hvm_assy.groupby('stimulus_id').mean()
 
     activations = {}
-    imgid_list = list(dataset.normed_data_frame['image_id'])
-    for layer in record_layers:
-        layer_act = dataassy_mean.sel(region=layer, stimulus_id=imgid_list).values
-        activations[layer] = layer_act.squeeze().transpose()
+    for rg in record_regions:
+        region_act = dataassy_mean.sel(region=rg, stimulus_id=image_id_list).values
+        activations[rg] = region_act.squeeze().transpose()
     return activations
 
 
-def get_neural_activity_on_dataset(record_layers: list):
+def get_neural_activity_on_dataset(record_regions: list, target: str):
     """
     get the neural activations of the dataset
     args:
-        record_layers: a list of layer names to record activations
+        record_regions: a list of region names to record activations
+        target: a string of target to record activations, eg. 's'
     returns:
-        data: a dict of activations and datasets
+        data: a dict of activations and targets
+            train_activations: a dict of activations
+
     """
 
-    # train data
-    train_dataset = HVMDataset(split='train')
-    train_activations = get_neural_activity(train_dataset, record_layers)
+    # all neural data 5760 images in total
+    dataset = HVMDataset(split='all')
+    imgid_list = list(dataset.normed_data_frame['image_id'])
+    all_activations = get_neural_activity(imgid_list, record_regions)
 
-    # validation data
-    val_dataset = HVMDataset(split='val')
-    val_activations = get_neural_activity(val_dataset, record_layers)
+    # create train and validation split
+    # train 4608 images, val 1152 images
+    data_len = len(dataset)
+    permuted_index = np.random.permutation(data_len)
+    train_len = int(data_len * 0.8)
+    train_index = permuted_index[:train_len]
+    val_index = permuted_index[train_len:]
+
+    train_activations = {}
+    val_activations = {}
+    for region, activity in all_activations.items():
+        train_activations[region] = activity[train_index]
+        val_activations[region] = activity[val_index]
     
+    all_target = dataset.normed_data_frame[target].to_numpy(copy=True)
+    train_target = all_target[train_index]
+    val_target = all_target[val_index]
+
     data = {}
-    data['train_activations'] = train_activations
-    data['val_activations'] = val_activations
-    data['train_dataset'] = train_dataset
-    data['val_dataset'] = val_dataset
-    
+    data['train_activity'] = train_activations
+    data['val_activity'] = val_activations
+    data['train_target'] = train_target
+    data['val_target'] = val_target
     return data
 
 
-def evaluate_regression(layer, target, 
-                        train_activations, val_activations, 
-                        train_dataset, val_dataset,
+def evaluate_regression(train_activity, val_activity, 
+                        train_target, val_target,
                         downsample_number=None):
-    
-    X_train = train_activations[layer]
-    X_val = val_activations[layer]
-
-    y_train = np.array(train_dataset.normed_data_frame[target])
-    y_val = np.array(val_dataset.normed_data_frame[target])
+    """
+    evaluate the regression model on the dataset
+    args:
+        train_activity: ndarray of shape (num_train_images, num_neurons)
+        val_activity: ndarray of shape (num_val_images, num_neurons)
+        train_target: ndarray of shape (num_train_images,)
+        val_target: ndarray of shape (num_val_images,)
+        downsample_number: int, number of neurons to downsample to
+    returns:
+        correlation coefficient, p-value
+    """
+    assert train_activity.shape[1] == val_activity.shape[1]
+    num_neurons = train_activity.shape[1]
 
     if downsample_number is not None:
         print(f'Downsampling to have {downsample_number} neurons')
-        sample_idx = np.random.choice(X_train.shape[1], downsample_number, 
-                                      replace=False)
-        X_train = X_train[:, sample_idx]
-        X_val = X_val[:, sample_idx]
+        sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
+        train_activity = train_activity[:, sample_ids]
+        val_activity = val_activity[:, sample_ids]
 
     # fit regression model
     alphas = [1e-4, 1e-3, 1e-2, 5e-2, 1e-1, 2.5e-1, 5e-1, .75e-1, 1e0, 2.5e0, 5e0, 1e1, 25, 1e2, 1e3]
-    reg = linear_model.RidgeCV(alphas=alphas).fit(X_train, y_train)
+    reg = linear_model.RidgeCV(alphas=alphas).fit(train_activity, train_target)
     # print(reg.score(X, y))
-    return stats.pearsonr(reg.predict(X_val), y_val)
+    return stats.pearsonr(reg.predict(val_activity), val_target)
 
 
 if __name__ == '__main__':
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    data = get_activity_on_dataset(model, ['layer3.1.relu', 'avgpool'])
-    evaluate_regression('layer3.1.relu', 's', **data)
-    evaluate_regression('avgpool', 's', **data)
+    pass
+    # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    # data = get_activity_on_dataset(model, ['layer3.1.relu', 'avgpool'])
+    # evaluate_regression('layer3.1.relu', 's', **data)
+    # evaluate_regression('avgpool', 's', **data)
