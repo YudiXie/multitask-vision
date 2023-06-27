@@ -10,7 +10,6 @@ from config_global import DEVICE
 from scipy import stats
 
 from brainio import get_assembly, get_stimulus_set
-from tqdm import tqdm
 
 
 def append_tuple(name, activity_dict, output):
@@ -150,18 +149,29 @@ def get_activity_on_dataset(model, record_layers: list):
 
 
 def get_neural_activity(dataset, record_layers):
+    """
+    get the neural activity of the dataset
+    args:
+        dataset: a torch.utils.data.Dataset object,
+            input of the model is accessed by dataset[i]['image']
+        record_layers: a list of layer names to record activations
+    returns:
+        activations: a dict of activations
+            for each specified layer (key in the dict)
+            activations[layer_name] is a numpy array of shape
+            (num_samples, num_neurons)
+    """
+    # 128 V4 neurons, 168 IT neurons, 5760 images
+    # (296, 268800, 1) arrary (neuroid, presentation, time_bin)
     hvm_assy = get_assembly(identifier="dicarlo.MajajHong2015")
+    # (296, 5760, 1) arrary (neuroid, presentation, time_bin) mean over repetitions
     dataassy_mean = hvm_assy.groupby('stimulus_id').mean()
 
-    activations = defaultdict(list)
-    image_id_list = dataset.normed_data_frame['image_id']
+    activations = {}
+    imgid_list = list(dataset.normed_data_frame['image_id'])
     for layer in record_layers:
-        print(f'getting data for layer: {layer}')
-        for image_id in tqdm(image_id_list):
-            act = dataassy_mean.sel(region=layer, stimulus_id=image_id).values.squeeze()
-            activations[layer].append(act)
-        activations[layer] = np.stack(activations[layer], axis=0) 
-
+        layer_act = dataassy_mean.sel(region=layer, stimulus_id=imgid_list).values
+        activations[layer] = layer_act.squeeze().transpose()
     return activations
 
 
