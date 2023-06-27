@@ -56,7 +56,8 @@ def append_activations(name, activity_dict):
     return hook
 
 
-def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
+def get_model_activations(dataset, model, layers, 
+                          remove_duplicates=lambda x: x):
     """
     get the activations of the model on the dataset
     args:
@@ -101,14 +102,18 @@ def get_activity(dataset, model, layers, remove_duplicates=lambda x: x):
     return all_activity
 
 
-def get_activity_on_dataset(model, record_layers: list):
+def get_model_activations_on_dataset(model, record_layers: list):
     """
     get the activations of the model on the dataset
     args:
         model: a torch.nn.Module object
         record_layers: a list of layer names to record activations
     returns:
-        data: a dict of activations and datasets
+        all_activations: a dict of activations
+            each key is the region names
+            each value is a numpy array of shape (num_images, num_neurons)
+        data_frame: a pandas dataframe of the dataset
+            that have num_images rows, each stores metadata of the stimulus
     """
 
     # Data preprocessing
@@ -127,25 +132,10 @@ def get_activity_on_dataset(model, record_layers: list):
                 v.pop(-2)
     remove_func = remove_resnet_duplicates
 
-    # train data
-    train_dataset = HVMDataset(split='train', transform=transform)
-    train_activations = get_activity(dataset=train_dataset, model=model,
-                                     layers=record_layers,
-                                     remove_duplicates=remove_func)
-
-    # validation data
-    val_dataset = HVMDataset(split='val', transform=transform)
-    val_activations = get_activity(dataset=val_dataset, model=model,
-                                   layers=record_layers,
-                                   remove_duplicates=remove_func)
-    
-    data = {}
-    data['train_activations'] = train_activations
-    data['val_activations'] = val_activations
-    data['train_dataset'] = train_dataset
-    data['val_dataset'] = val_dataset
-    
-    return data
+    dataset = HVMDataset(split='all', transform=transform)
+    all_activations = get_model_activations(dataset, model, 
+                                            record_layers, remove_func)
+    return all_activations, dataset.normed_data_frame
 
 
 def get_neural_activations(image_id_list, record_regions):
@@ -291,7 +281,3 @@ def cross_validate_on_target(activity, df, target_name,
 
 if __name__ == '__main__':
     pass
-    # model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    # data = get_activity_on_dataset(model, ['layer3.1.relu', 'avgpool'])
-    # evaluate_regression('layer3.1.relu', 's', **data)
-    # evaluate_regression('avgpool', 's', **data)
