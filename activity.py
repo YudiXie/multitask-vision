@@ -148,9 +148,9 @@ def get_activity_on_dataset(model, record_layers: list):
     return data
 
 
-def get_neural_activity(image_id_list, record_regions):
+def get_neural_activations(image_id_list, record_regions):
     """
-    get the neural activity of the dataset
+    get the neural activations of the dataset
     args:
         image_id_list: a list of image id to record activations
         record_regions: a list of region names to record activations
@@ -174,11 +174,11 @@ def get_neural_activity(image_id_list, record_regions):
     return activations
 
 
-def get_neural_activity_on_dataset(record_regions: list):
+def get_neural_activations_on_dataset(record_regions: list):
     """
     get the neural activations of the dataset
     args:
-        record_regions: a list of region names to record activations
+        record_regions: a list of region names to record activities
     returns:
         all_activations: a dict of activations
             each key is the region names
@@ -190,50 +190,46 @@ def get_neural_activity_on_dataset(record_regions: list):
     dataset = HVMDataset(split='all')
     data_frame = dataset.normed_data_frame
     imgid_list = list(data_frame['image_id'])
-    all_activations = get_neural_activity(imgid_list, record_regions)
+    all_activations = get_neural_activations(imgid_list, record_regions)
     return all_activations, data_frame
 
 
-def create_train_test_split(all_activations, data_frame, target_name,
+def create_train_test_split(all_activity, data_frame, target_name,
                             train_ratio=0.8):
     """
     create train and test split
     args:
-        all_activations: a dict of activations
-            each key is the region names
-            each value is a numpy array of shape (num_images, num_neurons)
+        all_activity: a numpy array of shape (num_all_images, num_neurons)
         data_frame: a pandas dataframe of the dataset
             that have num_images rows, each stores metadata of the stimulus
-        target_name: a string of target to record activations, eg. 's'
+        target_name: a string of target name, eg. 's'
         train_ratio: float, the ratio of train data in the whole dataset
     returns:
-        data: a dict of train and test activations and targets
-            data['train_activations'], data['test_activations']: a dict of activations
-                each key is the region names
-                each value is a numpy array of shape (num_images, num_neurons)
-            data['train_target'], data['test_target']: a numpy array of shape (num_images,)
+        data: a dict of train and test activities and targets
+            data['train_activity'], data['test_activity']:
+                a numpy array of shape (num_train/test_images, num_neurons)
+            data['train_target'], data['test_target']: 
+                a numpy array of shape (num_train/test_images,)
     """
     # create train and test split
-    # train 4608 images, test 1152 images
+    # train 4608 images, test 1152 images if train_ratio=0.8 and total 5760 images
+    assert all_activity.shape[0] == len(data_frame), 'number of images must match'
     data_len = len(data_frame)
     permuted_index = np.random.permutation(data_len)
     train_len = int(data_len * train_ratio)
     train_index = permuted_index[:train_len]
     test_index = permuted_index[train_len:]
 
-    train_activations = {}
-    test_activations = {}
-    for region, activity in all_activations.items():
-        train_activations[region] = activity[train_index, :]
-        test_activations[region] = activity[test_index, :]
+    train_activity = all_activity[train_index, :]
+    test_activity = all_activity[test_index, :]
     
     all_target = data_frame[target_name].to_numpy(copy=True)
     train_target = all_target[train_index]
     test_target = all_target[test_index]
 
     data = {}
-    data['train_activations'] = train_activations
-    data['test_activations'] = test_activations
+    data['train_activity'] = train_activity
+    data['test_activity'] = test_activity
     data['train_target'] = train_target
     data['test_target'] = test_target
     return data
@@ -257,7 +253,6 @@ def evaluate_regression(train_activity, test_activity,
     num_neurons = train_activity.shape[1]
 
     if downsample_number is not None:
-        print(f'Downsampling to have {downsample_number} neurons')
         sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
         train_activity = train_activity[:, sample_ids]
         test_activity = test_activity[:, sample_ids]
@@ -269,11 +264,29 @@ def evaluate_regression(train_activity, test_activity,
     return stats.pearsonr(reg.predict(test_activity), test_target)
 
 
-def evaluate_regression_on_region(region, data):
-    return evaluate_regression(data['train_activations'][region],
-                               data['test_activations'][region],
-                               data['train_target'],
-                               data['test_target'])
+def cross_validate_on_target(activity, df, target_name,
+                             downsample_number=128,
+                             num_cross_val=30):
+    """
+    cross validate the regression model on the dataset
+    args:
+        activity: a numpy array of shape (num_all_images, num_neurons)
+        df: a pandas dataframe of the dataset
+            that have num_images rows, each stores metadata of the stimulus
+        target_name: a string of target name, eg. 's'
+        downsample_number: int, number of neurons to downsample to
+        num_cross_val: int, number of cross validation
+    returns:
+        mean correlation coefficient, std of correlation coefficient
+    """
+    coef_list = []
+    for i in range(num_cross_val):
+        train_test_data = create_train_test_split(activity, df, target_name)
+        coef, pval = evaluate_regression(downsample_number=downsample_number,
+                                         **train_test_data)
+        coef_list.append(coef)
+
+    return np.mean(coef_list), np.std(coef_list)
 
 
 if __name__ == '__main__':
