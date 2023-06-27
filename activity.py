@@ -191,60 +191,67 @@ def get_neural_activity_on_dataset(record_regions: list, target: str):
     imgid_list = list(dataset.normed_data_frame['image_id'])
     all_activations = get_neural_activity(imgid_list, record_regions)
 
-    # create train and validation split
-    # train 4608 images, val 1152 images
+    # create train and test split
+    # train 4608 images, test 1152 images
     data_len = len(dataset)
     permuted_index = np.random.permutation(data_len)
     train_len = int(data_len * 0.8)
     train_index = permuted_index[:train_len]
-    val_index = permuted_index[train_len:]
+    test_index = permuted_index[train_len:]
 
     train_activations = {}
-    val_activations = {}
+    test_activations = {}
     for region, activity in all_activations.items():
         train_activations[region] = activity[train_index]
-        val_activations[region] = activity[val_index]
+        test_activations[region] = activity[test_index]
     
     all_target = dataset.normed_data_frame[target].to_numpy(copy=True)
     train_target = all_target[train_index]
-    val_target = all_target[val_index]
+    test_target = all_target[test_index]
 
     data = {}
     data['train_activity'] = train_activations
-    data['val_activity'] = val_activations
+    data['test_activity'] = test_activations
     data['train_target'] = train_target
-    data['val_target'] = val_target
+    data['test_target'] = test_target
     return data
 
 
-def evaluate_regression(train_activity, val_activity, 
-                        train_target, val_target,
+def evaluate_regression(train_activity, test_activity, 
+                        train_target, test_target,
                         downsample_number=None):
     """
     evaluate the regression model on the dataset
     args:
         train_activity: ndarray of shape (num_train_images, num_neurons)
-        val_activity: ndarray of shape (num_val_images, num_neurons)
+        test_activity: ndarray of shape (num_test_images, num_neurons)
         train_target: ndarray of shape (num_train_images,)
-        val_target: ndarray of shape (num_val_images,)
+        test_target: ndarray of shape (num_test_images,)
         downsample_number: int, number of neurons to downsample to
     returns:
         correlation coefficient, p-value
     """
-    assert train_activity.shape[1] == val_activity.shape[1]
+    assert train_activity.shape[1] == test_activity.shape[1]
     num_neurons = train_activity.shape[1]
 
     if downsample_number is not None:
         print(f'Downsampling to have {downsample_number} neurons')
         sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
         train_activity = train_activity[:, sample_ids]
-        val_activity = val_activity[:, sample_ids]
+        test_activity = test_activity[:, sample_ids]
 
     # fit regression model
     alphas = [1e-4, 1e-3, 1e-2, 5e-2, 1e-1, 2.5e-1, 5e-1, .75e-1, 1e0, 2.5e0, 5e0, 1e1, 25, 1e2, 1e3]
     reg = linear_model.RidgeCV(alphas=alphas).fit(train_activity, train_target)
     # print(reg.score(X, y))
-    return stats.pearsonr(reg.predict(val_activity), val_target)
+    return stats.pearsonr(reg.predict(test_activity), test_target)
+
+
+def evaluate_regression_on_region(region, data):
+    return evaluate_regression(data['train_activity'][region],
+                               data['test_activity'][region],
+                               data['train_target'],
+                               data['test_target'])
 
 
 if __name__ == '__main__':
