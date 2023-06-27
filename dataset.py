@@ -82,12 +82,14 @@ class HVMDataset(Dataset):
             normed_data_frame[collum] = (data_frame[collum] - data_frame[collum].mean()) / data_frame[collum].std()
             normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
         
-        if split == 'train':
+        if split == 'all':
+            self.normed_data_frame = normed_data_frame
+        elif split == 'train':
             self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * 0.8)]
         elif split == 'val':
             self.normed_data_frame = normed_data_frame[int(len(normed_data_frame) * 0.8):].reset_index(drop=True)
         else:
-            raise ValueError('split must be either train or val')
+            raise ValueError('split must be either all, train, or val')
 
     def __len__(self):
         return len(self.normed_data_frame)
