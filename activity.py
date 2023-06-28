@@ -3,7 +3,7 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights, ResNet
 from collections import defaultdict
 import torchvision.transforms as transforms
-from sklearn import linear_model
+from sklearn import linear_model, svm
 
 from dataset import HVMDataset
 from config_global import DEVICE
@@ -226,27 +226,17 @@ def create_train_test_split(all_activity, data_frame, target_name,
 
 
 def evaluate_regression(train_activity, test_activity, 
-                        train_target, test_target,
-                        downsample_number=None):
+                        train_target, test_target):
     """
     evaluate the regression model on the dataset
     args:
         train_activity: ndarray of shape (num_train_images, num_neurons)
         test_activity: ndarray of shape (num_test_images, num_neurons)
-        train_target: ndarray of shape (num_train_images,)
-        test_target: ndarray of shape (num_test_images,)
-        downsample_number: int, number of neurons to downsample to
+        train_target: ndarray of shape (num_train_images,), targets are continuous
+        test_target: ndarray of shape (num_test_images,), targets are continuous
     returns:
         correlation coefficient, p-value
     """
-    assert train_activity.shape[1] == test_activity.shape[1]
-    num_neurons = train_activity.shape[1]
-
-    if downsample_number is not None:
-        sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
-        train_activity = train_activity[:, sample_ids]
-        test_activity = test_activity[:, sample_ids]
-
     # fit regression model
     alphas = [1e-4, 1e-3, 1e-2, 5e-2, 1e-1, 2.5e-1, 5e-1, .75e-1, 1e0, 2.5e0, 5e0, 1e1, 25, 1e2, 1e3]
     reg = linear_model.RidgeCV(alphas=alphas).fit(train_activity, train_target)
@@ -254,9 +244,31 @@ def evaluate_regression(train_activity, test_activity,
     return stats.pearsonr(reg.predict(test_activity), test_target)
 
 
+def evaluate_classification(train_activity, test_activity, 
+                            train_target, test_target):
+    """
+    evaluate the regression model on the dataset
+    args:
+        train_activity: ndarray of shape (num_train_images, num_neurons)
+        test_activity: ndarray of shape (num_test_images, num_neurons)
+        train_target: ndarray of shape (num_train_images,), targets are discrete class labels
+            like [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        test_target: ndarray of shape (num_test_images,), targets are discrete class labels
+            like [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    returns:
+        evaluation accuracy
+    """
+    # fit classification model
+    clf = svm.LinearSVC(C=5e-3)
+    clf.fit(train_activity, train_target)
+    return clf.score(test_activity, test_target)
+
+
 def cross_validate_on_target(activity, df, target_name,
                              downsample_number=128,
-                             num_cross_val=30):
+                             num_cross_val=30,
+                             mode='regression'
+                             ):
     """
     cross validate the regression model on the dataset
     args:
@@ -266,17 +278,35 @@ def cross_validate_on_target(activity, df, target_name,
         target_name: a string of target name, eg. 's'
         downsample_number: int, number of neurons to downsample to
         num_cross_val: int, number of cross validation
+        mode: string, 'regression' or 'classification'
     returns:
+        for regression mode:
         mean correlation coefficient, std of correlation coefficient
+        for classification mode:
+        mean accuracy, std of accuracy
     """
-    coef_list = []
+    assert mode in ['regression', 'classification']
+
+    performance_list = []
     for i in range(num_cross_val):
         train_test_data = create_train_test_split(activity, df, target_name)
-        coef, pval = evaluate_regression(downsample_number=downsample_number,
-                                         **train_test_data)
-        coef_list.append(coef)
+        
+        # downsample neurons
+        if downsample_number is not None:
+            assert train_test_data['train_activity'].shape[1] == train_test_data['test_activity'].shape[1]
+            num_neurons = train_test_data['train_activity'].shape[1]
+            sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
+            train_test_data['train_activity'] = train_test_data['train_activity'][:, sample_ids]
+            train_test_data['test_activity'] = train_test_data['test_activity'][:, sample_ids]
 
-    return np.mean(coef_list), np.std(coef_list)
+        if mode == 'regression':
+            coef, pval = evaluate_regression(**train_test_data)
+            performance_list.append(coef)
+        else:
+            acc = evaluate_classification(**train_test_data)
+            performance_list.append(acc)
+
+    return np.mean(performance_list), np.std(performance_list)
 
 
 if __name__ == '__main__':
