@@ -177,12 +177,15 @@ def bar_2par(data,
              data_err={},
              folder_name='exp',
              fig_name='fig',
-             legend_title="Groups:",
              x_label=None,
              y_label='Performance',
              fig_title=None,
              ylim=None,
+             xlim=None,
              bar_label=True,
+             bar_label_decimals=2,
+             show_legend=True,
+             legend_title="Groups:",
              legend_fontsize=12,
              show=True,
              ):
@@ -231,13 +234,17 @@ def bar_2par(data,
             alpha=0.5,
             **kwargs)
         if bar_label:
-            ax.bar_label(rect, padding=3, fmt='%.2f', fontsize=8)
+            ax.bar_label(rect, padding=3, fmt=f'%.{bar_label_decimals}f', fontsize=8)
 
     ax.set_xticks(x_axis, x_axis_labels)
     if ylim is not None:
         ax.set_ylim(ylim)
 
-    ax.legend(title=legend_title, fontsize=legend_fontsize)
+    if xlim is not None:
+        ax.set_xlim(xlim)
+
+    if show_legend:
+        ax.legend(title=legend_title, fontsize=legend_fontsize)
 
     if x_label is not None:
         ax.set_xlabel(x_label)
