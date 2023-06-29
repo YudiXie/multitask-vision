@@ -197,7 +197,7 @@ def save_exp_scores(exp_name):
 
 
 if __name__ == '__main__':
-    # parse arguments
+    # run this script to save model scores for all models in an experiment
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--name', help='Name of the experiment')
     args = parser.parse_args()
