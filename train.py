@@ -227,7 +227,10 @@ def train_model(config):
     assert config.max_batch % config.eval_per == 0
     
     # initialize the model
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    if config.pretrain_init:
+        model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    else:
+        model = resnet18()
     # Replace the last layer with a linear layer for multi-task learning
     model.fc = nn.Linear(model.fc.in_features, 78)
     model = model.to(DEVICE)
