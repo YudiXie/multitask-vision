@@ -25,6 +25,27 @@ base_config = {
     }
 
 
+def random_models0630():
+    # only used to score the random models
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'random_models0630'
+
+    seed_list = [0, 1, 2, 3, 4]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for seed in seed_list:
+        cfg = copy.deepcopy(exp_config)
+        cfg['seed'] = seed
+
+        cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+        cfg['run_id'] = run_id
+        config_list.append(cfg)
+        run_id += 1
+    return config_list
+
+
 def multi_task_0620():
     # compare models with different training targets
     exp_config = copy.deepcopy(base_config)
