@@ -64,7 +64,7 @@ def get_layer_commitment(model: ModelCommitment):
     return layer_map
 
 
-def prepare_model(model_identifier: str, load_path: str = '') -> ModelCommitment:
+def prepare_model_commitment(model_identifier: str, load_path: str = '') -> ModelCommitment:
     """
     prepare model for benchmarking
     args:
@@ -127,7 +127,7 @@ def prepare_and_score_model(config):
                          config['model_archi'], str(config['run_id'])])
     model_save_path = os.path.join(config['save_path'], 'model.pth')
     
-    model = prepare_model(model_id, model_save_path)
+    model = prepare_model_commitment(model_id, model_save_path)
 
     start_time = datetime.now()
     for region, benchmark_id in benchmark_dict.items():
@@ -181,7 +181,7 @@ def save_exp_scores(exp_name):
                                     ])
     
     # save score for pre-trained model
-    model = prepare_model('mt0527-resnet18-pret')
+    model = prepare_model_commitment('mt0527-resnet18-pret')
     save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
     # save score for models specified by experiment config list
@@ -190,7 +190,7 @@ def save_exp_scores(exp_name):
                              config['model_archi'], str(config['run_id'])])
         model_save_path = os.path.join(config['save_path'], 'model.pth')
 
-        model = prepare_model(model_identifier=model_id, load_path=model_save_path)
+        model = prepare_model_commitment(model_identifier=model_id, load_path=model_save_path)
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
