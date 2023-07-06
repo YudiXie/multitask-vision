@@ -64,6 +64,27 @@ def get_layer_commitment(model: ModelCommitment):
     return layer_map
 
 
+def prepare_pytorch_model(load_path: str = ''):
+    """
+    prepare a torch.nn model
+    args:
+        load_path: str, path to load model weights, 
+            if provided load weights, otherwise use pretrained weights
+    return:
+        model: torch.nn model
+    """
+    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    model.fc = nn.Linear(model.fc.in_features, 78)
+    model = model.to(DEVICE)
+    
+    # load model from saved weights
+    if load_path != '':
+        print(f'loading model from {load_path}')
+        model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
+    
+    return model
+
+
 def prepare_model_commitment(model_identifier: str, load_path: str = '') -> ModelCommitment:
     """
     prepare model for benchmarking
@@ -74,20 +95,16 @@ def prepare_model_commitment(model_identifier: str, load_path: str = '') -> Mode
     return:
         model: ModelCommitment object
     """
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    model.fc = nn.Linear(model.fc.in_features, 78)
-    model = model.to(DEVICE)
-    if load_path != '':
-        print(f'loading model from {load_path}')
-        model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
-
+    pytorch_model = prepare_pytorch_model(load_path)
     preprocessing = functools.partial(load_preprocess_images, image_size=224)
-    activations_model = PytorchWrapper(identifier=model_identifier, model=model, preprocessing=preprocessing)
-    model = ModelCommitment(identifier=model_identifier,
-                            activations_model=activations_model,
-                            layers=resnet18layerlist,
-                            behavioral_readout_layer='avgpool')
-    return model
+    activations_model = PytorchWrapper(identifier=model_identifier, 
+                                       model=pytorch_model,
+                                       preprocessing=preprocessing)
+    model_commitment = ModelCommitment(identifier=model_identifier,
+                                       activations_model=activations_model,
+                                       layers=resnet18layerlist,
+                                       behavioral_readout_layer='avgpool')
+    return model_commitment
 
 
 def score_model_on_a_benchmark(model: ModelCommitment, 
