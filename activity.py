@@ -309,23 +309,24 @@ def cross_validate_on_target(activity, df, target_name,
     return np.mean(performance_list), np.std(performance_list)
 
 
-def factorization_analysis(activity, df, target_name):
+def target_direction_vector(activity, targets):
     """
-    analysis of factorization, get dirctional vector
+    get dirctional vector of the target variable
     args:
         activity: a numpy array of shape (num_all_images, num_neurons)
-        df: a pandas dataframe of the dataset
-            that have num_images rows, each stores metadata of the stimulus
-        target_name: a string of target name, eg. 's'
+        targets: a numpy array of shape (num_all_images,) for a target value eg. 's'
     returns:
-        for classification mode:
-        mean factorization, std of factorization
+        a vector containing regression coefficients of the target variable
     """
-    # TODO add regularization
+    # TODO test regularization
+    # TODO test PCA first
+    # TODO test normalization
+
+    # center activity
     activity = activity[:, :100]
     activity = activity - np.mean(activity, axis=0)
-    target = df[target_name].to_numpy(copy=True)
-    reg = linear_model.LinearRegression().fit(activity, target)
+
+    reg = linear_model.LinearRegression().fit(activity, targets)
     return reg.coef_
 
 

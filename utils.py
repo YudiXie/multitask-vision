@@ -98,3 +98,15 @@ def cosine_sim(A, B):
 
 def abs_cosine_sim(A, B):
     return np.abs(cosine_sim(A, B))
+
+
+def trim_diagonal(mat):
+    assert mat.shape[0] == mat.shape[1]  # check if the matrix is square
+    n = mat.shape[0]  # get the size of the matrix
+    trimmed_mat = np.zeros((n, n - 1))  # initialize the trimmed matrix
+    
+    for i in range(n):
+        trimmed_mat[i, :i] = mat[i, :i]  # elements before the diagonal
+        trimmed_mat[i, i:] = mat[i, i+1:]  # elements after the diagonal
+    
+    return trimmed_mat
