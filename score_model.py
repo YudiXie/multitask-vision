@@ -1,22 +1,17 @@
 import os
 import functools
-import time
 from datetime import datetime
 import argparse
 
-import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-from torchvision.models import resnet18, ResNet18_Weights
 
 from brainscore import score_model
 from model_tools.activations.pytorch import load_preprocess_images
 from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
-from config_global import DEVICE, EXP_DIR
-from utils import load_config, log_complete
+from config_global import EXP_DIR
+from utils import load_config, log_complete, prepare_pytorch_model
 import exp_config_list
 
 # code to get layer names
@@ -62,27 +57,6 @@ def get_layer_commitment(model: ModelCommitment):
     layer_map['IT'] = model.layer_model.region_layer_map['IT']
     # layer_map['Behavior']
     return layer_map
-
-
-def prepare_pytorch_model(load_path: str = ''):
-    """
-    prepare a torch.nn model
-    args:
-        load_path: str, path to load model weights, 
-            if provided load weights, otherwise use pretrained weights
-    return:
-        model: torch.nn model
-    """
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    model.fc = nn.Linear(model.fc.in_features, 78)
-    model = model.to(DEVICE)
-    
-    # load model from saved weights
-    if load_path != '':
-        print(f'loading model from {load_path}')
-        model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
-    
-    return model
 
 
 def prepare_model_commitment(model_identifier: str, load_path: str = '') -> ModelCommitment:
