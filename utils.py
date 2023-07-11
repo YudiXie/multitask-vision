@@ -69,3 +69,21 @@ def prepare_pytorch_model(load_path: str = ''):
         model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
     
     return model
+
+
+def find_region_layer(df, region, model_n):
+    """
+    find the layer name for a model for a particular benchmark region
+    """
+    layer_series = df[(df['model'] == model_n) & (df['benchmark_region'] == region)]['mapped_layer']
+    assert len(layer_series) == 1
+    return layer_series.to_numpy(copy=True)[0]
+
+
+def get_model_id(config):
+    """
+    get a unique model id from the config dictionary
+    """
+    return '-'.join([config['experiment_name'], 
+                     config['model_archi'], 
+                     str(config['run_id'])])

@@ -11,7 +11,7 @@ from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
 from config_global import EXP_DIR
-from utils import load_config, log_complete, prepare_pytorch_model
+from utils import load_config, log_complete, prepare_pytorch_model, get_model_id
 import exp_config_list
 
 # code to get layer names
@@ -114,11 +114,8 @@ def prepare_and_score_model(config):
     args:
         config: dict, an experimental config specifying a model
     """
-    model_id = '-'.join([config['experiment_name'], 
-                         config['model_archi'], str(config['run_id'])])
     model_save_path = os.path.join(config['save_path'], 'model.pth')
-    
-    model = prepare_model_commitment(model_id, model_save_path)
+    model = prepare_model_commitment(get_model_id(config), model_save_path)
 
     start_time = datetime.now()
     for region, benchmark_id in benchmark_dict.items():
@@ -177,11 +174,9 @@ def save_exp_scores(exp_name):
 
     # save score for models specified by experiment config list
     for config in config_list:
-        model_id = '-'.join([config['experiment_name'], 
-                             config['model_archi'], str(config['run_id'])])
         model_save_path = os.path.join(config['save_path'], 'model.pth')
-
-        model = prepare_model_commitment(model_identifier=model_id, load_path=model_save_path)
+        model = prepare_model_commitment(model_identifier=get_model_id(config), 
+                                         load_path=model_save_path)
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
