@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import yaml
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
@@ -89,3 +90,11 @@ def get_model_id(config):
     return '-'.join([config['experiment_name'], 
                      config['model_archi'], 
                      str(config['run_id'])])
+
+
+def cosine_sim(A, B):
+    return np.dot(A, B) / (np.linalg.norm(A) * np.linalg.norm(B))
+
+
+def abs_cosine_sim(A, B):
+    return np.abs(cosine_sim(A, B))
