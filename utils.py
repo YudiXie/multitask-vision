@@ -71,11 +71,11 @@ def prepare_pytorch_model(load_path: str = ''):
     return model
 
 
-def find_region_layer(df, region, model_n):
+def find_region_layer(df, region, model_id):
     """
     find the layer name for a model for a particular benchmark region
     """
-    layer_series = df[(df['model'] == model_n) & (df['benchmark_region'] == region)]['mapped_layer']
+    layer_series = df[(df['model'] == model_id) & (df['benchmark_region'] == region)]['mapped_layer']
     assert len(layer_series) == 1
     return layer_series.to_numpy(copy=True)[0]
 
