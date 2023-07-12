@@ -264,6 +264,18 @@ def evaluate_classification(train_activity, test_activity,
     return clf.score(test_activity, test_target)
 
 
+def downsample_idx(num_neurons, downsample_number):
+    """
+    generate downsampled indices
+    args:
+        num_neurons: int, number of neurons
+        downsample_number: int, number of neurons to downsample to
+    returns:
+        downsampled_idx: a array of indices
+    """
+    return np.random.choice(num_neurons, downsample_number, replace=False)
+
+
 def cross_validate_on_target(activity, df, target_name,
                              downsample_number=128,
                              num_cross_val=30,
@@ -295,7 +307,7 @@ def cross_validate_on_target(activity, df, target_name,
         if downsample_number is not None:
             assert train_test_data['train_activity'].shape[1] == train_test_data['test_activity'].shape[1]
             num_neurons = train_test_data['train_activity'].shape[1]
-            sample_ids = np.random.choice(num_neurons, downsample_number, replace=False)
+            sample_ids = downsample_idx(num_neurons, downsample_number)
             train_test_data['train_activity'] = train_test_data['train_activity'][:, sample_ids]
             train_test_data['test_activity'] = train_test_data['test_activity'][:, sample_ids]
 
@@ -318,15 +330,14 @@ def target_direction_vector(activity, targets):
     returns:
         a vector containing regression coefficients of the target variable
     """
-    # TODO test regularization
+    # TODO figure out what is the best way to do regularization
     # TODO test PCA first
-    # TODO test normalization
+    # TODO test normalization, show activity distribution difference between model and data
 
     # center activity
-    activity = activity[:, :100]
     activity = activity - np.mean(activity, axis=0)
 
-    reg = linear_model.LinearRegression().fit(activity, targets)
+    reg = linear_model.Ridge(fit_intercept=False).fit(activity, targets)
     return reg.coef_
 
 

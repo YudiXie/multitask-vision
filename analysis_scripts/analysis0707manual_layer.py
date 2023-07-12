@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from config_global import EXP_DIR
 from analysis import bar_2par, heatmap, annotate_heatmap
 from exp_config_list import multi_task_0620
-from activity import get_model_activations_on_dataset, get_neural_activations_on_dataset, target_direction_vector
+from activity import get_model_activations_on_dataset, get_neural_activations_on_dataset, target_direction_vector, downsample_idx
 from utils import prepare_pytorch_model, find_region_layer, get_model_id, abs_cosine_sim, trim_diagonal
 
 region_list = ['V4', 'IT']
@@ -69,8 +69,20 @@ diff_model_actications['Neural-data'] = {
     'IT_layer': 'IT',
 }
 
+# add random activations for comparison
+random_acitvations = {}
+random_acitvations['random1'] = np.random.randn(*neural_activations['V4'].shape)
+random_acitvations['random2'] = np.random.randn(*neural_activations['IT'].shape)
+
+diff_model_actications['Random'] = {
+    'all_activations': random_acitvations,
+    'df': neural_df,
+    'V4_layer': 'random1',
+    'IT_layer': 'random2',
+}
+
 target_list = ['s', 'ty', 'tz', 'rxy_semantic', 'rxz_semantic', 'ryz_semantic']
-group_name_list = ['Pre-trained', 'Categorization', 'Multi-task', 'Neural-data']
+group_name_list = ['Pre-trained', 'Categorization', 'Multi-task', 'Neural-data', 'Random']
 region_list = ['V4_layer', 'IT_layer']
 
 directions_dict = defaultdict(dict)
@@ -79,6 +91,8 @@ for group_name, data_dict in diff_model_actications.items():
     for region, layer in zip(region_list, layer_list):
         directions_dict[group_name][region] = {}
         layer_activity = data_dict['all_activations'][layer]
+        # Downsample to 128 neurons
+        layer_activity = layer_activity[:, downsample_idx(layer_activity.shape[1], 128)]
         for target_name in target_list:
             targets = data_dict['df'][target_name].to_numpy(copy=True)
             directions_dict[group_name][region][target_name] = target_direction_vector(layer_activity, targets)
