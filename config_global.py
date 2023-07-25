@@ -16,3 +16,9 @@ DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 CUDA_MODULE = 'openmind8/cuda/11.7'
 CONDA_ENV = 'multitask-vision'
 CONDA_SCORE_ENV = 'brainscore'
+
+print('Pytorch version: ', torch.__version__)
+if USE_CUDA:
+    print('Using GPU, Pytorch linked cuda version: ', torch.version.cuda)
+else:
+    print('Using CPU, no GPU is fund in pytorch')
