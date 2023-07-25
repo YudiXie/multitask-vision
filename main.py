@@ -122,7 +122,9 @@ def get_jobfile(cmd,
             + 'module load {}\n'.format(cuda_module)
             + 'conda activate {}\n'.format(conda_env)
             + 'cd {}\n'.format(work_dir)
-            + 'echo -e "System Info: \\n----------\\n$(hostnamectl)\\n----------"'
+            + 'echo -e "System Info: \\n----------\\n$(hostnamectl)\\n----------"' + '\n'
+            + 'nvcc --version\n'
+            + 'nvidia-smi\n'
             + cmd + '\n'
             + '\n'
             )
