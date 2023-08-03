@@ -179,9 +179,7 @@ class TDWDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        record_name = self.normed_data_frame.loc[idx, 'record_name']
-        image_count = self.normed_data_frame.loc[idx, 'file_index']
-        img_file = os.path.join(self.root_dir, f"img_{record_name}_{image_count:04d}")
+        img_file = os.path.join(self.root_dir, self.normed_data_frame.loc[idx, 'image_filename'])
         image = load_image(img_file)
         if self.transform:
             image = self.transform(image)
