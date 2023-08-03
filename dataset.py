@@ -30,15 +30,16 @@ def load_image(image_filepath):
 
 class HVMDataset(Dataset):
     """hvm-public dataset."""
-    # my guess about the meaning of the collums
+    # The axis labeling here uses the convention that
+    #     +x coming "out of the screen"
+    #     +z is "up" (vertical height) and
+    #     +y is "right" (horizontal extent)
+    
     # s (size)
-    # tz, vertical translation
-    # ty, horizontal translation
-    # the rest seems to be rotations
-    # it seems that the following is true most of the time, but not always
-    # rxy_semantic - rxy = 90
-    # rxz_semantic = rxz
-    # ryz_semantic = ryz
+    # tz, vertical translation (up + /down -)
+    # ty, horizontal translation (right + /left -)
+    # 'rxz', 'rxy', 'ryz', rotational parameters
+    # 'r[xz/xy/yz]_semantic', semantically consistent rotational parameters,
 
     # all collums in the stimulus set
     all_collums = ['id', 'background_id', 's', 'image_id', 'image_file_name', 'filename', 'rxy', 'tz', 'category_name', 'rxz_semantic', 'ty', 'ryz', 'object_name', 'variation', 'size', 'rxy_semantic', 'ryz_semantic', 'rxz']
@@ -46,8 +47,8 @@ class HVMDataset(Dataset):
     norm_collums = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz', 'rxy_semantic', 'rxz_semantic', 'ryz_semantic']
 
     def __init__(self, 
-                 csv_file='./data/image_dicarlo_hvm.csv', 
-                 root_dir='./data/image_dicarlo_hvm', 
+                 csv_file='./data/hvm_dataset/image_dicarlo_hvm.csv', 
+                 root_dir='./data/hvm_dataset/image_dicarlo_hvm', 
                  split='train',
                  transform=None,
                  ):
@@ -103,6 +104,85 @@ class HVMDataset(Dataset):
         img_name = os.path.join(self.root_dir,
                                 self.normed_data_frame.loc[idx, 'image_file_name'])
         image = load_image(img_name)
+        if self.transform:
+            image = self.transform(image)
+        sample = {'image': image}
+        sample['category_label'] = self.normed_data_frame.loc[idx, 'category_label']
+        sample['object_label'] = self.normed_data_frame.loc[idx, 'object_label']
+        
+        for i in range(2, 9):
+            # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
+            sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
+
+        for collum in self.norm_collums:
+            sample[collum] = self.normed_data_frame.loc[idx, collum]
+
+        return sample
+
+
+class TDWDataset(Dataset):
+    """TDW dataset."""
+    norm_collums = ['s', 'ty', 'tz','rxy_semantic', 'rxz_semantic', 'ryz_semantic']
+
+    def __init__(self, 
+                 csv_file='./data/tdw_image_dataset_small/images_meta.csv',
+                 root_dir='./data/tdw_image_dataset_small',
+                 split='train',
+                 transform=None,
+                 ):
+        """
+        Arguments:
+            csv_file (string): Path to the csv file with annotations.
+            root_dir (string): Directory with all the images.
+        """
+        data_frame = pd.read_csv(csv_file, index_col=0)
+        normed_data_frame = data_frame.copy()
+        self.root_dir = root_dir
+        self.transform = transform
+      
+        # create a map from category name to category label
+        self.category_str2int = {}
+        cat_list = list(normed_data_frame['wnid'].unique())
+        cat_list.sort()
+        for i, category_name in enumerate(cat_list):
+            self.category_str2int[category_name] = i
+        self.category_int2str = {v: k for k, v in self.category_str2int.items()}
+        normed_data_frame['category_label'] = [self.category_str2int[cn] for cn in normed_data_frame['category_name']]
+        
+        # create a map from object name to object label
+        self.object_str2int = {}
+        object_list = list(normed_data_frame['record'].unique())
+        object_list.sort()
+        for i, object_name in enumerate(object_list):
+            self.object_str2int[object_name] = i
+        self.object_int2str = {v: k for k, v in self.object_str2int.items()}
+        normed_data_frame['object_label'] = [self.object_str2int[on] for on in normed_data_frame['object_name']]
+
+        # normalize the data
+        for collum in self.norm_collums:
+            normed_data_frame[collum] = (data_frame[collum] - data_frame[collum].mean()) / data_frame[collum].std()
+            normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
+        
+        if split == 'all':
+            self.normed_data_frame = normed_data_frame
+        elif split == 'train':
+            self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * 0.8)]
+        elif split == 'val':
+            self.normed_data_frame = normed_data_frame[int(len(normed_data_frame) * 0.8):].reset_index(drop=True)
+        else:
+            raise ValueError('split must be either all, train, or val')
+
+    def __len__(self):
+        return len(self.normed_data_frame)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        record_name = self.normed_data_frame.loc[idx, 'record']
+        image_count = self.normed_data_frame.loc[idx, 'file_index']
+        img_file = os.path.join(self.root_dir, f"img_{record_name}_{image_count:04d}")
+        image = load_image(img_file)
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}
