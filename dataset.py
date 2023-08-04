@@ -1,5 +1,6 @@
 
 import os
+from pathlib import Path
 
 from skimage import io
 
@@ -136,6 +137,12 @@ class TDWDataset(Dataset):
             root_dir (string): Directory with all the images.
         """
         data_frame = pd.read_csv(csv_file, index_col=0)
+
+        # check if all images exist
+        data_path = Path(root_dir)
+        for i in range(len(data_frame)):
+            assert data_path.joinpath(data_frame.loc[i, 'image_filename']).is_file()
+
         normed_data_frame = data_frame.copy()
         self.root_dir = root_dir
         self.transform = transform
