@@ -72,6 +72,8 @@ def get_model_activations(dataset, model, layers,
             for each specified layer (key in the dict)
             all_activity[layer_name] is a numpy array of shape
             (num_samples, num_neurons)
+            num_samples is the number of samples in the dataset
+            num_neurons is the number of neurons in the layer
     """
     all_activity = defaultdict(list)
     handles = defaultdict(list)
