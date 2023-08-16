@@ -122,8 +122,13 @@ class HVMDataset(Dataset):
 
 
 class TDWDataset(Dataset):
-    """TDW dataset."""
-    norm_collums = ['s', 'ty', 'tz','rxy_semantic', 'rxz_semantic', 'ryz_semantic']
+    """TDW dataset.
+    neg_x: distance of object from the screen, in TDW world-space units, where the screen is at x = 0, + is going into the image
+    ty: horizontal position of object, in pixels, center of image is 0, + is going right
+    tz: vertical position of object, in pixels, center of image is 0, + is going up
+    euler_1, euler_2, euler_3: rotation of object, in degrees, returned by TDW local transform relative to the camera
+    """
+    norm_collums = ['neg_x', 'ty', 'tz','euler_1', 'euler_2', 'euler_3']
 
     def __init__(self, 
                  csv_file='./data/tdw_image_dataset_small/images_meta.csv',
