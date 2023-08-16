@@ -11,6 +11,8 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
+RNG: np.random.RandomState = np.random.RandomState(0)
+
 
 def load_image(image_filepath):
     """Load an image from disk and return a PIL.Image object.
@@ -142,6 +144,7 @@ class TDWDataset(Dataset):
             root_dir (string): Directory with all the images.
         """
         data_frame = pd.read_csv(csv_file, index_col=0)
+        data_frame = data_frame.sample(frac=1, random_state=RNG).reset_index(drop=True) # shuffle the data
 
         # check if all images exist
         data_path = Path(root_dir)
