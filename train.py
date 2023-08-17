@@ -10,7 +10,7 @@ from torchvision.models import resnet18, ResNet18_Weights
 import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
-from dataset import HVMDataset
+from dataset import HVMDataset, TDWDataset
 from utils import load_config, log_complete
 
 
@@ -27,6 +27,8 @@ task2targets_name = {
     'category_class': ['category_label'],
     'object_class': ['object_label'],
     'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
+    'rotation_reg_tdw': ['euler_1_proc', 'euler_2_proc', 'euler_3_proc'], # for TDW dataset
+    'depth_reg': ['neg_x'], # for TDW dataset
     'size_reg': ['s'],
     'translation_reg': ['ty', 'tz'],
 }
@@ -42,6 +44,8 @@ task2loss_func = {
     'category_class': nn.CrossEntropyLoss(),
     'object_class': nn.CrossEntropyLoss(),
     'rotation_reg': nn.MSELoss(),
+    'rotation_reg_tdw': nn.MSELoss(),
+    'depth_reg': nn.MSELoss(),
     'size_reg': nn.MSELoss(),
     'translation_reg': nn.MSELoss(),
 }
@@ -57,7 +61,9 @@ task2output_range = {
     'category_class': (0, 8),
     'object_class': (8, 72),
     'rotation_reg': [72, 75],
+    'rotation_reg_tdw': [72, 75],
     'size_reg': [75, 76],
+    'depth_reg': [75, 76],
     'translation_reg': [76, 78],
 }
 
@@ -73,14 +79,20 @@ task2output_range = {
 # }
 
 
-def get_dataloader(is_train, batch_size, transform):
+def get_dataloader(dataset_name, is_train, batch_size, transform):
     "Get a training dataloader"    
     if is_train:
         split = 'train'
     else:
         split = 'val'
 
-    dataset = HVMDataset(split=split, transform=transform)
+    if dataset_name == 'HvM':
+        dataset = HVMDataset(split=split, transform=transform)
+    elif dataset_name == 'TDW':
+        dataset = TDWDataset(split=split, transform=transform)
+    else:
+        raise NotImplementedError(f'Unknown dataset: {dataset_name}')
+    
     loader = torch.utils.data.DataLoader(dataset=dataset, 
                                          batch_size=batch_size, 
                                          shuffle=True if is_train else False, 
@@ -243,9 +255,13 @@ def train_model(config):
     ])
 
     # Get dataloaders
-    train_loader = get_dataloader(is_train=True, batch_size=config.batch_size,
+    train_loader = get_dataloader(dataset_name=config.dataset_name,
+                                  is_train=True, 
+                                  batch_size=config.batch_size,
                                   transform=transform)
-    val_loader = get_dataloader(is_train=False, batch_size=config.batch_size,
+    val_loader = get_dataloader(dataset_name=config.dataset_name,
+                                is_train=False,
+                                batch_size=config.batch_size,
                                 transform=transform)
 
     # Set up optimizer
