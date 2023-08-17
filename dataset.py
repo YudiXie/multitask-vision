@@ -6,12 +6,27 @@ from skimage import io
 
 import numpy as np
 import pandas as pd
+from scipy.stats import circmean
 from PIL import Image
 
 import torch
 from torch.utils.data import Dataset
 
 RNG: np.random.RandomState = np.random.RandomState(0)
+
+
+def center_circ_array(arr):
+    """
+    Center an array of circular data.
+    arr: array of circular data, 1d numpy array, in degrees, range (-inf, inf)
+    return: centered array, 1d numpy array, in degrees, range (-180, 180), 
+        centered around 0, has circular mean of 0 (mean is not 0)
+    """
+    arr = arr % 360.0
+    arr = arr - circmean(arr, high=360.0, low=0.0)
+    arr = arr % 360.0
+    arr[arr > 180.0] -= 360.0
+    return arr
 
 
 def load_image(image_filepath):
@@ -131,8 +146,9 @@ class TDWDataset(Dataset):
     ty: horizontal position of object, in pixels, center of image is 0, + is going right
     tz: vertical position of object, in pixels, center of image is 0, + is going up
     euler_1, euler_2, euler_3: rotation of object, in degrees, returned by TDW local transform relative to the camera
+    euler_x_proc: rotation of object, in degrees, processed to be in the range (-180, 180), centered around 0
     """
-    norm_collums = ['neg_x', 'ty', 'tz','euler_1', 'euler_2', 'euler_3']
+    norm_collums = ['neg_x', 'ty', 'tz','euler_1_proc', 'euler_2_proc', 'euler_3_proc']
 
     def __init__(self, 
                  csv_file='./data/tdw_image_dataset_small/images_meta.csv',
@@ -156,6 +172,11 @@ class TDWDataset(Dataset):
         normed_data_frame = data_frame.copy()
         self.root_dir = root_dir
         self.transform = transform
+
+        # process the euler angles
+        data_frame['euler_1_proc'] = center_circ_array(data_frame['euler_1'].to_numpy())
+        data_frame['euler_2_proc'] = center_circ_array(data_frame['euler_2'].to_numpy())
+        data_frame['euler_3_proc'] = center_circ_array(data_frame['euler_3'].to_numpy())
       
         # create a map from category name to category label
         self.category_str2int = {}
