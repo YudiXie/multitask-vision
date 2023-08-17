@@ -33,6 +33,7 @@ def load_image(image_filepath):
 
 class HVMDataset(Dataset):
     """hvm-public dataset."""
+    # images are 256x256 pixels
     # The axis labeling here uses the convention that
     #     +x coming "out of the screen"
     #     +z is "up" (vertical height) and
@@ -125,6 +126,7 @@ class HVMDataset(Dataset):
 
 class TDWDataset(Dataset):
     """TDW dataset.
+    images are 256x256 pixels
     neg_x: distance of object from the screen, in TDW world-space units, where the screen is at x = 0, + is going into the image
     ty: horizontal position of object, in pixels, center of image is 0, + is going right
     tz: vertical position of object, in pixels, center of image is 0, + is going up
@@ -162,16 +164,16 @@ class TDWDataset(Dataset):
         for i, category_name in enumerate(cat_list):
             self.category_str2int[category_name] = i
         self.category_int2str = {v: k for k, v in self.category_str2int.items()}
-        normed_data_frame['category_label'] = [self.category_str2int[cn] for cn in normed_data_frame['category_name']]
+        normed_data_frame['category_label'] = [self.category_str2int[cn] for cn in normed_data_frame['wnid']]
         
         # create a map from object name to object label
         self.object_str2int = {}
-        object_list = list(normed_data_frame['record'].unique())
+        object_list = list(normed_data_frame['record_name'].unique())
         object_list.sort()
         for i, object_name in enumerate(object_list):
             self.object_str2int[object_name] = i
         self.object_int2str = {v: k for k, v in self.object_str2int.items()}
-        normed_data_frame['object_label'] = [self.object_str2int[on] for on in normed_data_frame['object_name']]
+        normed_data_frame['object_label'] = [self.object_str2int[on] for on in normed_data_frame['record_name']]
 
         # normalize the data
         for collum in self.norm_collums:
