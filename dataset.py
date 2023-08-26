@@ -151,8 +151,8 @@ class TDWDataset(Dataset):
     norm_collums = ['neg_x', 'ty', 'tz','euler_1_proc', 'euler_2_proc', 'euler_3_proc']
 
     def __init__(self, 
-                 csv_file='./data/tdw_image_dataset_small/images_meta.csv',
-                 root_dir='./data/tdw_image_dataset_small',
+                 csv_file='./data/tdw_image_dataset_small_multi_env/images_meta_shuffled.csv',
+                 root_dir='./data/tdw_image_dataset_small_multi_env',
                  split='train',
                  transform=None,
                  ):
@@ -162,7 +162,8 @@ class TDWDataset(Dataset):
             root_dir (string): Directory with all the images.
         """
         data_frame = pd.read_csv(csv_file, index_col=0)
-        data_frame = data_frame.sample(frac=1, random_state=RNG).reset_index(drop=True) # shuffle the data
+        # shuffle the data
+        # data_frame = data_frame.sample(frac=1, random_state=RNG).reset_index(drop=True)
 
         # check if all images exist
         data_path = Path(root_dir)
