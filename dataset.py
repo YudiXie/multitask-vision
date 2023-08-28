@@ -12,8 +12,6 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
-RNG: np.random.RandomState = np.random.RandomState(0)
-
 
 def center_circ_array(arr):
     """
