@@ -86,6 +86,62 @@ scatter_errorbar(data_dict,
 
 
 # compared with 0705, the difference is (1) change image save folder to 0830_analysis_tdw_small_multi_scene, (2) mlt_data: multi_task_wo_object_class is now multi_task
+latent_data = list(df_mt[df_mt['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').mean()['score'].reindex(latent_task_list))
+latent_error = list(df_mt[df_mt['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').std(ddof=0)['score'].reindex(latent_task_list))
+
+cat_data = list(df_cat[df_cat['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').mean()['score'].reindex(cat_task_list))
+cat_error = list(df_cat[df_cat['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').std(ddof=0)['score'].reindex(cat_task_list))
+
+mlt_data = df_mt[df_mt['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').mean()['score']['multi_task']
+mlt_data = [mlt_data, ]
+mlt_error = df_mt[df_mt['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').std(ddof=0)['score']['multi_task']
+mlt_error = [mlt_error, ]
+
+# here use multi_task to index group name because it is the default group name
+# the models are random untrained models
+rnd_data = df_rnd[df_rnd['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').mean()['score']['multi_task']
+rnd_data = [rnd_data, ]
+rnd_error = df_rnd[df_rnd['benchmark_region'] != 'Behavior'].groupby(['exp_group', 'model']).mean().groupby('exp_group').std(ddof=0)['score']['multi_task']
+rnd_error = [rnd_error, ]
+
+pret_score = df_mt[df_mt['benchmark_region'] != 'Behavior'].groupby('exp_group').mean()['score']['Pre-trained']
+
+data_dict = {
+    'latent_tasks': {
+        'x': latent_output_num_list,
+        'y': latent_data,
+        'error': latent_error
+    },
+    'cat_tasks': {
+        'x': cat_output_num_list,
+        'y': cat_data,
+        'error': cat_error
+    },
+    'multi_task': {
+        'x': [14, ],
+        'y': mlt_data,
+        'error': mlt_error
+    },
+    'random': {
+        'x': [0, ],
+        'y': rnd_data,
+        'error': rnd_error
+    },
+}
+
+add_plots = [
+    lambda: plt.hlines(pret_score, 0, 15, linestyles='dashed', label='Pre-trained'),
+    ]
+scatter_errorbar(data_dict,
+                 x_label='Number of output units',
+                 y_label='Mean brain score \n (V1, V2, V4, IT)',
+                 additional_plots=add_plots,
+                 folder_name='0830_analysis_tdw_small_multi_scene',
+                 fig_name='brainscore_vs_output_num_wo_behavior',
+                 )
+
+
+# compared with 0705, the difference is (1) change image save folder to 0830_analysis_tdw_small_multi_scene, (2) mlt_data: multi_task_wo_object_class is now multi_task
 region_list = ['V1', 'V2', 'V4', 'IT', 'Behavior']
 for region in region_list:
     df_mt_r = df_mt[df_mt['benchmark_region'] == region]
