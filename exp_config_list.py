@@ -170,18 +170,18 @@ def multi_task_tdw_0817():
     exp_config['dataset_name'] = 'TDW'
 
     task_set_dict = {
-        'depth_reg': ['depth_reg'],
+        'distance_reg': ['distance_reg'],
         'translation_reg': ['translation_reg'],
         'rotation_reg': ['rotation_reg_tdw'],
 
-        'depth_translation': ['depth_reg', 'translation_reg'],
-        'depth_rotation': ['depth_reg', 'rotation_reg_tdw'],
+        'depth_translation': ['distance_reg', 'translation_reg'],
+        'depth_rotation': ['distance_reg', 'rotation_reg_tdw'],
         'translation_rotation': ['translation_reg', 'rotation_reg_tdw'],
 
-        'depth_translation_rotation': ['depth_reg', 'translation_reg', 'rotation_reg_tdw'],
+        'depth_translation_rotation': ['distance_reg', 'translation_reg', 'rotation_reg_tdw'],
 
         'categorization': ['category_class'],
-        'multi_task': ['category_class', 'rotation_reg_tdw', 'depth_reg', 'translation_reg'],
+        'multi_task': ['category_class', 'rotation_reg_tdw', 'distance_reg', 'translation_reg'],
     }
     seed_list = [0, 1, 2, 3, 4]
     

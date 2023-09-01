@@ -28,7 +28,7 @@ task2targets_name = {
     'object_class': ['object_label'],
     'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
     'rotation_reg_tdw': ['euler_1_proc', 'euler_2_proc', 'euler_3_proc'], # for TDW dataset
-    'depth_reg': ['neg_x'], # for TDW dataset
+    'distance_reg': ['neg_x'], # for TDW dataset
     'size_reg': ['s'],
     'translation_reg': ['ty', 'tz'],
 }
@@ -45,7 +45,7 @@ task2loss_func = {
     'object_class': nn.CrossEntropyLoss(),
     'rotation_reg': nn.MSELoss(),
     'rotation_reg_tdw': nn.MSELoss(),
-    'depth_reg': nn.MSELoss(),
+    'distance_reg': nn.MSELoss(),
     'size_reg': nn.MSELoss(),
     'translation_reg': nn.MSELoss(),
 }
@@ -63,7 +63,7 @@ task2output_range = {
     'rotation_reg': [72, 75],
     'rotation_reg_tdw': [72, 75],
     'size_reg': [75, 76],
-    'depth_reg': [75, 76],
+    'distance_reg': [75, 76],
     'translation_reg': [76, 78],
 }
 

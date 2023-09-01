@@ -12,7 +12,7 @@ df_cat = pd.read_csv(os.path.join(EXP_DIR, 'cat_diff_tdw_multiscene_0826', 'brai
 df_rnd = pd.read_csv(os.path.join(EXP_DIR, 'random_models0630', 'brainscore_results.csv'), index_col=0)
 
 # name of task groups, not individual tasks
-latent_task_list = ['depth_reg', # 1
+latent_task_list = ['distance_reg', # 1
                     'translation_reg', # 2
                     'rotation_reg', # 3
                     'depth_translation', # 3
