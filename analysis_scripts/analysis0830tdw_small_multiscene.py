@@ -15,10 +15,10 @@ df_rnd = pd.read_csv(os.path.join(EXP_DIR, 'random_models0630', 'brainscore_resu
 latent_task_list = ['distance_reg', # 1
                     'translation_reg', # 2
                     'rotation_reg', # 3
-                    'depth_translation', # 3
-                    'depth_rotation', # 4
+                    'distance_translation', # 3
+                    'distance_rotation', # 4
                     'translation_rotation', # 5
-                    'depth_translation_rotation', # 6
+                    'distance_translation_rotation', # 6
                    # 'categorization', # 8
                    # 'multi_task_wo_object_class', # 14
                    # 'multi_task' # 78

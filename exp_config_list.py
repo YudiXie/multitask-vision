@@ -174,11 +174,11 @@ def multi_task_tdw_0817():
         'translation_reg': ['translation_reg'],
         'rotation_reg': ['rotation_reg_tdw'],
 
-        'depth_translation': ['distance_reg', 'translation_reg'],
-        'depth_rotation': ['distance_reg', 'rotation_reg_tdw'],
+        'distance_translation': ['distance_reg', 'translation_reg'],
+        'distance_rotation': ['distance_reg', 'rotation_reg_tdw'],
         'translation_rotation': ['translation_reg', 'rotation_reg_tdw'],
 
-        'depth_translation_rotation': ['distance_reg', 'translation_reg', 'rotation_reg_tdw'],
+        'distance_translation_rotation': ['distance_reg', 'translation_reg', 'rotation_reg_tdw'],
 
         'categorization': ['category_class'],
         'multi_task': ['category_class', 'rotation_reg_tdw', 'distance_reg', 'translation_reg'],
