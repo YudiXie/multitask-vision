@@ -65,7 +65,7 @@ def prepare_pytorch_model(load_path: str = ''):
     model = model.to(DEVICE)
     
     # load model from saved weights
-    if load_path != '':
+    if load_path:
         model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
         print(f'Loaded model from {load_path}')
     else:
