@@ -149,8 +149,8 @@ class TDWDataset(Dataset):
     norm_collums = ['neg_x', 'ty', 'tz','euler_1_proc', 'euler_2_proc', 'euler_3_proc']
 
     def __init__(self, 
-                 csv_file='./data/tdw_image_dataset_small_multi_env/images_meta_shuffled.csv',
-                 root_dir='./data/tdw_image_dataset_small_multi_env',
+                 csv_file='./data/tdw_image_dataset_small_multi_env_hdri/images_meta_shuffled.csv',
+                 root_dir='./data/tdw_image_dataset_small_multi_env_hdri',
                  split='train',
                  transform=None,
                  ):

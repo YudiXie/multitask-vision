@@ -252,3 +252,21 @@ def cat_diff_tdw_multiscene_0826():
         run_id = config['run_id']
         config['save_path'] = os.path.join(EXP_DIR, config['experiment_name'], f'run_{run_id:04d}')
     return config_list
+
+
+def multi_task_tdw_multiscene_hdri_0906():
+    config_list = multi_task_tdw_0817()
+    for config in config_list:
+        config['experiment_name'] = 'multi_task_tdw_multiscene_hdri_0906'
+        run_id = config['run_id']
+        config['save_path'] = os.path.join(EXP_DIR, config['experiment_name'], f'run_{run_id:04d}')
+    return config_list
+
+
+def cat_diff_tdw_multiscene_hdri_0906():
+    config_list = cat_diff_tdw_0820()
+    for config in config_list:
+        config['experiment_name'] = 'cat_diff_tdw_multiscene_hdri_0906'
+        run_id = config['run_id']
+        config['save_path'] = os.path.join(EXP_DIR, config['experiment_name'], f'run_{run_id:04d}')
+    return config_list
