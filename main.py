@@ -58,6 +58,7 @@ def get_jobfile(cmd,
                 cuda_module='openmind8/cuda/11.7',
                 conda_env='base',
                 work_dir='./',
+                gpu_name='',
                 ):
     """
     Create a job file.
@@ -78,6 +79,7 @@ def get_jobfile(cmd,
         cuda_module : str, cuda module to load
         conda_env : str, conda environment to use
         work_dir : str, working directory to execute the command
+        gpu_name : str, name of the gpu to use. eg. 'a100'
     Returns:
         job_file : str, Path to the job file.
     """
@@ -96,7 +98,12 @@ def get_jobfile(cmd,
         email_line = ''
     else:
         email_line = '#SBATCH --mail-type=ALL\n' + \
-                     '#SBATCH --mail-user={}\n'.format(email)
+                     f'#SBATCH --mail-user={email}\n'
+    
+    constraint_line = f'#SBATCH --constraint={gpu_constraint}\n'
+    if gpu_name:
+        gpu_name = f':{gpu_name}'
+        constraint_line = '' # overwrite gpu constraint when gpu name is specified
     
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -106,22 +113,22 @@ def get_jobfile(cmd,
     with open(job_file, 'w') as f:
         f.write(
             '#!/bin/bash\n'
-            + '#SBATCH -t {}:00:00\n'.format(hours)
+            + f'#SBATCH -t {hours}:00:00\n'
             + '#SBATCH -N 1\n'
-            + '#SBATCH -n {}\n'.format(cpu)
-            + '#SBATCH --mem={}G\n'.format(mem)
-            + '#SBATCH --gres=gpu:1\n'
-            + '#SBATCH --constraint={}\n'.format(gpu_constraint)
-            + '#SBATCH --partition={}\n'.format(','.join(partition))
-            + '#SBATCH -e {}/slurm-%j-{}.out\n'.format(output_path, job_name)
-            + '#SBATCH -o {}/slurm-%j-{}.out\n'.format(output_path, job_name)
+            + f'#SBATCH -n {cpu}\n'
+            + f'#SBATCH --mem={mem}G\n'
+            + f'#SBATCH --gres=gpu{gpu_name}:1\n'
+            + constraint_line
+            + f'#SBATCH --partition={",".join(partition)}\n'
+            + f'#SBATCH -e {output_path}/slurm-%j-{job_name}.out\n'
+            + f'#SBATCH -o {output_path}/slurm-%j-{job_name}.out\n'
             + dependency_line
             + email_line
             + '\n'
             + 'source ~/.bashrc\n'
-            + 'module load {}\n'.format(cuda_module)
-            + 'conda activate {}\n'.format(conda_env)
-            + 'cd {}\n'.format(work_dir)
+            + f'module load {cuda_module}\n'
+            + f'conda activate {conda_env}\n'
+            + f'cd {work_dir}\n'
             + 'echo -e "System Info: \\n----------\\n$(hostnamectl)\\n----------"' + '\n'
             + 'nvcc --version\n'
             + 'nvidia-smi\n'
@@ -141,6 +148,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--cluster', action='store_true', help='Use batch submission on cluster')
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
+    parser.add_argument('-g', '--gpu', default='', help='Kind of GPU to use, eg. a100')
     args = parser.parse_args()
 
     assert args.do in ['train', 'score'], 'Unknown operation: ' + args.do
@@ -180,6 +188,7 @@ if __name__ == '__main__':
                                          partition=args.partition,
                                          cuda_module=CUDA_MODULE,
                                          conda_env=conda_env,
+                                         gpu_name=args.gpu,
                                          )
             cp_process = subprocess.run(['sbatch', slurm_job_file],
                                         capture_output=True, check=True)
