@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -267,13 +268,27 @@ def train_model(config):
     # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
 
-    # Train the model
-    model.train()
-    batch_n = 1
-    example_ct = 0
+    # initialize
+    batch_n = 0  # the numbder of batches the model has trained on so far
+    sample_ct = 0  # number of training samples the model has trained on so far
     best_category_acc = 0.0
     best_object_acc = 0.0
-    while batch_n < config.max_batch + 1:
+
+    # restart from checkpoint if checkpoint exist
+    checkpoint_path = Path(os.path.join(config.save_path, 'checkpoint.tar'))
+    if checkpoint_path.is_file() and config.restart_from_checkpoint:
+        checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        batch_n = checkpoint['batch_number']
+        sample_ct = checkpoint['sample_count']
+        best_category_acc = checkpoint['best_category_accuracy']
+        best_object_acc = checkpoint['best_object_accuracy']
+        print(f'Loaded checkpoint! Restarting from batch: {batch_n}')
+    
+    # Train the model
+    model.train()
+    while batch_n < config.max_batch:
         for data in train_loader:
             inputs = data['image'].to(DEVICE)
             outputs = model(inputs)
@@ -307,9 +322,11 @@ def train_model(config):
             train_loss.backward()
             optimizer.step()
 
-            example_ct += len(inputs)
+            batch_n += 1
+            sample_ct += len(inputs)
+
             metrics = {"train/batch_n": batch_n,
-                       "train/example_ct": example_ct,
+                       "train/sample_ct": sample_ct,
                        "train/train_loss": train_loss.item()}
             metrics.update({f"train/train_{k}_loss": v.item() for k, v in task_loss_dict.items()})
             
@@ -338,21 +355,28 @@ def train_model(config):
                         best_object_acc = object_acc
                     out_string += f", Valid Object Accuracy: {object_acc:.2f}"
                 print(out_string)
-
-            batch_n += 1
-            if batch_n > config.max_batch:
+            
+            # save model checkpoint for restarting, at the very end of each loop
+            if batch_n % config.checkpoint_per == 0:
+                torch.save({
+                    'batch_number': batch_n,
+                    'sample_count': sample_ct,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'best_category_accuracy': best_category_acc,
+                    'best_object_accuracy': best_object_acc,
+                    }, checkpoint_path)
+            
+            if batch_n >= config.max_batch:
                 break
     
-    # save the model
+    # save the final model
     torch.save(model.state_dict(), os.path.join(config.save_path, 'model.pth'))
 
-    # log a Summary metric
-    log_complete(config.save_path, start_time)
+    # log summary metrics
     wandb.summary['best_category_accuracy'] = best_category_acc
     wandb.summary['best_object_accuracy'] = best_object_acc
-    wandb.alert(
-            title='Run Finished',
-            text=f'Run Finished, Best Category Accuracy: {best_category_acc:.2f}'
-        )
     wandb.finish()
+    
+    log_complete(config.save_path, start_time)
     return model

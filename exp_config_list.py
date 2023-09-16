@@ -10,6 +10,8 @@ base_config = {
     'lr': 1e-3,
     'max_batch': 1000,
     'eval_per': 10,
+    'restart_from_checkpoint': True,
+    'checkpoint_per': 100,
     'group_name': 'multi_task',
     'tasks': [
         'category_class',
