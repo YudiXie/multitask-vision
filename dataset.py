@@ -2,15 +2,14 @@
 import os
 from pathlib import Path
 
-from skimage import io
-
 import numpy as np
 import pandas as pd
 from scipy.stats import circmean
 from PIL import Image
-
 import torch
 from torch.utils.data import Dataset
+from skimage import io
+from tqdm import tqdm
 
 
 def center_circ_array(arr):
@@ -165,7 +164,7 @@ class TDWDataset(Dataset):
 
         # check if all images exist
         data_path = Path(root_dir)
-        for i in range(len(data_frame)):
+        for i in tqdm(range(len(data_frame))):
             assert data_path.joinpath(data_frame.loc[i, 'image_filename']).is_file()
 
         normed_data_frame = data_frame.copy()
