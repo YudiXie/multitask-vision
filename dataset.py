@@ -146,6 +146,9 @@ class TDWDataset(Dataset):
     tz: vertical position of object, in pixels, center of image is 0, + is going up
     euler_1, euler_2, euler_3: rotation of object, in degrees, returned by TDW local transform relative to the camera
     euler_x_proc: rotation of object, in degrees, processed to be in the range (-180, 180), centered around 0
+
+    tdw_image_dataset_small_multi_env: 8 categories, ~5,000 images
+    tdw_image_dataset_large_20230907: 117 categories, 587 objects, ~1,350,000 images
     """
     norm_collums = ['neg_x', 'ty', 'tz','euler_1_proc', 'euler_2_proc', 'euler_3_proc']
 
