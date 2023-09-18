@@ -160,6 +160,9 @@ class TDWDataset(Dataset):
         """
         assert Path(root_dir).joinpath('images_meta_shuffled_processed.csv').is_file(), \
             f'images_meta_shuffled_processed.csv does not exist in {root_dir}, please run tdw_dataset_preprocess() first'
+        assert Path(root_dir).joinpath('mappings.yml').is_file(), \
+            f'mappings.yml does not exist in {root_dir}, please run tdw_dataset_preprocess() first'
+        
         normed_data_frame = pd.read_csv(os.path.join(root_dir, 'images_meta_shuffled_processed.csv'), index_col=0)
 
         self.root_dir = root_dir
