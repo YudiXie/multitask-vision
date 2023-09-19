@@ -147,7 +147,7 @@ class TDWDataset(Dataset):
     euler_1, euler_2, euler_3: rotation of object, in degrees, returned by TDW local transform relative to the camera
     euler_x_proc: rotation of object, in degrees, processed to be in the range (-180, 180), centered around 0
 
-    tdw_image_dataset_small_multi_env: 8 categories, ~5,000 images
+    tdw_image_dataset_small_multi_env(_hdri): 8 categories, ~5,000 images
     tdw_image_dataset_large_20230907: 117 categories, 587 objects, ~1,350,000 images
     """
     norm_collums = ['neg_x', 'ty', 'tz','euler_1_proc', 'euler_2_proc', 'euler_3_proc']
@@ -168,6 +168,14 @@ class TDWDataset(Dataset):
         
         normed_data_frame = pd.read_csv(os.path.join(root_dir, 'images_meta_shuffled_processed.csv'), index_col=0)
 
+        dataset_name = os.path.basename(root_dir)
+        if dataset_name == 'tdw_image_dataset_small_multi_env_hdri':
+            split_index = int(len(normed_data_frame) * 0.8)
+        elif dataset_name == 'tdw_image_dataset_large_20230907':
+            split_index = -50000
+        else:
+            raise NotImplementedError(f'Dataset: {dataset_name} not implemented')
+        
         self.root_dir = root_dir
         self.transform = transform
 
@@ -178,9 +186,9 @@ class TDWDataset(Dataset):
         if split == 'all':
             self.normed_data_frame = normed_data_frame
         elif split == 'train':
-            self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * 0.8)]
+            self.normed_data_frame = normed_data_frame[:split_index]
         elif split == 'val':
-            self.normed_data_frame = normed_data_frame[int(len(normed_data_frame) * 0.8):].reset_index(drop=True)
+            self.normed_data_frame = normed_data_frame[split_index:].reset_index(drop=True)
         else:
             raise ValueError('split must be either all, train, or val')
 
