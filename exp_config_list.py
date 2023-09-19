@@ -281,7 +281,8 @@ def multi_task_tdw_large20230907_0919():
         run_id = config['run_id']
         config['save_path'] = os.path.join(EXP_DIR, config['experiment_name'], f'run_{run_id:04d}')
 
-        config['max_batch'] = 100000
+        config['dataset_name'] = 'TDW_large20230907'
+        config['max_batch'] = 100000  # run thorugh the dataset ~5 times with batchsize 64
         config['eval_per'] = 1000
         config['checkpoint_per'] = 1000
     return config_list

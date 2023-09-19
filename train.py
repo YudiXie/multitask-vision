@@ -51,7 +51,7 @@ task2loss_func = {
     'translation_reg': nn.MSELoss(),
 }
 
-task2output_range = {
+task2output_range_small = {
     'cat2': (0, 2),
     'cat3': (0, 3),
     'cat4': (0, 4),
@@ -66,6 +66,16 @@ task2output_range = {
     'size_reg': [75, 76],
     'distance_reg': [75, 76],
     'translation_reg': [76, 78],
+}
+
+task2output_range_large = {
+    'category_class': (0, 117),
+    'object_class': (117, 704),
+    'rotation_reg': [704, 707],
+    'rotation_reg_tdw': [704, 707],
+    'size_reg': [707, 708],
+    'distance_reg': [707, 708],
+    'translation_reg': [708, 710],
 }
 
 # used to set the weights of the different tasks by hand
@@ -91,6 +101,9 @@ def get_dataloader(dataset_name, is_train, batch_size, transform):
         dataset = HVMDataset(split=split, transform=transform)
     elif dataset_name == 'TDW':
         dataset = TDWDataset(split=split, transform=transform)
+    elif dataset_name == 'TDW_large20230907':
+        dataset = TDWDataset(root_dir='./data/tdw_image_dataset_large_20230907', 
+                             split=split, transform=transform)
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
@@ -105,6 +118,7 @@ def get_dataloader(dataset_name, is_train, batch_size, transform):
 def validate_model(model,
                    valid_dl,
                    task_list,
+                   task2output_range,
                    log_images=False,
                    batch_idx=0):
     "Compute performance of the model on the validation dataset and log a wandb.Table"
@@ -244,8 +258,18 @@ def train_model(config):
         model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
     else:
         model = resnet18()
+
+    if config.dataset_name == 'TDW_large20230907':
+        # TDW large dataset
+        output_number = 710 # 117 + 587 + 3 + 1 + 2
+        task2output_range = task2output_range_large
+    else:
+        # TDW small dataset and HvM dataset
+        output_number = 78  # 8 + 64 + 3 + 1 + 2
+        task2output_range = task2output_range_small
+
     # Replace the last layer with a linear layer for multi-task learning
-    model.fc = nn.Linear(model.fc.in_features, 78)
+    model.fc = nn.Linear(model.fc.in_features, output_number)
     model = model.to(DEVICE)
 
     # Data preprocessing
@@ -335,7 +359,8 @@ def train_model(config):
                 wandb.log(metrics)
             # validate model
             else:
-                val_loss, val_results = validate_model(model, val_loader, config.tasks,
+                val_loss, val_results = validate_model(model, val_loader, config.tasks, 
+                                                       task2output_range,
                                                        log_images=(batch_n==config.max_batch))
                 model.train()
                 # Log train and validation metrics to wandb
