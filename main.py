@@ -147,8 +147,10 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', '--cluster', action='store_true', help='Use batch submission on cluster')
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
-    parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     parser.add_argument('-g', '--gpu', default='', help='Kind of GPU to use, eg. a100')
+    parser.add_argument('-h', '--hours', type=int, default=8, help='Maximum hours to run')
+
+    parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
     assert args.do in ['train', 'score'], 'Unknown operation: ' + args.do
@@ -189,6 +191,7 @@ if __name__ == '__main__':
                                          cuda_module=CUDA_MODULE,
                                          conda_env=conda_env,
                                          gpu_name=args.gpu,
+                                         hours=args.hours,
                                          )
             cp_process = subprocess.run(['sbatch', slurm_job_file],
                                         capture_output=True, check=True)
