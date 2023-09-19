@@ -10,6 +10,7 @@ conda activate multitask-vision
 # on linux
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 conda install pyyaml scikit-image pandas
+conda install -c conda-forge tqdm
 
 conda install wandb --channel conda-forge
 # or
