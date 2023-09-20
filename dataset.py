@@ -178,6 +178,8 @@ class TDWDataset(Dataset):
             f'mappings.yml does not exist in {root_dir}, please run tdw_dataset_preprocess() first'
         
         normed_data_frame = pd.read_csv(os.path.join(root_dir, 'images_meta_shuffled_processed.csv'), index_col=0)
+        for collum in TDWDataset.norm_collums:
+            normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
 
         dataset_name = os.path.basename(root_dir)
         if dataset_name == 'tdw_image_dataset_small_multi_env_hdri':
