@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+import time
 
 import numpy as np
 import torch
@@ -395,6 +396,9 @@ def train_model(config):
             if batch_n >= config.max_batch:
                 break
     
+    # wait 2.5 seconds
+    time.sleep(2.5)
+
     # save the final model
     torch.save(model.state_dict(), os.path.join(config.save_path, 'model.pth'))
 
