@@ -368,7 +368,7 @@ def train_model(config):
                 val_metrics.update({f"val/{k}": v for k, v in val_results.items()})
                 wandb.log({**metrics, **val_metrics})
 
-                out_string = f"Batch Number: {batch_n:4d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:.3f}"
+                out_string = f"Batch Number: {batch_n:10d}, Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:.3f}"
                 if 'category_class' in config.tasks:
                     category_acc = val_results['val_category_acc']
                     if category_acc > best_category_acc:
