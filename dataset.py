@@ -28,6 +28,20 @@ def center_circ_array(arr):
     return arr
 
 
+def create_mapping(str_list: list):
+    """
+    Create a mapping from string to int and int to string
+    param: str_list: list of strings with no duplicates
+    return: two dictionaries that contains the mapping from string to int and int to string
+    """
+    str_list.sort()
+    str2int_map = {}
+    for i, str_name in enumerate(str_list):
+        str2int_map[str_name] = i
+    int2str_map = {v: k for k, v in str2int_map.items()}
+    return str2int_map, int2str_map
+
+
 def load_image(image_filepath):
     """Load an image from disk and return a PIL.Image object.
     from https://github.com/brain-score/model-tools/blob/75365b54670d3f6f63dcdf88395c0a07d6b286fc/model_tools/activations/pytorch.py#L118
@@ -81,22 +95,19 @@ class HVMDataset(Dataset):
         self.transform = transform
       
         # create a map from category name to category label
-        self.category_str2int = {}
-        cat_list = list(normed_data_frame['category_name'].unique())
-        cat_list.sort()
-        for i, category_name in enumerate(cat_list):
-            self.category_str2int[category_name] = i
-        self.category_int2str = {v: k for k, v in self.category_str2int.items()}
-        normed_data_frame['category_label'] = [self.category_str2int[cn] for cn in normed_data_frame['category_name']]
+        category_str2int, category_int2str = create_mapping(list(normed_data_frame['category_name'].unique()))
+        normed_data_frame['category_label'] = [category_str2int[cn] for cn in normed_data_frame['category_name']]
         
         # create a map from object name to object label
-        self.object_str2int = {}
-        object_list = list(normed_data_frame['object_name'].unique())
-        object_list.sort()
-        for i, object_name in enumerate(object_list):
-            self.object_str2int[object_name] = i
-        self.object_int2str = {v: k for k, v in self.object_str2int.items()}
-        normed_data_frame['object_label'] = [self.object_str2int[on] for on in normed_data_frame['object_name']]
+        object_str2int, object_int2str = create_mapping(list(normed_data_frame['object_name'].unique()))
+        normed_data_frame['object_label'] = [object_str2int[on] for on in normed_data_frame['object_name']]
+
+        self.mappings = {
+            'category_str2int': category_str2int,
+            'category_int2str': category_int2str,
+            'object_str2int': object_str2int,
+            'object_int2str': object_int2str,
+        }
 
         # normalize the data
         for collum in self.norm_collums:
@@ -215,20 +226,6 @@ class TDWDataset(Dataset):
             sample[collum] = self.normed_data_frame.loc[idx, collum]
 
         return sample
-
-
-def create_mapping(str_list: list):
-    """
-    Create a mapping from string to int and int to string
-    param: str_list: list of strings with no duplicates
-    return: two dictionaries that contains the mapping from string to int and int to string
-    """
-    str_list.sort()
-    str2int_map = {}
-    for i, str_name in enumerate(str_list):
-        str2int_map[str_name] = i
-    int2str_map = {v: k for k, v in str2int_map.items()}
-    return str2int_map, int2str_map
 
 
 def tdw_dataset_preprocess(root_dir):

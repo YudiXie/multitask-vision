@@ -172,7 +172,7 @@ def validate_model(model,
                                     predicted, 
                                     category_label, 
                                     outputs[:, 0:8].softmax(dim=1),
-                                    valid_dl.dataset.category_int2str,
+                                    valid_dl.dataset.mappings['category_int2str'],
                                     )
             
             if 'object_class' in task_list:
