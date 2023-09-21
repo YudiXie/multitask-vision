@@ -13,7 +13,7 @@ from model_tools.brain_transformation import ModelCommitment
 from config_global import EXP_DIR
 from utils import load_config, log_complete, prepare_pytorch_model, get_model_id
 import exp_config_list
-from task_setup import get_output_info
+from tasks_setup import get_output_info
 
 # code to get layer names
 # for name, layer in model.named_modules():
