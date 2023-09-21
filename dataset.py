@@ -194,7 +194,7 @@ class TDWDataset(Dataset):
 
         with open(os.path.join(root_dir, 'mappings.yml'), 'r') as file:
             mappings = yaml.safe_load(file)
-        self.mapping = mappings
+        self.mappings = mappings
         
         if split == 'all':
             self.normed_data_frame = normed_data_frame
