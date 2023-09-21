@@ -13,44 +13,8 @@ import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
 from dataset import HVMDataset, TDWDataset
-from utils import load_config, log_complete, get_output_info
-
-
-cat_reduced_tasks = ['cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8']
-
-task2targets_name = {
-    'cat2': ['cat_label_reduce2'],
-    'cat3': ['cat_label_reduce3'],
-    'cat4': ['cat_label_reduce4'],
-    'cat5': ['cat_label_reduce5'],
-    'cat6': ['cat_label_reduce6'],
-    'cat7': ['cat_label_reduce7'],
-    'cat8': ['cat_label_reduce8'],
-    'category_class': ['category_label'],
-    'object_class': ['object_label'],
-    'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
-    'rotation_reg_tdw': ['euler_1_proc', 'euler_2_proc', 'euler_3_proc'], # for TDW dataset
-    'distance_reg': ['neg_x'], # for TDW dataset
-    'size_reg': ['s'],
-    'translation_reg': ['ty', 'tz'],
-}
-
-task2loss_func = {
-    'cat2': nn.CrossEntropyLoss(),
-    'cat3': nn.CrossEntropyLoss(),
-    'cat4': nn.CrossEntropyLoss(),
-    'cat5': nn.CrossEntropyLoss(),
-    'cat6': nn.CrossEntropyLoss(),
-    'cat7': nn.CrossEntropyLoss(),
-    'cat8': nn.CrossEntropyLoss(),
-    'category_class': nn.CrossEntropyLoss(),
-    'object_class': nn.CrossEntropyLoss(),
-    'rotation_reg': nn.MSELoss(),
-    'rotation_reg_tdw': nn.MSELoss(),
-    'distance_reg': nn.MSELoss(),
-    'size_reg': nn.MSELoss(),
-    'translation_reg': nn.MSELoss(),
-}
+from utils import load_config, log_complete
+from task_setup import cat_reduced_tasks, task2loss_func, task2targets_name, get_output_info
 
 # used to set the weights of the different tasks by hand
 # note that when less than 5 tasks are used, the weights should be adjusted
