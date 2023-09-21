@@ -48,10 +48,12 @@ def get_output_info(dataset_name):
         # TDW large dataset
         output_number = 710 # 117 + 587 + 3 + 1 + 2
         task2output_range = task2output_range_large
-    else:
+    elif dataset_name == 'TDW' or dataset_name == 'HvM':
         # TDW small dataset and HvM dataset
         output_number = 78  # 8 + 64 + 3 + 1 + 2
         task2output_range = task2output_range_small
+    else:
+        raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
     return output_number, task2output_range
 

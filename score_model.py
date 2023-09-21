@@ -115,7 +115,7 @@ def prepare_and_score_model(config):
         config: dict, an experimental config specifying a model
     """
     model_save_path = os.path.join(config['save_path'], 'model.pth')
-    out_dim, _ignore = get_output_info(config)
+    out_dim, _ignore = get_output_info(config['dataset_name'])
     model = prepare_model_commitment(get_model_id(config), out_dim, model_save_path)
 
     start_time = datetime.now()
@@ -176,7 +176,7 @@ def save_exp_scores(exp_name):
     # save score for models specified by experiment config list
     for config in config_list:
         model_save_path = os.path.join(config['save_path'], 'model.pth')
-        out_dim, _ignore = get_output_info(config)
+        out_dim, _ignore = get_output_info(config['dataset_name'])
         model = prepare_model_commitment(model_identifier=get_model_id(config),
                                          out_dim=out_dim, load_path=model_save_path)
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
