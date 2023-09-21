@@ -163,7 +163,8 @@ def validate_model(model,
 
             # Compute accuracy and accumulate
             if 'category_class' in task_list:
-                _, predicted = torch.max(outputs[:, 0:8], 1)
+                out_range = task2output_range['category_class']
+                _, predicted = torch.max(outputs[:, out_range[0]:out_range[1]], 1)
                 category_label = data['category_label'].to(DEVICE)
                 category_correct += (predicted == category_label).sum().item()
                 
@@ -172,12 +173,13 @@ def validate_model(model,
                     log_image_table(inputs, 
                                     predicted, 
                                     category_label, 
-                                    outputs[:, 0:8].softmax(dim=1),
+                                    outputs[:, out_range[0]:out_range[1]].softmax(dim=1),
                                     valid_dl.dataset.mappings['category_int2str'],
                                     )
             
             if 'object_class' in task_list:
-                _, predicted = torch.max(outputs[:, 8:72], 1)
+                out_range = task2output_range['object_class']
+                _, predicted = torch.max(outputs[:, out_range[0]:out_range[1]], 1)
                 object_label = data['object_label'].to(DEVICE)
                 object_correct += (predicted == object_label).sum().item()
             
