@@ -11,7 +11,7 @@ from model_tools.activations.pytorch import PytorchWrapper
 from model_tools.brain_transformation import ModelCommitment
 
 from config_global import EXP_DIR
-from utils import load_config, log_complete, prepare_pytorch_model, get_model_id
+from utils import load_config, log_complete, prepare_pytorch_model, get_model_id, get_output_info
 import exp_config_list
 
 # code to get layer names
@@ -59,7 +59,7 @@ def get_layer_commitment(model: ModelCommitment):
     return layer_map
 
 
-def prepare_model_commitment(model_identifier: str, load_path: str = '') -> ModelCommitment:
+def prepare_model_commitment(model_identifier: str, out_dim: int, load_path: str = '') -> ModelCommitment:
     """
     prepare model for benchmarking
     args:
@@ -69,7 +69,7 @@ def prepare_model_commitment(model_identifier: str, load_path: str = '') -> Mode
     return:
         model: ModelCommitment object
     """
-    pytorch_model = prepare_pytorch_model(load_path)
+    pytorch_model = prepare_pytorch_model(out_dim, load_path)
     preprocessing = functools.partial(load_preprocess_images, image_size=224)
     activations_model = PytorchWrapper(identifier=model_identifier, 
                                        model=pytorch_model,
@@ -115,7 +115,8 @@ def prepare_and_score_model(config):
         config: dict, an experimental config specifying a model
     """
     model_save_path = os.path.join(config['save_path'], 'model.pth')
-    model = prepare_model_commitment(get_model_id(config), model_save_path)
+    out_dim, _ignore = get_output_info(config)
+    model = prepare_model_commitment(get_model_id(config), out_dim, model_save_path)
 
     start_time = datetime.now()
     for region, benchmark_id in benchmark_dict.items():
@@ -169,14 +170,15 @@ def save_exp_scores(exp_name):
                                     ])
     
     # save score for pre-trained model
-    model = prepare_model_commitment('mt0527-resnet18-pret')
+    model = prepare_model_commitment('mt0527-resnet18-pret', out_dim=78)
     save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
     # save score for models specified by experiment config list
     for config in config_list:
         model_save_path = os.path.join(config['save_path'], 'model.pth')
-        model = prepare_model_commitment(model_identifier=get_model_id(config), 
-                                         load_path=model_save_path)
+        out_dim, _ignore = get_output_info(config)
+        model = prepare_model_commitment(model_identifier=get_model_id(config),
+                                         out_dim=out_dim, load_path=model_save_path)
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))

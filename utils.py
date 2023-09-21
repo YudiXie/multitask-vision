@@ -9,6 +9,52 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 from config_global import DEVICE
 
+task2output_range_small = {
+    'cat2': (0, 2),
+    'cat3': (0, 3),
+    'cat4': (0, 4),
+    'cat5': (0, 5),
+    'cat6': (0, 6),
+    'cat7': (0, 7),
+    'cat8': (0, 8), # equvalent to category_class
+    'category_class': (0, 8),
+    'object_class': (8, 72),
+    'rotation_reg': [72, 75],
+    'rotation_reg_tdw': [72, 75],
+    'size_reg': [75, 76],
+    'distance_reg': [75, 76],
+    'translation_reg': [76, 78],
+}
+
+task2output_range_large = {
+    'category_class': (0, 117),
+    'object_class': (117, 704),
+    'rotation_reg': [704, 707],
+    'rotation_reg_tdw': [704, 707],
+    'size_reg': [707, 708],
+    'distance_reg': [707, 708],
+    'translation_reg': [708, 710],
+}
+
+
+def get_output_info(dataset_name):
+    """
+    determine the output dimention and the output range based on the dataset
+    args:
+        dataset_name: str, name of the dataset
+    """
+
+    if dataset_name == 'TDW_large20230907':
+        # TDW large dataset
+        output_number = 710 # 117 + 587 + 3 + 1 + 2
+        task2output_range = task2output_range_large
+    else:
+        # TDW small dataset and HvM dataset
+        output_number = 78  # 8 + 64 + 3 + 1 + 2
+        task2output_range = task2output_range_small
+    
+    return output_number, task2output_range
+
 
 def log_complete(exp_path: str, start_time=None, mode='train'):
     """
@@ -51,17 +97,18 @@ def load_config(yaml_file_path='config.yml'):
     return config
 
 
-def prepare_pytorch_model(load_path: str = ''):
+def prepare_pytorch_model(out_dim: int, load_path: str = ''):
     """
     prepare a torch.nn model
     args:
+        out_dim: int, the output dimension of the model
         load_path: str, path to load model weights, 
             if provided load weights, otherwise use pretrained weights
     return:
         model: torch.nn model
     """
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    model.fc = nn.Linear(model.fc.in_features, 78)
+    model.fc = nn.Linear(model.fc.in_features, out_dim)
     model = model.to(DEVICE)
     
     # load model from saved weights

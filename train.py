@@ -13,7 +13,7 @@ import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
 from dataset import HVMDataset, TDWDataset
-from utils import load_config, log_complete
+from utils import load_config, log_complete, get_output_info
 
 
 cat_reduced_tasks = ['cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8']
@@ -50,33 +50,6 @@ task2loss_func = {
     'distance_reg': nn.MSELoss(),
     'size_reg': nn.MSELoss(),
     'translation_reg': nn.MSELoss(),
-}
-
-task2output_range_small = {
-    'cat2': (0, 2),
-    'cat3': (0, 3),
-    'cat4': (0, 4),
-    'cat5': (0, 5),
-    'cat6': (0, 6),
-    'cat7': (0, 7),
-    'cat8': (0, 8), # equvalent to category_class
-    'category_class': (0, 8),
-    'object_class': (8, 72),
-    'rotation_reg': [72, 75],
-    'rotation_reg_tdw': [72, 75],
-    'size_reg': [75, 76],
-    'distance_reg': [75, 76],
-    'translation_reg': [76, 78],
-}
-
-task2output_range_large = {
-    'category_class': (0, 117),
-    'object_class': (117, 704),
-    'rotation_reg': [704, 707],
-    'rotation_reg_tdw': [704, 707],
-    'size_reg': [707, 708],
-    'distance_reg': [707, 708],
-    'translation_reg': [708, 710],
 }
 
 # used to set the weights of the different tasks by hand
@@ -262,14 +235,7 @@ def train_model(config):
     else:
         model = resnet18()
 
-    if config.dataset_name == 'TDW_large20230907':
-        # TDW large dataset
-        output_number = 710 # 117 + 587 + 3 + 1 + 2
-        task2output_range = task2output_range_large
-    else:
-        # TDW small dataset and HvM dataset
-        output_number = 78  # 8 + 64 + 3 + 1 + 2
-        task2output_range = task2output_range_small
+    output_number, task2output_range = get_output_info(config.dataset_name)
 
     # Replace the last layer with a linear layer for multi-task learning
     model.fc = nn.Linear(model.fc.in_features, output_number)
