@@ -149,6 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--partition', nargs='+', default=['normal'], help='Partition of resource on cluster to use')
     parser.add_argument('-g', '--gpu', default='', help='Kind of GPU to use, eg. a100')
     parser.add_argument('-t', '--time', type=int, default=8, help='Maximum hours to run')
+    parser.add_argument('-e', '--memory', type=int, default=32, help='Memory to use in GB')
 
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
@@ -192,6 +193,7 @@ if __name__ == '__main__':
                                          conda_env=conda_env,
                                          gpu_name=args.gpu,
                                          hours=args.time,
+                                         mem=args.memory,
                                          )
             cp_process = subprocess.run(['sbatch', slurm_job_file],
                                         capture_output=True, check=True)
