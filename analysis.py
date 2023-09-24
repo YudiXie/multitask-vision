@@ -288,6 +288,8 @@ def scatter_errorbar(data_dict,
         kwargs = {}
         if 'error' in value:
             kwargs.update({'yerr': value['error']})
+        if 'color' in value:
+            kwargs.update({'color': value['color']})
         plt.errorbar(value['x'], value['y'], fmt="o", label=key, **kwargs)
     
     if x_label is not None:
