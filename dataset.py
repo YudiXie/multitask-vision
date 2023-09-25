@@ -167,10 +167,12 @@ class TDWDataset(Dataset):
                  root_dir='./data/tdw_image_dataset_small_multi_env_hdri',
                  split='train',
                  transform=None,
+                 fraction=1.0,
                  ):
         """
         Arguments:
             root_dir (string): Directory with all the images.
+            fraction (float): fraction of the training or testing dataset to use, 1.0 means use all the data
         """
         assert Path(root_dir).joinpath('images_meta_shuffled_processed.csv').is_file(), \
             f'images_meta_shuffled_processed.csv does not exist in {root_dir}, please run tdw_dataset_preprocess() first'
@@ -197,13 +199,15 @@ class TDWDataset(Dataset):
         self.mappings = mappings
         
         if split == 'all':
-            self.normed_data_frame = normed_data_frame
+            pass
         elif split == 'train':
-            self.normed_data_frame = normed_data_frame[:split_index]
+            normed_data_frame = normed_data_frame[:split_index]
         elif split == 'val':
-            self.normed_data_frame = normed_data_frame[split_index:].reset_index(drop=True)
+            normed_data_frame = normed_data_frame[split_index:].reset_index(drop=True)
         else:
             raise ValueError('split must be either all, train, or val')
+        
+        self.normed_data_frame = normed_data_frame[:int(len(normed_data_frame) * fraction)]
 
     def __len__(self):
         return len(self.normed_data_frame)
