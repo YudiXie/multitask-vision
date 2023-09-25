@@ -28,7 +28,7 @@ from tasks_setup import cat_reduced_tasks, task2loss_func, task2targets_name, ge
 # }
 
 
-def get_dataloader(dataset_name, is_train, batch_size, transform):
+def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction=1.0):
     "Get a training dataloader"    
     if is_train:
         split = 'train'
@@ -36,12 +36,16 @@ def get_dataloader(dataset_name, is_train, batch_size, transform):
         split = 'val'
 
     if dataset_name == 'HvM':
+        assert dataset_fraction == 1.0, 'HvM dataset does not support dataset_fraction'
         dataset = HVMDataset(split=split, transform=transform)
     elif dataset_name == 'TDW':
-        dataset = TDWDataset(split=split, transform=transform)
+        dataset = TDWDataset(split=split, transform=transform,
+                             fraction=dataset_fraction,)
     elif dataset_name == 'TDW_large20230907':
         dataset = TDWDataset(root_dir='./data/tdw_image_dataset_large_20230907', 
-                             split=split, transform=transform)
+                             split=split,
+                             transform=transform,
+                             fraction=dataset_fraction,)
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
@@ -216,7 +220,8 @@ def train_model(config):
     train_loader = get_dataloader(dataset_name=config.dataset_name,
                                   is_train=True, 
                                   batch_size=config.batch_size,
-                                  transform=transform)
+                                  transform=transform,
+                                  dataset_fraction=config.train_dataset_fraction)
     val_loader = get_dataloader(dataset_name=config.dataset_name,
                                 is_train=False,
                                 batch_size=config.batch_size,

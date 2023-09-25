@@ -24,6 +24,7 @@ base_config = {
     # 'experiment_name': 'multi_task_0620',
     'save_path': './experiments/',
     'pretrain_init': True,
+    'train_dataset_fraction': 1.0,
     }
 
 
@@ -329,6 +330,37 @@ def multi_task_tdw_large20230907_nopret_0925():
             cfg = copy.deepcopy(exp_config)
             cfg['group_name'] = group_n
             cfg['tasks'] = task_set
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
+
+
+def multi_task_tdw_large20230907_nopret_dis_scaling_0925():
+    # compare models with different training targets
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'multi_task_tdw_large20230907_nopret_dis_scaling_0925'
+    exp_config['dataset_name'] = 'TDW_large20230907'
+    exp_config['max_batch'] = 200000  # run thorugh the dataset ~10 times with batchsize 64
+    exp_config['eval_per'] = 1000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['tasks'] = ['distance_reg']
+    seed_list = [0, 1, 2]
+    
+    fractions = [1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for frac in fractions:
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = f'frac_{frac}'
+            cfg['train_dataset_fraction'] = frac
             cfg['seed'] = seed
 
             cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
