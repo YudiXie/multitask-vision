@@ -1,22 +1,60 @@
 # multitask-vision
 A repo for training vision models with multiple tasks
 
-Installing environment:
+### Installing environment:
 
 ```
-# not tested
 conda create -n multitask-vision python
 conda activate multitask-vision
-# on linux
+# install pytorch, on linux it is, might be different on MacOS.
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 conda install pyyaml scikit-image pandas
 conda install -c conda-forge tqdm
 
+# install weights and biases
 conda install wandb --channel conda-forge
 # or
 pip install wandb
 
-# then wandb login
+# then login to wandb
 wandb login
 ```
 
+### Example usage
+First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
+
+Then, prepare the datset, by running:
+```
+python dataset.py -n <dataset-name>
+```
+
+Train models, this will trained a group of neural network models with the dataset specified in `exp_config_list.py`
+
+Use `-c`, to run on the openmind cluster, this will submit many jobs, each for the training or scoring for one neural network model.
+
+```
+python main.py -d train -n <experiment-name> -c
+```
+
+After the training is complete, check if all the train runs are finished successfully.
+
+```
+python main.py -d train -n <experiment-name> -c -m
+```
+
+Score models, this will calculate the Brain-Score for the group of neural network models.
+```
+python main.py -d score -n <experiment-name> -c
+```
+
+After the scoring is complete, check if all the score runs are finished successfully.
+
+```
+python main.py -d score -n <experiment-name> -c -m
+```
+
+Run the following to complie the scores into a consolidated csv file
+
+```
+python score_model.py -n <experiment-name>
+```
