@@ -16,6 +16,7 @@ from dataset import HVMDataset, TDWDataset
 from utils import load_config, log_complete
 from tasks_setup import cat_reduced_tasks, task2loss_func, task2targets_name, get_output_info
 
+
 # used to set the weights of the different tasks by hand
 # note that when less than 5 tasks are used, the weights should be adjusted
 # so that they sum to 1
