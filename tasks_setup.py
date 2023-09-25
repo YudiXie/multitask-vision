@@ -3,6 +3,7 @@ import torch.nn as nn
 # Task relevant constants
 cat_reduced_tasks = ['cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8']
 
+# mapping from individual task names to the corresponding target names in the data frame
 task2targets_name = {
     'cat2': ['cat_label_reduce2'],
     'cat3': ['cat_label_reduce3'],
@@ -20,6 +21,7 @@ task2targets_name = {
     'translation_reg': ['ty', 'tz'],
 }
 
+# mapping from individual task names to the corresponding loss functions to be used
 task2loss_func = {
     'cat2': nn.CrossEntropyLoss(),
     'cat3': nn.CrossEntropyLoss(),
@@ -37,6 +39,8 @@ task2loss_func = {
     'translation_reg': nn.MSELoss(),
 }
 
+# mapping from individual task names to the output units in the model
+# for small TDW dataset and HvM dataset
 task2output_range_small = {
     'cat2': (0, 2),
     'cat3': (0, 3),
@@ -54,6 +58,7 @@ task2output_range_small = {
     'translation_reg': [76, 78],
 }
 
+# for large TDW dataset and HvM dataset
 task2output_range_large = {
     'category_class': (0, 117),
     'object_class': (117, 704),
