@@ -61,7 +61,7 @@ Run the following to complie the scores into a consolidated csv file
 python score_model.py -n <experiment-name>
 ```
 
-## examples:
+## Examples:
 ```
 python main.py -d train -n multi_task_tdw_large20230907_nopret_0925 -c -g a100 -t 12
 ```
