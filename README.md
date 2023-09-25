@@ -38,6 +38,8 @@ python main.py -d train -n <experiment-name> -c
 
 After the training is complete, check if all the train runs are finished successfully.
 
+Use `-m`, to check for any runs that are not finished.
+
 ```
 python main.py -d train -n <experiment-name> -c -m
 ```
