@@ -20,7 +20,7 @@ pip install wandb
 wandb login
 ```
 
-### Example usage
+### Using the code:
 First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
 
 Then, prepare the datset, by running:
@@ -59,4 +59,9 @@ Run the following to complie the scores into a consolidated csv file
 
 ```
 python score_model.py -n <experiment-name>
+```
+
+## examples:
+```
+python main.py -d train -n multi_task_tdw_large20230907_nopret_0925 -c -g a100 -t 12
 ```
