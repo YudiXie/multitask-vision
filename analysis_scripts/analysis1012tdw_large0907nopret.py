@@ -1,11 +1,4 @@
 # %%
-%load_ext autoreload
-%autoreload 2
-
-%cd ..
-%pwd
-
-# %%
 import os
 import pandas as pd
 
