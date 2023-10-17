@@ -284,7 +284,7 @@ def cross_validate_on_target(activity, df, target_name,
                              mode='regression'
                              ):
     """
-    cross validate the regression model on the dataset
+    cross validate the regression or classification model on the dataset
     args:
         activity: a numpy array of shape (num_all_images, num_neurons)
         df: a pandas dataframe of the dataset
