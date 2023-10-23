@@ -20,6 +20,8 @@ pip install wandb
 wandb login
 ```
 
+To analyze model neural alignment, you would need to install Brain-Score as well. See [here](https://github.com/brain-score/brain-score).
+
 ### Using the code:
 First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
 
