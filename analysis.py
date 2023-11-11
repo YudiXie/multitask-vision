@@ -270,6 +270,7 @@ def scatter_errorbar(data_dict,
                      folder_name='exp',
                      fig_name='fig',
                      show=True,
+                     log_scale=False,
                      ):
     """
         make a scatter plot with error bars
@@ -284,13 +285,16 @@ def scatter_errorbar(data_dict,
             additional_plots: list, a list of functions that plot additional 
                 things on the same figure, functions will be called without arguements
     """
+    plt.figure(figsize=(4.8, 3.6))
     for key, value in data_dict.items():
         kwargs = {}
         if 'error' in value:
             kwargs.update({'yerr': value['error']})
         if 'color' in value:
             kwargs.update({'color': value['color']})
-        plt.errorbar(value['x'], value['y'], fmt="o", label=key, **kwargs)
+        plt.errorbar(value['x'], value['y'], fmt="o", label=key,
+                     capsize=3,
+                     **kwargs)
     
     if x_label is not None:
         plt.xlabel(x_label)
@@ -301,8 +305,11 @@ def scatter_errorbar(data_dict,
     if additional_plots is not None:
         for plot in additional_plots:
             plot()
+    if log_scale:
+        ax = plt.gca()
+        ax.set_xscale('log')
     
-    plt.legend()
+    plt.legend(loc=(0.4, 0.13))
     adjust_figure()
     os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
     plt.savefig(os.path.join(FIG_DIR, folder_name, fig_name + '.pdf'), transparent=True)
