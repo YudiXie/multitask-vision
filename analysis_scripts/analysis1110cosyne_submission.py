@@ -69,7 +69,7 @@ data_dict = {
         'y': cat_class_data,
         'error': cat_class_error,
     },
-    'Object model cla. (TDW)': {
+    'Object identity cla. (TDW)': {
         'x': [587, ],
         'y': obj_class_data,
         'error': obj_class_error,
@@ -177,6 +177,7 @@ def bscore_scaling_plot(dataset_sizes,
     ax.legend(loc='upper left')
     ax.set_xlabel('Dataset size, number of images')
     ax.set_ylabel(ylabel)
+    ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
     adjust_figure(ax)
     if not os.path.exists(os.path.join(FIG_DIR, folder_name)):
         os.makedirs(os.path.join(FIG_DIR, folder_name))
