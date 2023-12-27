@@ -6,8 +6,12 @@ A repo for training vision models with multiple tasks
 ```
 conda create -n multitask-vision python
 conda activate multitask-vision
-# install pytorch, on linux it is, might be different on MacOS.
+
+# install pytorch, on linux
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+# or on MacOS
+conda install pytorch::pytorch torchvision torchaudio -c pytorch
+
 conda install pyyaml scikit-image pandas
 conda install -c conda-forge tqdm
 
