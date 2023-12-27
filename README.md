@@ -4,8 +4,8 @@ A repo for training vision models with multiple tasks
 ### Installing environment:
 
 ```
-conda create -n multitask-vision python
-conda activate multitask-vision
+conda create -n mtvision python=3.10
+conda activate mtvision
 
 # install pytorch, on linux
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
