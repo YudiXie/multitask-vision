@@ -254,30 +254,25 @@ class TDWDataset(Dataset):
         return sample
 
 
-def tdw_dataset_preprocess(root_dir):
+def tdw_dataset_preprocess(index_p):
     """
     Preprocess the TDW dataset.
     """
-    csv_path = os.path.join(root_dir, 'images_meta_shuffled.csv')
-    data_frame = pd.read_csv(csv_path, index_col=0)
-    # shuffle the data
-    # data_frame = data_frame.sample(frac=1, random_state=RNG).reset_index(drop=True)
-
+    index_path = Path(index_p)
+    dataset_path = index_path.parent
     # check if all images exist
-    data_path = Path(root_dir)
-    for i in tqdm(range(len(data_frame))):
-        assert data_path.joinpath(data_frame.loc[i, 'image_filename']).is_file()
-    print(f'All images in csv file {csv_path} exist')
+    assert dataset_path.joinpath("dataset_complete.txt").is_file(), "No complete check file found"
 
-    normed_data_frame = data_frame.copy()
+    index_df = pd.read_csv(index_path, names=['image_index', 'scene', 'wnid', 'model'], skiprows=1)
+    # shuffle the index, and save a copy on disk
+    shuffled_index = index_df.sample(frac=1).reset_index(drop=True)
+    shuffled_index.to_csv(dataset_path.joinpath("index_img_shuffled.csv"))
 
+    # --------------------------------
     # create a map from category name to category label
-    category_str2int, category_int2str = create_mapping(list(normed_data_frame['wnid'].unique()))
-    normed_data_frame['category_label'] = [category_str2int[cn] for cn in normed_data_frame['wnid']]
-    
+    category_str2int, category_int2str = create_mapping(list(shuffled_index['wnid'].unique()))
     # create a map from object name to object label
-    object_str2int, object_int2str = create_mapping(list(normed_data_frame['record_name'].unique()))
-    normed_data_frame['object_label'] = [object_str2int[on] for on in normed_data_frame['record_name']]
+    object_str2int, object_int2str = create_mapping(list(shuffled_index['model'].unique()))
 
     mappings = {
         'category_str2int': category_str2int,
@@ -285,6 +280,13 @@ def tdw_dataset_preprocess(root_dir):
         'object_str2int': object_str2int,
         'object_int2str': object_int2str,
     }
+
+    with open(dataset_path.joinpath('mappings.yml'), 'w') as yamlfile:
+        yaml.dump(mappings, yamlfile, default_flow_style=False)
+
+    # --------------------------------
+    # sample some data to calculate the mean and std of collums in norm_collums
+    sample_size = min(100000, len(shuffled_index))
 
     # process the euler angles, center them around 0, and in range (-180, 180)
     data_frame['euler_1_proc'] = center_circ_array(data_frame['euler_1'].to_numpy())
@@ -298,9 +300,6 @@ def tdw_dataset_preprocess(root_dir):
     
     # save the processed data
     normed_data_frame.to_csv(str(data_path.joinpath('images_meta_shuffled_processed.csv').resolve()))
-    yaml_file_path = os.path.join(root_dir, 'mappings.yml')
-    with open(yaml_file_path, 'w') as file:
-        yaml.dump(mappings, file, default_flow_style=False)
 
 
 if __name__ == '__main__':
