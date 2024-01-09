@@ -14,6 +14,18 @@ from tqdm import tqdm
 import yaml
 
 
+def get_image_meta_path(index_df, idx, dataset_path):
+    """
+    Get the image path and meta data path for a given index.
+    """
+    image_idx, scene_name, wnid, model_name = index_df.iloc[idx]
+
+    record_path = dataset_path.joinpath('images', scene_name, wnid, model_name)
+    img_path = record_path.joinpath(f"img_img_{image_idx:010d}.jpg")
+    img_meta_path = record_path.joinpath(f"img_{image_idx:010d}_info.csv")
+    return img_path, img_meta_path
+
+
 def center_circ_array(arr):
     """
     Center an array of circular data.
@@ -220,26 +232,18 @@ class TDWDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         
-        # image_idx, scene_name, wnid, model_name= self.dataset_index.loc[idx]
-        image_idx = self.dataset_index.loc[idx, 'org_index']
-        scene_name = self.dataset_index.loc[idx, 'scene']
-        wnid = self.dataset_index.loc[idx, 'wnid']
-        model_name = self.dataset_index.loc[idx, 'model']
+        img_path, img_meta_path = get_image_meta_path(self.dataset_index, idx, self.root_dir)
 
-        img_path = os.path.join(self.root_dir, scene_name, wnid, model_name)
-        img_file = os.path.join(img_path, f"img_{image_idx:010d}.jpg")
-        image = load_image(img_file)
+        image = load_image(img_path)
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}
-
-        img_meta_file = os.path.join(img_path, f"img_{image_idx:010d}_info.csv")
 
         # need to do: should double check this because the index is not preserved
         # make sure the read collums are of the right type
         # normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
         # could also use python built-in csv reader to read directly into a dictory
-        img_meta = pd.read_csv(img_meta_file, names=self.headers, index_col=False)
+        img_meta = pd.read_csv(img_meta_path, names=self.headers, index_col=False)
         
         sample['category_label'] = img_meta.loc[0, 'category_label']
         sample['object_label'] = img_meta.loc[0, 'object_label']
@@ -287,6 +291,19 @@ def tdw_dataset_preprocess(index_p):
     # --------------------------------
     # sample some data to calculate the mean and std of collums in norm_collums
     sample_size = min(100000, len(shuffled_index))
+    sample_index = shuffled_index.iloc[:sample_size]
+    meta_headers = dataset_path.joinpath('img_meta_headers.txt').read_text(encoding="utf-8").split("\n")
+
+    for i_row in range(len(sample_index)):
+        _, img_meta_path = get_image_meta_path(sample_index, i_row, dataset_path)
+        img_meta = pd.read_csv(img_meta_path, names=meta_headers, index_col=False)
+        
+        if i_row == 0:
+            sampled_meta = img_meta
+        else:
+            sampled_meta = sampled_meta.append(img_meta, ignore_index=True)
+
+    # TODO: a lot of to do here
 
     # process the euler angles, center them around 0, and in range (-180, 180)
     data_frame['euler_1_proc'] = center_circ_array(data_frame['euler_1'].to_numpy())
