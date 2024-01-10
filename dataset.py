@@ -85,10 +85,10 @@ class HVMDataset(Dataset):
     # 'rxz', 'rxy', 'ryz', rotational parameters
     # 'r[xz/xy/yz]_semantic', semantically consistent rotational parameters,
 
-    # all collums in the stimulus set
-    all_collums = ['id', 'background_id', 's', 'image_id', 'image_file_name', 'filename', 'rxy', 'tz', 'category_name', 'rxz_semantic', 'ty', 'ryz', 'object_name', 'variation', 'size', 'rxy_semantic', 'ryz_semantic', 'rxz']
-    # collums that need to be normalized
-    norm_collums = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz', 'rxy_semantic', 'rxz_semantic', 'ryz_semantic']
+    # all columns in the stimulus set
+    all_columns = ['id', 'background_id', 's', 'image_id', 'image_file_name', 'filename', 'rxy', 'tz', 'category_name', 'rxz_semantic', 'ty', 'ryz', 'object_name', 'variation', 'size', 'rxy_semantic', 'ryz_semantic', 'rxz']
+    # columns that need to be normalized
+    norm_columns = ['s', 'ty', 'tz', 'rxy', 'rxz', 'ryz', 'rxy_semantic', 'rxz_semantic', 'ryz_semantic']
 
     def __init__(self, 
                  csv_file='./data/hvm_dataset/image_dicarlo_hvm.csv', 
@@ -122,9 +122,9 @@ class HVMDataset(Dataset):
         }
 
         # normalize the data
-        for collum in self.norm_collums:
-            normed_data_frame[collum] = (data_frame[collum] - data_frame[collum].mean()) / data_frame[collum].std()
-            normed_data_frame[collum] = normed_data_frame[collum].astype(np.float32)
+        for column in self.norm_columns:
+            normed_data_frame[column] = (data_frame[column] - data_frame[column].mean()) / data_frame[column].std()
+            normed_data_frame[column] = normed_data_frame[column].astype(np.float32)
         
         if split == 'all':
             self.normed_data_frame = normed_data_frame
@@ -155,8 +155,8 @@ class HVMDataset(Dataset):
             # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
             sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
 
-        for collum in self.norm_collums:
-            sample[collum] = self.normed_data_frame.loc[idx, collum]
+        for column in self.norm_columns:
+            sample[column] = self.normed_data_frame.loc[idx, column]
 
         return sample
 
@@ -173,7 +173,7 @@ class TDWDataset(Dataset):
     tdw_image_dataset_small_multi_env(_hdri): 8 categories, ~5,000 images
     tdw_image_dataset_large_20230907: 117 categories, 587 objects, ~1,350,000 images
     """
-    norm_collums = ['neg_x', 'ty', 'tz'] # columns that need to be normalized
+    norm_columns = ['neg_x', 'ty', 'tz'] # columns that need to be normalized
 
     def __init__(self,
                  root_dir='./data/tdw_image_dataset_small_multi_env_hdri',
@@ -236,8 +236,8 @@ class TDWDataset(Dataset):
         for i in range(1, 4):
             sample[f'euler_{i}'] = np.float32(img_meta[f'euler_{i}'])
         
-        for collum in self.norm_collums:
-            sample[collum] = np.float32((img_meta[collum] - self.means_stds[f'{collum}_mean']) / self.means_stds[f'{collum}_std'])
+        for column in self.norm_columns:
+            sample[column] = np.float32((img_meta[column] - self.means_stds[f'{column}_mean']) / self.means_stds[f'{column}_std'])
 
         return sample
 
@@ -273,7 +273,7 @@ def tdw_dataset_preprocess(index_p):
         yaml.dump(mappings, yamlfile, default_flow_style=False)
 
     # --------------------------------
-    # sample some data to calculate the mean and std of collums in norm_collums
+    # sample some data to calculate the mean and std of columns in norm_columns
     sample_size = min(100000, len(shuffled_index))
     sample_index = shuffled_index.iloc[:sample_size]
     meta_headers = dataset_path.joinpath('img_meta_headers.txt').read_text(encoding="utf-8").split("\n")
@@ -284,9 +284,9 @@ def tdw_dataset_preprocess(index_p):
         img_meta_rows.append(pd.read_csv(img_meta_path, names=meta_headers))
     img_meta_df = pd.concat(img_meta_rows, ignore_index=True)
 
-    # calculate the mean and std of collums in norm_collums
+    # calculate the mean and std of columns in norm_columns
     mean_std_dict = {}
-    for column in TDWDataset.norm_collums:
+    for column in TDWDataset.norm_columns:
         mean_std_dict[f'{column}_mean'] = [img_meta_df[column].mean(), ]
         mean_std_dict[f'{column}_std'] = [img_meta_df[column].std(), ]
     
