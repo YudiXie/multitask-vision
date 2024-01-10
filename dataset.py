@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -172,18 +173,21 @@ class TDWDataset(Dataset):
     norm_columns = ['neg_x', 'ty', 'tz'] # columns that need to be normalized
 
     def __init__(self,
-                 root_dir='./data/tdw_image_dataset_small_multi_env_hdri',
-                 split='train',
-                 transform=None,
-                 fraction=1.0,
+                 root_dir: Union[str, Path] = './data/tdw_image_dataset_small_multi_env_hdri',
+                 split: str = 'train',
+                 transform = None,
+                 fraction: float = 1.0,
                  ):
         """
         Arguments:
-            root_dir (string): Directory with all the images.
+            root_dir (string, or Path): Directory with all the images.
             fraction (float): fraction of the training or testing dataset to use, 1.0 means use all the data
                 this is used to investigate the scaling of the training with the dataset size
         """
-        self.root_path = Path(root_dir)
+        if isinstance(root_dir, str):
+            self.root_path: Path = Path(root_dir)
+        else:
+            self.root_path: Path = root_dir
         self.transform = transform
 
         with open(self.root_path.joinpath('mappings.yml'), 'r') as file:
