@@ -6,6 +6,7 @@ import yaml
 import pandas as pd
 from dataset import TDWDataset, create_mapping, get_image_meta_path
 
+
 if __name__ == '__main__':
     """
     Preprocess the TDW dataset, including:
