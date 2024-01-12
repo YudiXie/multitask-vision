@@ -215,6 +215,9 @@ def train_model(config):
     model.fc = nn.Linear(model.fc.in_features, output_number)
     model = model.to(DEVICE)
 
+    # Set up optimizer
+    optimizer = optim.Adam(model.parameters(), lr=config.lr)
+
     # Data preprocessing
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -232,9 +235,6 @@ def train_model(config):
                                 is_train=False,
                                 batch_size=config.batch_size,
                                 transform=transform)
-
-    # Set up optimizer
-    optimizer = optim.Adam(model.parameters(), lr=config.lr)
 
     # initialize
     batch_n = 0  # the numbder of batches the model has trained on so far
