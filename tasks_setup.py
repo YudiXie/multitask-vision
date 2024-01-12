@@ -97,7 +97,7 @@ def get_output_info(dataset_name):
         dataset_name: str, name of the dataset
     """
 
-    if dataset_name == 'TDW_large20230907':
+    if dataset_name in ['TDW_large20230907', 'TDW_large20240112']:
         # TDW large dataset
         output_number = 716 # 117 + 587 + 3 + 1 + 2 + 6
         task2output_range = task2output_range_large
