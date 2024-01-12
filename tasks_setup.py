@@ -1,9 +1,25 @@
+import torch
 import torch.nn as nn
+
+
+def two_units_sin_cos_mse(output, target):
+    """
+    parameters:
+        output: torch.Tensor, shape(batch_size, 6), sin and cos of 3 rotation angles
+        target: torch.Tensor, shape(batch_size, 3), 3 rotation angles in degrees
+    return:
+        loss: torch.Tensor, shape(1), mean squared error between output and target
+    """
+    target_rad = torch.deg2rad(target)
+    target_sin = torch.sin(target_rad)
+    target_cos = torch.cos(target_rad)
+    target_all = torch.cat([target_sin, target_cos], dim=1)
+    return torch.mean((output - target_all)**2)
 
 # Task relevant constants
 cat_reduced_tasks = ['cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8']
 
-# mapping from individual task names to the corresponding target names in the data frame
+# mapping from individual task names to the corresponding target names in the sample (or dataframe column names)
 task2targets_name = {
     'cat2': ['cat_label_reduce2'],
     'cat3': ['cat_label_reduce3'],
@@ -19,6 +35,7 @@ task2targets_name = {
     'distance_reg': ['neg_x'], # for TDW dataset
     'size_reg': ['s'],
     'translation_reg': ['ty', 'tz'],
+    'rotation_reg_tdw_two_units_sin_cos_mse': ['euler_1', 'euler_2', 'euler_3'],
 }
 
 # mapping from individual task names to the corresponding loss functions to be used
@@ -37,6 +54,7 @@ task2loss_func = {
     'distance_reg': nn.MSELoss(),
     'size_reg': nn.MSELoss(),
     'translation_reg': nn.MSELoss(),
+    'rotation_reg_tdw_two_units_sin_cos_mse': two_units_sin_cos_mse,
 }
 
 # mapping from individual task names to the output units in the model
@@ -56,9 +74,10 @@ task2output_range_small = {
     'size_reg': [75, 76],
     'distance_reg': [75, 76],
     'translation_reg': [76, 78],
+    'rotation_reg_tdw_two_units_sin_cos_mse': [78, 84],
 }
 
-# for large TDW dataset and HvM dataset
+# for large TDW dataset
 task2output_range_large = {
     'category_class': (0, 117),
     'object_class': (117, 704),
@@ -67,6 +86,7 @@ task2output_range_large = {
     'size_reg': [707, 708],
     'distance_reg': [707, 708],
     'translation_reg': [708, 710],
+    'rotation_reg_tdw_two_units_sin_cos_mse': [710, 716],
 }
 
 
@@ -79,11 +99,11 @@ def get_output_info(dataset_name):
 
     if dataset_name == 'TDW_large20230907':
         # TDW large dataset
-        output_number = 710 # 117 + 587 + 3 + 1 + 2
+        output_number = 716 # 117 + 587 + 3 + 1 + 2 + 6
         task2output_range = task2output_range_large
     elif dataset_name == 'TDW' or dataset_name == 'HvM':
         # TDW small dataset and HvM dataset
-        output_number = 78  # 8 + 64 + 3 + 1 + 2
+        output_number = 84  # 8 + 64 + 3 + 1 + 2 + 6
         task2output_range = task2output_range_small
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
