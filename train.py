@@ -28,6 +28,13 @@ from tasks_setup import cat_reduced_tasks, task2loss_func, task2targets_name, ge
 #     'translation_reg': 0.2,
 # }
 
+# Data preprocessing
+IMN_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+])
+
 
 def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction=1.0):
     "Get a training dataloader"    
@@ -218,23 +225,17 @@ def train_model(config):
     # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
 
-    # Data preprocessing
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    ])
-
     # Get dataloaders
     train_loader = get_dataloader(dataset_name=config.dataset_name,
                                   is_train=True, 
                                   batch_size=config.batch_size,
-                                  transform=transform,
+                                  transform=IMN_transform,
                                   dataset_fraction=config.train_dataset_fraction)
     val_loader = get_dataloader(dataset_name=config.dataset_name,
                                 is_train=False,
                                 batch_size=config.batch_size,
-                                transform=transform)
+                                transform=IMN_transform,
+                                )
 
     # initialize
     batch_n = 0  # the numbder of batches the model has trained on so far
