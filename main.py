@@ -7,7 +7,7 @@ from train import train_model
 from config_global import ROOT_DIR, CONDA_ENV, CUDA_MODULE, CONDA_SCORE_ENV
 from utils import save_config
 import exp_config_list
-from score_model import prepare_and_score_model
+# from score_model import prepare_and_score_model
 
 
 def check_run_complete(cfg, mode) -> bool:
@@ -172,7 +172,8 @@ if __name__ == '__main__':
             if args.do == 'train':
                 train_model(config)
             elif args.do == 'score':
-                prepare_and_score_model(config)
+                pass
+                # prepare_and_score_model(config)
         else:
             # submit jobs to the cluster
             if args.do == 'train':
