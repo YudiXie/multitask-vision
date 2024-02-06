@@ -170,7 +170,7 @@ class TDWDataset(Dataset):
     tdw_image_dataset_small_multi_env(_hdri): 8 categories, ~5,000 images
     tdw_image_dataset_large_20230907: 117 categories, 587 objects, ~1,350,000 images
     """
-    norm_columns = ['neg_x', 'ty', 'tz'] # columns that need to be normalized
+    norm_columns = ['rel_pos_x', 'rel_pos_y', 'rel_pos_z'] # columns that need to be normalized
 
     def __init__(self,
                  root_dir: Union[str, Path] = './data/tdw_image_dataset_small_multi_env_hdri',
@@ -233,8 +233,8 @@ class TDWDataset(Dataset):
             sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
 
         img_meta = pd.read_csv(img_meta_path, names=self.headers).iloc[0]
-        for i in range(1, 4):
-            sample[f'euler_{i}'] = np.float32(img_meta[f'euler_{i}'])
+        for i in range(3):
+            sample[f'rel_rot_euler_{i}'] = np.float32(img_meta[f'rel_rot_euler_{i}'])
         
         for column in self.norm_columns:
             sample[column] = np.float32((img_meta[column] - self.means_stds[f'{column}_mean']) / self.means_stds[f'{column}_std'])
