@@ -59,6 +59,11 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
                              split=split,
                              transform=transform,
                              fraction=dataset_fraction,)
+    elif dataset_name == 'tdw_1m_20240206':
+        dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_image_dataset_1m_20240206', 
+                             split=split,
+                             transform=transform,
+                             fraction=dataset_fraction,)
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
