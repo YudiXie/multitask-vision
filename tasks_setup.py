@@ -32,10 +32,10 @@ task2targets_name = {
     'object_class': ['object_label'],
     'rotation_reg': ['rxy_semantic', 'rxz_semantic', 'ryz_semantic'],
     'rotation_reg_tdw': ['euler_1_proc', 'euler_2_proc', 'euler_3_proc'], # for TDW dataset
-    'distance_reg': ['neg_x'], # for TDW dataset
+    'distance_reg': ['rel_pos_z'], # for TDW dataset
     'size_reg': ['s'],
-    'translation_reg': ['ty', 'tz'],
-    'rotation_reg_tdw_two_units_sin_cos_mse': ['euler_1', 'euler_2', 'euler_3'],
+    'translation_reg': ['rel_pos_x', 'rel_pos_y'],
+    'rotation_reg_tdw_two_units_sin_cos_mse': ['rel_rot_euler_0', 'rel_rot_euler_1', 'rel_rot_euler_2'],
 }
 
 # mapping from individual task names to the corresponding loss functions to be used
@@ -89,6 +89,14 @@ task2output_range_large = {
     'rotation_reg_tdw_two_units_sin_cos_mse': [710, 716],
 }
 
+task2output_range_large_new = {
+    'category_class': [0, 117],
+    'object_class': [117, 665],
+    'distance_reg': [665, 666],
+    'translation_reg': [666, 668],
+    'rotation_reg_tdw_two_units_sin_cos_mse': [668, 674],
+}
+
 
 def get_output_info(dataset_name):
     """
@@ -105,6 +113,9 @@ def get_output_info(dataset_name):
         # TDW small dataset and HvM dataset
         output_number = 84  # 8 + 64 + 3 + 1 + 2 + 6
         task2output_range = task2output_range_small
+    elif dataset_name == 'tdw_1m_20240206':
+        output_number = 674  # 117 + 548 + 1 + 2 + 6
+        task2output_range = task2output_range_large_new
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
