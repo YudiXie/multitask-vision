@@ -7,10 +7,10 @@ A repo for training vision models with multiple tasks
 conda create -n mtvision python=3.10
 conda activate mtvision
 
-# install pytorch, on linux
-conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+# install pytorch, on linux with cuda 11.7
+conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.7 -c pytorch -c nvidia
 # or on MacOS
-conda install pytorch::pytorch torchvision torchaudio -c pytorch
+conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 -c pytorch
 
 conda install pyyaml scikit-image pandas tqdm matplotlib
 
