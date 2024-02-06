@@ -12,7 +12,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvi
 # or on MacOS
 conda install pytorch::pytorch torchvision torchaudio -c pytorch
 
-conda install pyyaml scikit-image pandas tqdm
+conda install pyyaml scikit-image pandas tqdm matplotlib
 
 # install weights and biases
 conda install wandb --channel conda-forge
