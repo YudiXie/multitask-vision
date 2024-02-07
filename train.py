@@ -71,7 +71,7 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
                                          batch_size=batch_size, 
                                          shuffle=True if is_train else False, 
                                          pin_memory=True, 
-                                         num_workers=4)
+                                         num_workers=12)
     return loader
 
 
