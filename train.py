@@ -89,7 +89,7 @@ def validate_model(model,
     cat_red_correct = 0  # assumes that only one reduece categorization task is used
     image_ct = 0
     model.eval()
-    with torch.inference_mode():
+    with torch.no_grad():
         for i, data in enumerate(valid_dl):
             inputs = data['image'].to(DEVICE)
             outputs = model(inputs)
@@ -226,6 +226,8 @@ def train_model(config):
     # Replace the last layer with a linear layer for multi-task learning
     model.fc = nn.Linear(model.fc.in_features, output_number)
     model = model.to(DEVICE)
+
+    model = torch.compile(model)
 
     # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
