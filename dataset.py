@@ -171,6 +171,7 @@ class TDWDataset(Dataset):
     tdw_image_dataset_large_20230907: 117 categories, 587 objects, ~1,350,000 images
     """
     norm_columns = ['rel_pos_x', 'rel_pos_y', 'rel_pos_z'] # columns that need to be normalized
+    vis_collumns = ['rel_rot_euler_0', 'rel_rot_euler_1', 'rel_rot_euler_2'] + norm_columns
 
     def __init__(self,
                  root_dir: Union[str, Path] = './data/tdw_image_dataset_small_multi_env_hdri',
