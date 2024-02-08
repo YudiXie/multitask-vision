@@ -1,10 +1,13 @@
 from pathlib import Path
 import argparse
 
+import numpy as np
 from tqdm import trange
 import yaml
 import pandas as pd
+import matplotlib.pyplot as plt
 from dataset import TDWDataset, create_mapping, get_image_meta_path
+from plots import data_hist
 
 
 if __name__ == '__main__':
@@ -63,6 +66,14 @@ if __name__ == '__main__':
     for column in TDWDataset.norm_columns:
         mean_std_dict[f'{column}_mean'] = [img_meta_df[column].mean(), ]
         mean_std_dict[f'{column}_std'] = [img_meta_df[column].std(), ]
+    
+    # visulize the target distribution
+    for column in TDWDataset.vis_collumns:
+        show_mean_std = True if column in TDWDataset.norm_columns else False
+        fig, ax = plt.subplots()
+        data_hist(ax, np.array(img_meta_df[column]), 
+                  xlabel=column, show_mean_std=show_mean_std)
+        fig.savefig(dataset_path.joinpath(f'img_meta_hist_{column}.pdf'), transparent=True)
     
     # save the mean and std to be used later
     pd.DataFrame.from_dict(mean_std_dict).to_csv(dataset_path.joinpath('norm_column_mean_std.csv'))
