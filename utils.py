@@ -67,7 +67,15 @@ def prepare_pytorch_model(out_dim: int, load_path: str = ''):
     
     # load model from saved weights
     if load_path:
-        model.load_state_dict(torch.load(load_path, map_location=DEVICE), strict=True)
+        saved_state_dict = torch.load(load_path, map_location=DEVICE)
+        state_dict = {}
+        for k, v in saved_state_dict.items():
+            if k.startswith('_orig_mod.'):
+                # for compiled models
+                state_dict[k[10:]] = v
+            else:
+                state_dict[k] = v
+        model.load_state_dict(state_dict, strict=True)
         print(f'Loaded model from {load_path}')
     else:
         print(f'Loaded model from pretrained weights')
