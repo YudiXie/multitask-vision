@@ -5,15 +5,15 @@ import argparse
 
 import pandas as pd
 
-from brainscore import score_model
-from model_tools.activations.pytorch import load_preprocess_images
-from model_tools.activations.pytorch import PytorchWrapper
-from model_tools.brain_transformation import ModelCommitment
+from brainscore_vision import load_benchmark
+from brainscore_vision.model_helpers.brain_transformation import ModelCommitment
+from brainscore_vision.model_helpers.activations.pytorch import load_preprocess_images, PytorchWrapper
 
-from config_global import EXP_DIR
+from config_global import EXP_DIR, DATA_DIR
 from utils import load_config, log_complete, prepare_pytorch_model, get_model_id
 import exp_config_list
 from tasks_setup import get_output_info
+from pathlib import Path
 
 # code to get layer names
 # for name, layer in model.named_modules():
@@ -36,12 +36,30 @@ resnet18layerlist = [
 
 
 benchmark_dict = {
-    'V1': 'movshon.FreemanZiemba2013public.V1-pls',
-    'V2': 'movshon.FreemanZiemba2013public.V2-pls',
-    'V4': 'dicarlo.MajajHong2015public.V4-pls',
-    'IT': 'dicarlo.MajajHong2015public.IT-pls',
-    'Behavior': 'dicarlo.Rajalingham2018public-i2n',
+    'V1': 'FreemanZiemba2013public.V1-pls',
+    'V2': 'FreemanZiemba2013public.V2-pls',
+    'V4': 'MajajHong2015public.V4-pls',
+    'IT': 'MajajHong2015public.IT-pls',
+    'Behavior': 'Rajalingham2018public-i2n',
     }
+
+
+def score_local_model(model, benchmark_identifier):
+    """
+    Score a brain model on the benchmark referenced by the `benchmark_identifier`.
+    args:
+        model: BrainModel (ModelCommitment) object
+        benchmark_identifier: str, unique benchmark identifier
+    """ 
+    benchmark = load_benchmark(benchmark_identifier)
+    score = benchmark(model)
+    score.attrs['model_identifier'] = model.identifier
+    score.attrs['benchmark_identifier'] = benchmark_identifier
+    try:  # attempt to look up the layer commitment if model uses a standard layer model
+        score.attrs['comment'] = f"layers: {model.layer_model.region_layer_map}"
+    except Exception:
+        pass
+    return score
 
 
 def get_layer_commitment(model: ModelCommitment):
@@ -86,27 +104,33 @@ def score_model_on_a_benchmark(model: ModelCommitment,
                                benchmark: str,
                                log_path: str = ''):
     """
-    score model on a benchmark
+    score model on a benchmark, and save the results
     args:
         model: ModelCommitment object
         benchmark: str, benchmark name
         log_path: str, path to save log file, if provided, otherwise not save
     return:
-        score: xarray DataArray, the model score on that benchmark
+        score: the model score on that benchmark
+        error: the error of the score
     """
     start_time = datetime.now()
 
-    score = score_model(model_identifier=model.identifier, model=model,
-                        benchmark_identifier=benchmark)
-    print(score)
-    center, error = score.sel(aggregation='center'), score.sel(aggregation='error')
-    print(f"Score: {center.values:.3f}+-{error.values:.3f}")
-
+    score_path = Path(DATA_DIR).joinpath(f'{model}_{benchmark}_score.csv')
+    if score_path.is_file():
+        read_df = pd.read_csv(score_path, index_col=0)
+        score, error = read_df['score'][0], read_df['error'][0]
+    else:
+        bscore = score_local_model(model=model, benchmark_identifier=benchmark)
+        score, error = bscore.item(), bscore.error.item()
+        save_dict = {'score': [score, ], 'error': [error, ]}
+        pd.DataFrame.from_dict(save_dict).to_csv(score_path)
+    
     complete_time = datetime.now()
-    print(f'Scoring time for {benchmark}: {str(complete_time - start_time)}')
+    print(f"{model.identifier} on {benchmark} score: {score:.3f}+-{error:.3f}")
+    print(f'Scoring time: {str(complete_time - start_time)}')
     if log_path != '':
         log_complete(log_path, start_time, f'score_{benchmark}')
-    return score
+    return score, error
 
 
 def prepare_and_score_model(config):
@@ -140,13 +164,13 @@ def save_model_scores(model: ModelCommitment, save_df, exp_group):
     layer_map = get_layer_commitment(model)
     layer_map['Behavior'] = 'avgpool'
     for region, benchmark_id in benchmark_dict.items():
-        score = score_model_on_a_benchmark(model, benchmark_id)
+        score, error = score_model_on_a_benchmark(model, benchmark_id)
         save_df = save_df.append({'model': model.identifier, 
                                   'benchmark_region': region, 
                                   'benchmark_id': benchmark_id,
                                   'mapped_layer': layer_map[region],
-                                  'score': score.sel(aggregation='center').values, 
-                                  'error': score.sel(aggregation='error').values,
+                                  'score': score, 
+                                  'error': error,
                                   'exp_group': exp_group,
                                   }, 
                                   ignore_index=True)
