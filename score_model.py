@@ -115,7 +115,7 @@ def score_model_on_a_benchmark(model: ModelCommitment,
     """
     start_time = datetime.now()
 
-    score_path = Path(DATA_DIR).joinpath(f'{model}_{benchmark}_score.csv')
+    score_path = Path(DATA_DIR).joinpath(f'{model.identifier}_{benchmark}_score.csv')
     if score_path.is_file():
         read_df = pd.read_csv(score_path, index_col=0)
         score, error = read_df['score'][0], read_df['error'][0]
@@ -126,7 +126,7 @@ def score_model_on_a_benchmark(model: ModelCommitment,
         pd.DataFrame.from_dict(save_dict).to_csv(score_path)
     
     complete_time = datetime.now()
-    print(f"{model.identifier} on {benchmark} score: {score:.3f}+-{error:.3f}")
+    print(f"{model.identifier} on {benchmark} score: {score:.3f} +- {error:.3f}")
     print(f'Scoring time: {str(complete_time - start_time)}')
     if log_path != '':
         log_complete(log_path, start_time, f'score_{benchmark}')
