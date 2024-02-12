@@ -81,6 +81,7 @@ def validate_model(model,
                    valid_dl,
                    task_list,
                    task2output_range,
+                   use_amp,
                    log_images=False,
                    batch_idx=0):
     "Compute performance of the model on the validation dataset and log a wandb.Table"
@@ -93,34 +94,36 @@ def validate_model(model,
     model.eval()
     with torch.no_grad():
         for i, data in enumerate(valid_dl):
+            # prepare the inputs and targets
             inputs = data['image'].to(DEVICE)
-            outputs = model(inputs)
             batch_size = len(inputs)
             image_ct += batch_size
 
-            batch_loss_dict = {}
+            task_target_dict = {}
             for task in task_list:
                 task_targets = []
                 for target_name in task2targets_name[task]:
                     task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
-                
-                task_loss_func = task2loss_func[task]
-                if isinstance(task_loss_func, nn.CrossEntropyLoss):
+                if isinstance(task2loss_func[task], nn.CrossEntropyLoss):
                     task_targets = task_targets.squeeze(-1)
-
-                out_range = task2output_range[task]
-                task_outputs = outputs[:, out_range[0]:out_range[1]]
-
-                task_loss = task_loss_func(task_outputs, task_targets)
-                batch_loss_dict[task] = task_loss
-                val_task_loss[task] += task_loss.item() * batch_size
+                task_target_dict[task] = task_targets
             
-            task_weight = 1 / len(task_list)
-            batch_val_loss = [v.item() * task_weight for k, v in batch_loss_dict.items()]
-            # used to calculate weighted loss specified by hand
-            # batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
-            val_loss += sum(batch_val_loss) * batch_size
+            with torch.autocast(device_type=DEVICE.type, dtype=torch.float16, enabled=use_amp):
+                outputs = model(inputs)
+                batch_loss_dict = {}
+                for task in task_list:
+                    out_range = task2output_range[task]
+                    task_outputs = outputs[:, out_range[0]:out_range[1]]
+                    task_loss = task2loss_func[task](task_outputs, task_target_dict[task])
+                    batch_loss_dict[task] = task_loss
+                    val_task_loss[task] += task_loss.item() * batch_size
+                
+                task_weight = 1 / len(task_list)
+                batch_val_loss = [v.item() * task_weight for k, v in batch_loss_dict.items()]
+                # used to calculate weighted loss specified by hand
+                # batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
+                val_loss += sum(batch_val_loss) * batch_size
 
             # Compute accuracy and accumulate
             if 'category_class' in task_list:
@@ -233,6 +236,7 @@ def train_model(config):
 
     # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
+    scaler = torch.cuda.amp.GradScaler(enabled=config.use_amp)
 
     # Get dataloaders
     train_loader = get_dataloader(dataset_name=config.dataset_name,
@@ -258,6 +262,7 @@ def train_model(config):
         checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        scaler.load_state_dict(checkpoint["scaler_state_dict"])
         batch_n = checkpoint['batch_number']
         sample_ct = checkpoint['sample_count']
         best_category_acc = checkpoint['best_category_accuracy']
@@ -268,37 +273,41 @@ def train_model(config):
     model.train()
     while batch_n < config.max_batch:
         for data in train_loader:
+            optimizer.zero_grad()
+            
+            # prepare the inputs and targets
             inputs = data['image'].to(DEVICE)
-            outputs = model(inputs)
-
-            task_loss_dict = {}
+            task_target_dict = {}
             for task in config.tasks:
                 task_targets = []
                 for target_name in task2targets_name[task]:
                     # data[target_name] is a tensor of shape (batch_size, )
                     task_targets.append(data[target_name].to(DEVICE).unsqueeze(-1))
                 task_targets = torch.cat(task_targets, dim=-1)
-
-                task_loss_func = task2loss_func[task]
-                if isinstance(task_loss_func, nn.CrossEntropyLoss):
+                if isinstance(task2loss_func[task], nn.CrossEntropyLoss):
                     task_targets = task_targets.squeeze(-1)
-
-                out_range = task2output_range[task]
-                task_outputs = outputs[:, out_range[0]:out_range[1]]
-
-                task_loss_dict[task] = task_loss_func(task_outputs, task_targets)
+                task_target_dict[task] = task_targets
             
-            task_weight = 1.0 / len(config.tasks)
-            weighted_loss = [v * task_weight for k, v in task_loss_dict.items()]
-            # used to calculate weighted loss specified by hand
-            # weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
-            train_loss = 0.0
-            for loss in weighted_loss:
-                train_loss += loss
+            # forward pass
+            with torch.autocast(device_type=DEVICE.type, dtype=torch.float16, enabled=config.use_amp):
+                outputs = model(inputs)
+                task_loss_dict = {}
+                for task in config.tasks:
+                    out_range = task2output_range[task]
+                    task_outputs = outputs[:, out_range[0]:out_range[1]]
+                    task_loss_dict[task] = task2loss_func[task](task_outputs, task_target_dict[task])
+                
+                task_weight = 1.0 / len(config.tasks)
+                weighted_loss = [v * task_weight for k, v in task_loss_dict.items()]
+                # used to calculate weighted loss specified by hand
+                # weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
+                train_loss = torch.tensor(0.0).to(DEVICE)
+                for loss in weighted_loss:
+                    train_loss += loss
             
-            optimizer.zero_grad()
-            train_loss.backward()
-            optimizer.step()
+            scaler.scale(train_loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
             batch_n += 1
             sample_ct += len(inputs)
@@ -314,7 +323,7 @@ def train_model(config):
             # validate model
             else:
                 val_loss, val_results = validate_model(model, val_loader, config.tasks, 
-                                                       task2output_range,
+                                                       task2output_range, config.use_amp,
                                                        log_images=(batch_n==config.max_batch))
                 model.train()
                 # Log train and validation metrics to wandb
@@ -342,6 +351,7 @@ def train_model(config):
                     'sample_count': sample_ct,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
+                    "scaler_state_dict": scaler.state_dict(),
                     'best_category_accuracy': best_category_acc,
                     'best_object_accuracy': best_object_acc,
                     }, checkpoint_path)

@@ -25,6 +25,7 @@ base_config = {
     'save_path': './experiments/',
     'pretrain_init': True,
     'train_dataset_fraction': 1.0,
+    'use_amp': True,
     }
 
 
