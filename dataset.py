@@ -231,9 +231,9 @@ class TDWDataset(Dataset):
         sample['category_label'] = self.mappings['category_str2int'][self.dataset_index.iloc[idx]['wnid']]
         sample['object_label'] = self.mappings['object_str2int'][self.dataset_index.iloc[idx]['model']]
         
-        for i in range(2, 9):
-            # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
-            sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
+        # for i in range(2, 9):
+        #     # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
+        #     sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
 
         # due to some model has ",", this is not equal length, use inverse index
         img_meta = img_meta_path.read_text().split(",")
