@@ -196,6 +196,8 @@ class TDWDataset(Dataset):
         self.mappings = mappings
 
         self.headers = self.root_path.joinpath('img_meta_headers.txt').read_text(encoding="utf-8").split("\n")
+        # use inverse index to avoid "," in fields when spliting, assuming all the float data are in the later part metadata
+        self.headers_inv_idx = {header: - (len(self.headers) - i) for i, header in enumerate(self.headers)}
         self.means_stds = pd.read_csv(self.root_path.joinpath('norm_column_mean_std.csv'), index_col=0).iloc[0]
         
         dataset_index = pd.read_csv(self.root_path.joinpath('index_img_shuffled.csv'), index_col=0)
@@ -233,11 +235,13 @@ class TDWDataset(Dataset):
             # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
             sample[f'cat_label_reduce{i}'] = sample['category_label'] if sample['category_label'] < i else (i - 1)
 
-        img_meta = pd.read_csv(img_meta_path, names=self.headers).iloc[0]
+        # due to some model has ",", this is not equal length, use inverse index
+        img_meta = img_meta_path.read_text().split(",")
         for i in range(3):
-            sample[f'rel_rot_euler_{i}'] = np.float32(img_meta[f'rel_rot_euler_{i}'])
+            sample[f'rel_rot_euler_{i}'] = np.float32(img_meta[self.headers_inv_idx[f'rel_rot_euler_{i}']])
         
         for column in self.norm_columns:
-            sample[column] = np.float32((img_meta[column] - self.means_stds[f'{column}_mean']) / self.means_stds[f'{column}_std'])
+            col_data = np.float32(img_meta[self.headers_inv_idx[column]])
+            sample[column] = np.float32((col_data - self.means_stds[f'{column}_mean']) / self.means_stds[f'{column}_std'])
 
         return sample
