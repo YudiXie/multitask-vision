@@ -370,10 +370,10 @@ def multi_task_tdw_large20230907_nopret_dis_scaling_0925():
     return config_list
 
 
-def multi_task_tdw_1m20240206_nopret_0206():
+def multi_task_tdw_1m20240206_nopret_0211():
     # compare models with different training targets
     exp_config = copy.deepcopy(base_config)
-    exp_config['experiment_name'] = 'multi_task_tdw_1m20240206_nopret_0206'
+    exp_config['experiment_name'] = 'multi_task_tdw_1m20240206_nopret_0211'
     exp_config['dataset_name'] = 'tdw_1m_20240206'
     exp_config['max_batch'] = 200000  # run thorugh the dataset ~10 times with batchsize 64
     exp_config['eval_per'] = 1000
