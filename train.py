@@ -71,7 +71,9 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
                                          batch_size=batch_size, 
                                          shuffle=True if is_train else False, 
                                          pin_memory=True, 
-                                         num_workers=8)
+                                         num_workers=8,
+                                         drop_last=True,
+                                         )
     return loader
 
 
@@ -227,7 +229,7 @@ def train_model(config):
     model.fc = nn.Linear(model.fc.in_features, output_number)
     model = model.to(DEVICE)
 
-    model = torch.compile(model)
+    model = torch.compile(model, fullgraph=True, dynamic=False)
 
     # Set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=config.lr)
