@@ -252,6 +252,7 @@ def train_model(config):
 
     # initialize
     batch_n = 0  # the numbder of batches the model has trained on so far
+    batch_n_run = 0  # the number of batches in the current run, for logging only
     sample_ct = 0  # number of training samples the model has trained on so far
     best_category_acc = 0.0
     best_object_acc = 0.0
@@ -310,9 +311,11 @@ def train_model(config):
             scaler.update()
 
             batch_n += 1
+            batch_n_run += 1
             sample_ct += len(inputs)
 
             metrics = {"train/batch_n": batch_n,
+                       "train/batch_n_run": batch_n_run,
                        "train/sample_ct": sample_ct,
                        "train/train_loss": train_loss.item()}
             metrics.update({f"train/train_{k}_loss": v.item() for k, v in task_loss_dict.items()})
