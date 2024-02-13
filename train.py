@@ -119,7 +119,7 @@ def validate_model(model,
                     batch_loss_dict[task] = task_loss
                     val_task_loss[task] += task_loss.item() * batch_size
                 
-                task_weight = 1 / len(task_list)
+                task_weight = 1.0 / len(task_list)
                 batch_val_loss = [v.item() * task_weight for k, v in batch_loss_dict.items()]
                 # used to calculate weighted loss specified by hand
                 # batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
