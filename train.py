@@ -119,7 +119,7 @@ def validate_model(model,
                     batch_loss_dict[task] = task_loss
                     val_task_loss[task] += task_loss.item() * batch_size
                 
-                task_weight = 1.0 / len(task_list)
+                task_weight = torch.tensor(1.0 / len(task_list)).to(DEVICE)
                 batch_val_loss = [v.item() * task_weight for k, v in batch_loss_dict.items()]
                 # used to calculate weighted loss specified by hand
                 # batch_val_loss = [v.item() * task2weights[k] for k, v in batch_loss_dict.items()]
@@ -297,7 +297,7 @@ def train_model(config):
                     task_outputs = outputs[:, out_range[0]:out_range[1]]
                     task_loss_dict[task] = task2loss_func[task](task_outputs, task_target_dict[task])
                 
-                task_weight = 1.0 / len(config.tasks)
+                task_weight = torch.tensor(1.0 / len(config.tasks)).to(DEVICE)
                 weighted_loss = [v * task_weight for k, v in task_loss_dict.items()]
                 # used to calculate weighted loss specified by hand
                 # weighted_loss = [v * task2weights[k] for k, v in task_loss_dict.items()]
