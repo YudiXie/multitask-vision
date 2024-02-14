@@ -182,6 +182,10 @@ def save_exp_scores(exp_name):
     save model scores for all models in an experiment
     alone with pre-trained models
     to brainscore_results.csv in the experiment folder
+
+    need to do: the layer committement is not saved intuitively
+    so that the need to call the score_model_on_a_benchmark and prepare model
+    future version should save the layer commitment together with score
     """
     config_list = getattr(exp_config_list, exp_name)()
 
@@ -193,10 +197,6 @@ def save_exp_scores(exp_name):
                                     'error',
                                     'exp_group',
                                     ])
-    
-    # save score for pre-trained model
-    model = prepare_model_commitment('mt0527-resnet18-pret', out_dim=78)
-    save_df = save_model_scores(model, save_df, exp_group='Pre-trained')
 
     # save score for models specified by experiment config list
     for config in config_list:
