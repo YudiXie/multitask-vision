@@ -8,6 +8,7 @@ from scipy.stats import circmean
 from PIL import Image
 import torch
 from torch.utils.data import Dataset
+from torchvision.datasets.folder import pil_loader
 import yaml
 
 
@@ -224,7 +225,7 @@ class TDWDataset(Dataset):
         
         img_path, img_meta_path = get_image_meta_path(self.dataset_index, idx, self.root_path)
 
-        image = load_image(img_path)
+        image = pil_loader(img_path)
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}
