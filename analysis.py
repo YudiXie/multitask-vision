@@ -155,6 +155,7 @@ def two_set_scatter_plot(data1, data2,
                               [data1.max()-mean_data1, data2.max()-mean_data1],
                               barh=0.025)
     adjust_figure()
+    plt.tight_layout(pad=0.5)
     plt.savefig(os.path.join('./figures/', save_str + '.pdf'), transparent=True, bbox_inches="tight")
     if show:
         plt.show()
@@ -245,6 +246,7 @@ def bar_2par(data,
     plt.title(fig_title)
 
     adjust_figure()
+    plt.tight_layout(pad=0.5)
     os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
     plt.savefig(os.path.join(FIG_DIR, folder_name, fig_name + '.pdf'), transparent=True)
     if show:
@@ -302,6 +304,7 @@ def scatter_errorbar(data_dict,
     
     plt.legend(loc=(0.4, 0.13))
     adjust_figure()
+    plt.tight_layout(pad=0.5)
     os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
     plt.savefig(os.path.join(FIG_DIR, folder_name, fig_name + '.pdf'), transparent=True)
     if show:
