@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet18, resnet50, ResNet18_Weights, ResNet50_Weights
 import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
@@ -34,6 +34,16 @@ IMN_transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
 ])
+
+model_setup = {
+    'resnet18': resnet18,
+    'resnet50': resnet50,
+}
+
+model_weights = {
+    'resnet18': ResNet18_Weights.IMAGENET1K_V1,
+    'resnet50': ResNet50_Weights.IMAGENET1K_V1,
+}
 
 
 def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction=1.0):
@@ -222,9 +232,9 @@ def train_model(config):
     
     # initialize the model
     if config.pretrain_init:
-        model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        model = model_setup[config.model_archi](weights=model_weights[config.model_archi])
     else:
-        model = resnet18()
+        model = model_setup[config.model_archi]()
 
     output_number, task2output_range = get_output_info(config.dataset_name)
 

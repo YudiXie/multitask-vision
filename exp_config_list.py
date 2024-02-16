@@ -29,6 +29,32 @@ base_config = {
     }
 
 
+def change_config(config_list_func, new_exp_name, change_kwargs):
+    """
+    set attributes in change_kwargs to all config in config_list,
+    and generate a new list of experimental configs, with different epxeriment names and save paths
+    params:
+        config_list_func: a function that returns a list of config
+        new_exp_name: str, new experiment name
+        change_kwargs: dict, new attributes to be added to all config
+    return:
+        list of new configs
+    """
+    config_list = config_list_func()
+    for cfg in config_list:
+        for k, v in change_kwargs.items():
+            assert k not in ['experiment_name', 'run_id', 'save_path'], f'key {k} cannot be changed'
+            assert k in cfg, f'key {k} not in config'
+            cfg[k] = v
+        
+        # mandatory changes
+        cfg['experiment_name'] = new_exp_name
+        run_id = cfg['run_id']
+        cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+
+    return config_list
+
+
 def random_models0630():
     # only used to score the random models
     exp_config = copy.deepcopy(base_config)
@@ -413,3 +439,12 @@ def multi_task_tdw_1m20240206_nopret_0214():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+def multi_task_tdw_1m20240206_resnet50_nopret_0216():
+    change_kwargs = {
+        'model_archi': 'resnet50',
+    }
+    return change_config(multi_task_tdw_1m20240206_nopret_0214, 
+                         'multi_task_tdw_1m20240206_resnet50_nopret_0216', 
+                         change_kwargs)
