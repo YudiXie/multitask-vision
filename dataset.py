@@ -16,7 +16,7 @@ def get_image_meta_path(index_df, idx, dataset_path):
     """
     Get the image path and meta data path for a given index.
     """
-    image_idx, scene_name, wnid, model_name = index_df.iloc[idx]
+    image_idx, scene_name, wnid, model_name = index_df.iloc[idx, 0:4]
 
     record_path = dataset_path.joinpath('images', scene_name, wnid, model_name)
     img_path = record_path.joinpath(f"img_{image_idx:010d}.jpg")
