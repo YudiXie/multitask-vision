@@ -37,6 +37,7 @@ if __name__ == '__main__':
 
     # concatenate the meta data to the index and save a copy on disk
     # read CSV files string convertion, reverse indexing to avoid cases like "bag, handbag, pocketbook, purse
+    # assuming all the float data (vis_collumns) are in the later part of metadata
     inv_idx = {header: - (len(meta_headers) - i) for i, header in enumerate(meta_headers)}
     append_data = defaultdict(list)
     for i_row in trange(len(shuffled_index)):
