@@ -441,10 +441,10 @@ def multi_task_tdw_1m20240206_nopret_0214():
     return config_list
 
 
-def multi_task_tdw_1m20240206_resnet50_nopret_0216():
+def multi_task_tdw_1m20240206_resnet50_nopret_0219():
     change_kwargs = {
         'model_archi': 'resnet50',
     }
     return change_config(multi_task_tdw_1m20240206_nopret_0214, 
-                         'multi_task_tdw_1m20240206_resnet50_nopret_0216', 
+                         'multi_task_tdw_1m20240206_resnet50_nopret_0219', 
                          change_kwargs)
