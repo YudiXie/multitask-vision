@@ -183,8 +183,9 @@ class TDWDataset(Dataset):
         """
         Arguments:
             root_dir (string, or Path): Directory with all the images.
-            fraction (float): fraction of the training or testing dataset to use, 1.0 means use all the data
+            fraction (float): fraction of the training dataset to use, 1.0 means use all the data
                 this is used to investigate the scaling of the training with the dataset size
+                fraction only has an impact on the training set.
         """
         if isinstance(root_dir, str):
             self.root_path: Path = Path(root_dir)
@@ -201,18 +202,23 @@ class TDWDataset(Dataset):
         
         dataset_index = pd.read_csv(self.root_path.joinpath('index_img_shuffled_with_meta.csv'), index_col=0)
         full_dset_size = len(dataset_index)
-        split_index = round(full_dset_size * 0.8) if full_dset_size * 0.2 < 50000 else -50000
+
+        # clamp the validation set size to be between 50,000 and 100,000
+        val_set_size = min(max(round(full_dset_size * 0.2), 50000), 100000)
+        train_set_size = full_dset_size - val_set_size
+        assert train_set_size > 0
 
         if split == 'all':
-            pass
+            use_index = len(dataset_index)
         elif split == 'train':
-            dataset_index = dataset_index[:split_index]
+            dataset_index = dataset_index[:train_set_size]
+            use_index = round(len(dataset_index) * fraction)
         elif split == 'val':
-            dataset_index = dataset_index[split_index:].reset_index(drop=True)
+            dataset_index = dataset_index[train_set_size:].reset_index(drop=True)
+            use_index = len(dataset_index)
         else:
             raise ValueError('split must be either all, train, or val')
-        
-        self.dataset_index = dataset_index[:round(len(dataset_index) * fraction)]
+        self.dataset_index = dataset_index[:use_index]
 
     def __len__(self):
         return len(self.dataset_index)
