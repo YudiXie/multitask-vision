@@ -8,6 +8,7 @@ import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
 
 from config_global import DEVICE
+from train import model_setup, model_weights
 
 
 def log_complete(exp_path: str, start_time=None, mode='train'):
@@ -51,17 +52,18 @@ def load_config(yaml_file_path='config.yml'):
     return config
 
 
-def prepare_pytorch_model(out_dim: int, load_path: str = ''):
+def prepare_pytorch_model(model_archi: str, out_dim: int, load_path: str = ''):
     """
     prepare a torch.nn model
     args:
+        model_archi: str, the model architecture name
         out_dim: int, the output dimension of the model
         load_path: str, path to load model weights, 
             if provided load weights, otherwise use pretrained weights
     return:
         model: torch.nn model
     """
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    model = model_setup[model_archi](weights=model_weights[model_archi])
     model.fc = nn.Linear(model.fc.in_features, out_dim)
     model = model.to(DEVICE)
     

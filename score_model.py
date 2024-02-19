@@ -20,7 +20,7 @@ from pathlib import Path
 #     if isinstance(layer, torch.nn.Conv2d):
 #         print(name)
 
-resnet18layerlist = [
+resnet18_scorelayerlist = [
     'relu',
     'layer1.0.relu',
     'layer1.1.relu',
@@ -33,6 +33,33 @@ resnet18layerlist = [
     'avgpool',
     'fc',
 ]
+
+resnet50_scorelayerlist = [
+    'relu',
+    'layer1.0.relu',
+    'layer1.1.relu',
+    'layer1.2.relu',
+    'layer2.0.relu',
+    'layer2.1.relu',
+    'layer2.2.relu',
+    'layer2.3.relu',
+    'layer3.0.relu',
+    'layer3.1.relu',
+    'layer3.2.relu',
+    'layer3.3.relu',
+    'layer3.4.relu',
+    'layer3.5.relu',
+    'layer4.0.relu',
+    'layer4.1.relu',
+    'layer4.2.relu',
+    'avgpool',
+    'fc',
+]
+
+score_layers = {
+    'resnet18': resnet18_scorelayerlist,
+    'resnet50': resnet50_scorelayerlist,
+}
 
 
 benchmark_dict = {
@@ -78,24 +105,26 @@ def get_layer_commitment(model: ModelCommitment):
     return layer_map
 
 
-def prepare_model_commitment(model_identifier: str, out_dim: int, load_path: str = '') -> ModelCommitment:
+def prepare_model_commitment(model_archi: str, model_identifier: str, 
+                             out_dim: int, load_path: str = '') -> ModelCommitment:
     """
     prepare model for benchmarking
     args:
+        model_archi: str, model architecture name
         model_identifier: str, unique model identifier for benchmarking
         load_path: str, path to load model weights, 
             if provided load weights, otherwise use pretrained weights
     return:
         model: ModelCommitment object
     """
-    pytorch_model = prepare_pytorch_model(out_dim, load_path)
+    pytorch_model = prepare_pytorch_model(model_archi, out_dim, load_path)
     preprocessing = functools.partial(load_preprocess_images, image_size=224)
     activations_model = PytorchWrapper(identifier=model_identifier, 
                                        model=pytorch_model,
                                        preprocessing=preprocessing)
     model_commitment = ModelCommitment(identifier=model_identifier,
                                        activations_model=activations_model,
-                                       layers=resnet18layerlist,
+                                       layers=score_layers[model_archi],
                                        behavioral_readout_layer='avgpool')
     return model_commitment
 
@@ -141,7 +170,8 @@ def prepare_and_score_model(config):
     """
     model_save_path = os.path.join(config['save_path'], 'model.pth')
     out_dim, _ignore = get_output_info(config['dataset_name'])
-    model = prepare_model_commitment(get_model_id(config), out_dim, model_save_path)
+    model = prepare_model_commitment(config['model_archi'], get_model_id(config), 
+                                     out_dim, model_save_path)
 
     start_time = datetime.now()
     for region, benchmark_id in benchmark_dict.items():
@@ -202,8 +232,8 @@ def save_exp_scores(exp_name):
     for config in config_list:
         model_save_path = os.path.join(config['save_path'], 'model.pth')
         out_dim, _ignore = get_output_info(config['dataset_name'])
-        model = prepare_model_commitment(model_identifier=get_model_id(config),
-                                         out_dim=out_dim, load_path=model_save_path)
+        model = prepare_model_commitment(config['model_archi'], get_model_id(config),
+                                         out_dim, model_save_path)
         save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
