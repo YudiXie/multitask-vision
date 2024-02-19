@@ -224,9 +224,6 @@ class TDWDataset(Dataset):
         return len(self.dataset_index)
 
     def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        
         image_meta = self.dataset_index.iloc[idx]
         image_idx = image_meta['image_index']
         img_path = self.root_path.joinpath('images', image_meta['scene'], image_meta['wnid'], image_meta['model'],
