@@ -8,7 +8,7 @@ import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
 
 from config_global import DEVICE
-from train import model_setup, model_weights
+from model_setup import model_setup_dict, model_pretrain_weights
 
 
 def log_complete(exp_path: str, start_time=None, mode='train'):
@@ -63,7 +63,7 @@ def prepare_pytorch_model(model_archi: str, out_dim: int, load_path: str = ''):
     return:
         model: torch.nn model
     """
-    model = model_setup[model_archi](weights=model_weights[model_archi])
+    model = model_setup_dict[model_archi](weights=model_pretrain_weights[model_archi])
     model.fc = nn.Linear(model.fc.in_features, out_dim)
     model = model.to(DEVICE)
     
