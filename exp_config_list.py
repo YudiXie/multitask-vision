@@ -448,3 +448,29 @@ def multi_task_tdw_1m20240206_resnet50_nopret_0219():
     return change_config(multi_task_tdw_1m20240206_nopret_0214, 
                          'multi_task_tdw_1m20240206_resnet50_nopret_0219', 
                          change_kwargs)
+
+
+def pretrain_and_random_resnet50_0220():
+    # only used to score the random models
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'pretrain_and_random_resnet50_0220'
+    exp_config['dataset_name'] = 'tdw_1m_20240206'
+    exp_config['model_archi'] = 'resnet50'
+
+    group_list = ['random', 'imagenet1k_pretrain']
+    seed_list = [0, 1, 2, 3, 4]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for group_n in group_list:
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = group_n
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
