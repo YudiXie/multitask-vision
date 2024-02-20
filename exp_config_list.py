@@ -474,3 +474,12 @@ def pretrain_and_random_resnet50_0220():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+def pretrain_and_random_resnet18_0220():
+    change_kwargs = {
+        'model_archi': 'resnet18',
+    }
+    return change_config(pretrain_and_random_resnet50_0220, 
+                         'pretrain_and_random_resnet18_0220', 
+                         change_kwargs)
