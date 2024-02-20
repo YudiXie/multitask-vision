@@ -203,8 +203,8 @@ class TDWDataset(Dataset):
         dataset_index = pd.read_csv(self.root_path.joinpath('index_img_shuffled_with_meta.csv'), index_col=0)
         full_dset_size = len(dataset_index)
 
-        # clamp the validation set size to be between 50,000 and 100,000
-        val_set_size = min(max(round(full_dset_size * 0.2), 50000), 100000)
+        # clamp the validation set size to be between 1,000 and 50,000
+        val_set_size = min(max(round(full_dset_size * 0.2), 1000), 50000)
         train_set_size = full_dset_size - val_set_size
         assert train_set_size > 0
 
