@@ -403,7 +403,7 @@ def multi_task_tdw_1m20240206_nopret_0214():
     exp_config['experiment_name'] = 'multi_task_tdw_1m20240206_nopret_0214'
     exp_config['dataset_name'] = 'tdw_1m_20240206'
     exp_config['max_batch'] = 200000  # run thorugh the dataset ~10 times with batchsize 64
-    exp_config['eval_per'] = 1000
+    exp_config['eval_per'] = 5000
     exp_config['checkpoint_per'] = 1000
     exp_config['pretrain_init'] = False
 
