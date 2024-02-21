@@ -450,6 +450,17 @@ def multi_task_tdw_1m20240206_resnet50_nopret_0219():
                          change_kwargs)
 
 
+def multi_task_tdw_10m20240208_resnet50_nopret_0221():
+    change_kwargs = {
+        'dataset_name': 'tdw_10m_20240208',
+        'max_batch': 500000,  # run thorugh the 10m dataset ~3 times
+        'eval_per': 20000,
+    }
+    return change_config(multi_task_tdw_1m20240206_resnet50_nopret_0219, 
+                         'multi_task_tdw_10m20240208_resnet50_nopret_0221', 
+                         change_kwargs)
+
+
 def pretrain_and_random_resnet50_0220():
     # only used to score the random models
     exp_config = copy.deepcopy(base_config)
