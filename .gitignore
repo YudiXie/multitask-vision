@@ -172,3 +172,4 @@ experiments/
 *.pdf
 test_debug.py
 *.jpg
+*.zip
