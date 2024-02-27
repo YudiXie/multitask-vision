@@ -263,6 +263,8 @@ def scatter_errorbar(data_dict,
                      show=True,
                      log_scale=False,
                      show_legend=True,
+                     yticks=None,
+                     yticklabels=None,
                      ):
     """
         make a scatter plot with error bars
@@ -294,7 +296,8 @@ def scatter_errorbar(data_dict,
     if y_label is not None:
         plt.ylabel(y_label)
     
-    plt.yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
+    if yticks:
+        plt.yticks(yticks, yticklabels)
     
     if additional_plots is not None:
         for plot in additional_plots:

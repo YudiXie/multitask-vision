@@ -89,6 +89,8 @@ scatter_errorbar(data_dict,
                  folder_name='0227_tdw_10m_resnet50_1mbatch',
                  fig_name='brainscore_vs_output_num_wo_behavior',
                  log_scale=True,
+                 yticks=[0.25, 0.30, 0.35, 0.40],
+                 yticklabels=['0.25', '', '', '0.40'],
                  )
 
 # %%
