@@ -503,3 +503,24 @@ def pretrain_and_random_resnet18_0220():
     return change_config(pretrain_and_random_resnet50_0220, 
                          'pretrain_and_random_resnet18_0220', 
                          change_kwargs)
+
+
+def dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0227():
+    change_kwargs = {
+        'model_archi': 'resnet50',
+        'dataset_name': 'tdw_10m_20240208',
+        'max_batch': 1000000,  # run thorugh the 10m dataset ~6 times
+        'eval_per': 20000,
+    }
+    return change_config(multi_task_tdw_large20230907_nopret_dis_scaling_0925, 
+                         'dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0227', 
+                         change_kwargs)
+
+
+def allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0227():
+    change_kwargs = {
+        'tasks': ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg'],
+    }
+    return change_config(dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0227, 
+                         'allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0227', 
+                         change_kwargs)
