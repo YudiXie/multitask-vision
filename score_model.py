@@ -1,4 +1,5 @@
 import os
+import sys
 import functools
 from datetime import datetime
 import argparse
@@ -194,16 +195,23 @@ def save_model_scores(model: ModelCommitment, save_df, exp_group):
     layer_map = get_layer_commitment(model)
     layer_map['Behavior'] = 'avgpool'
     for region, benchmark_id in benchmark_dict.items():
-        score, error = score_model_on_a_benchmark(model, benchmark_id)
-        save_df = save_df.append({'model': model.identifier, 
-                                  'benchmark_region': region, 
-                                  'benchmark_id': benchmark_id,
-                                  'mapped_layer': layer_map[region],
-                                  'score': score, 
-                                  'error': error,
-                                  'exp_group': exp_group,
-                                  }, 
-                                  ignore_index=True)
+        score_path = Path(DATA_DIR).joinpath(f'{model.identifier}_{benchmark_id}_score.csv')
+        if score_path.is_file():
+            read_df = pd.read_csv(score_path, index_col=0)
+            score, error = read_df['score'][0], read_df['error'][0]
+            save_df = save_df.append({'model': model.identifier, 
+                                    'benchmark_region': region, 
+                                    'benchmark_id': benchmark_id,
+                                    'mapped_layer': layer_map[region],
+                                    'score': score, 
+                                    'error': error,
+                                    'exp_group': exp_group,
+                                    }, 
+                                    ignore_index=True)
+        else:
+            print(f'No score file found for {model.identifier} on {benchmark_id}')
+            if input('Continue? (yes/no): ') != 'yes':
+                sys.exit("exit program.")
     return save_df
 
 
