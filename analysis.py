@@ -262,6 +262,7 @@ def scatter_errorbar(data_dict,
                      fig_name='fig',
                      show=True,
                      log_scale=False,
+                     show_legend=True,
                      ):
     """
         make a scatter plot with error bars
@@ -302,7 +303,8 @@ def scatter_errorbar(data_dict,
         ax = plt.gca()
         ax.set_xscale('log')
     
-    plt.legend(loc=(0.4, 0.13))
+    if show_legend:
+        plt.legend(loc=(0.4, 0.13))
     adjust_figure()
     plt.tight_layout(pad=0.5)
     os.makedirs(os.path.join(FIG_DIR, folder_name), exist_ok=True)
