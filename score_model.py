@@ -192,11 +192,12 @@ def save_model_scores(model: ModelCommitment, save_df, exp_group):
     """
     read model score on benchmarks and append to save_df
     """
-    layer_map = get_layer_commitment(model)
-    layer_map['Behavior'] = 'avgpool'
     for region, benchmark_id in benchmark_dict.items():
         score_path = Path(DATA_DIR).joinpath(f'{model.identifier}_{benchmark_id}_score.csv')
         if score_path.is_file():
+            layer_map = get_layer_commitment(model)
+            layer_map['Behavior'] = 'avgpool'
+
             read_df = pd.read_csv(score_path, index_col=0)
             score, error = read_df['score'][0], read_df['error'][0]
             save_df = save_df.append({'model': model.identifier, 
