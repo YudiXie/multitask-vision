@@ -18,11 +18,11 @@ from brainscore_vision.model_helpers.activations.pytorch import PytorchWrapper, 
 
 
 def get_model_list():
-    return ['yudixie_resnet50_imagenet1kpret_0_240222']
+    return ['yudixie_resnet50_imagenet1kpret_0_240312']
 
 
 def get_model(name):
-    assert name == 'yudixie_resnet50_imagenet1kpret_0_240222'
+    assert name == 'yudixie_resnet50_imagenet1kpret_0_240312'
 
     pytorch_device = torch.device('cpu')
     
@@ -55,7 +55,7 @@ def get_model(name):
 
 
 def get_layers(name):
-    assert name == 'yudixie_resnet50_imagenet1kpret_0_240222'
+    assert name == 'yudixie_resnet50_imagenet1kpret_0_240312'
     return ['conv1','layer1', 'layer2', 'layer3', 'layer4', 'fc']
 
 
@@ -65,4 +65,4 @@ def get_bibtex(model_identifier):
 
 if __name__ == '__main__':
     check_models.check_base_models(__name__)
-    # get_model('yudixie_resnet50_imagenet1kpret_0_240222')
+    # get_model('yudixie_resnet50_imagenet1kpret_0_240312')
