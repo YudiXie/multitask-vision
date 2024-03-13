@@ -1,14 +1,16 @@
-from brainscore_vision.model_helpers.check_submission import check_models
+import os
+from pathlib import Path
 import functools
-from brainscore_vision.model_helpers.activations.pytorch import PytorchWrapper
-from brainscore_vision.model_helpers.activations.pytorch import load_preprocess_images
+from urllib.request import urlretrieve
+
+import numpy as np
 import torch
 import torch.nn as nn
-import os
-import numpy as np
-from pathlib import Path
-from brainscore_vision.model_helpers.brain_transformation import ModelCommitment
 from torchvision.models import resnet50
+
+from brainscore_vision.model_helpers.check_submission import check_models
+from brainscore_vision.model_helpers.brain_transformation import ModelCommitment
+from brainscore_vision.model_helpers.activations.pytorch import PytorchWrapper, load_preprocess_images
 
 
 # Please load your pytorch model for usage in CPU. There won't be GPUs available for scoring your model.
@@ -25,8 +27,8 @@ def get_model(name):
     pytorch_device = torch.device('cpu')
     
     weigth_url = f'https://yudi-brainscore-models.s3.amazonaws.com/{name}.pth'
-    os.system(f'wget "{weigth_url}"')
-    load_path = Path(__file__).parent.joinpath(f'{name}.pth')
+    fh = urlretrieve(weigth_url, f'{name}_weights.pth')
+    load_path = fh[0]
 
     pytorch_model = resnet50()
     pytorch_model.fc = nn.Linear(pytorch_model.fc.in_features, 674)
