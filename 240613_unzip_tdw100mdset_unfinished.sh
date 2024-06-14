@@ -1,10 +1,9 @@
 #!/bin/bash
-#SBATCH -t 12:00:00
+#SBATCH -t 20:00:00
 #SBATCH -N 1
 #SBATCH -n 12
 #SBATCH --mem=32G
-#SBATCH --gres=gpu:a100:1
-#SBATCH --partition=normal
+#SBATCH --partition=dicarlo
 #SBATCH -e /om/weka/dicarlo/yu_xie/projects/multitask-vision/slurm_output/slurm-%j-240613_unzip_tdw100mdset.out
 #SBATCH -o /om/weka/dicarlo/yu_xie/projects/multitask-vision/slurm_output/slurm-%j-240613_unzip_tdw100mdset.out
 
