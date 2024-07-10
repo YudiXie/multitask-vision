@@ -530,7 +530,8 @@ def allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306():
 def dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710():
     # just to test the new pytorch version
     change_kwargs = {
-        'max_batch': 500000,  # run thorugh the 10m dataset ~6 times
+        'max_batch': 500000,
+        'use_amp': True,
     }
     return change_config(dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306, 
                          'dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710', 
