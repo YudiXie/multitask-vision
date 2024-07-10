@@ -527,11 +527,11 @@ def allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306():
                          change_kwargs)
 
 
-def allcat_alllat_tdw_10m20240208_resnet50_nopret_500kb_0710():
+def dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710():
     # just to test the new pytorch version
     change_kwargs = {
         'max_batch': 500000,  # run thorugh the 10m dataset ~6 times
     }
-    return change_config(allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306, 
-                         'allcat_alllat_tdw_10m20240208_resnet50_nopret_500kb_0710', 
+    return change_config(dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306, 
+                         'dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710', 
                          change_kwargs)
