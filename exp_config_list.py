@@ -34,7 +34,7 @@ def change_config(config_list_func, new_exp_name, change_kwargs):
     set attributes in change_kwargs to all config in config_list,
     and generate a new list of experimental configs, with different epxeriment names and save paths
     params:
-        config_list_func: a function that returns a list of config
+        config_list_func: a function that returns a list of config, can be empty
         new_exp_name: str, new experiment name
         change_kwargs: dict, new attributes to be added to all config
     return:
@@ -524,4 +524,14 @@ def allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306():
     }
     return change_config(dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306, 
                          'allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306', 
+                         change_kwargs)
+
+
+def allcat_alllat_tdw_10m20240208_resnet50_nopret_500kb_0710():
+    # just to test the new pytorch version
+    change_kwargs = {
+        'max_batch': 500000,  # run thorugh the 10m dataset ~6 times
+    }
+    return change_config(allcat_alllat_tdw_10m20240208_resnet50_nopret_1mb_0306, 
+                         'allcat_alllat_tdw_10m20240208_resnet50_nopret_500kb_0710', 
                          change_kwargs)

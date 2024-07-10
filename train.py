@@ -98,7 +98,7 @@ def validate_model(model,
     cat_red_correct = 0  # assumes that only one reduece categorization task is used
     image_ct = 0
     model.eval()
-    with torch.no_grad():
+    with torch.inference_mode():
         for i, data in enumerate(valid_dl):
             # prepare the inputs and targets
             inputs = data['image'].to(DEVICE)
