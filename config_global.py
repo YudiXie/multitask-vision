@@ -13,8 +13,8 @@ DATA_DIR = osp.join(ROOT_DIR, 'data')
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device('cuda:0' if USE_CUDA else 'cpu')
 
-CUDA_MODULE = 'openmind8/cuda/11.7'
-CONDA_ENV = 'mtvision'
+CUDA_MODULE = 'openmind8/cuda/12.1'
+CONDA_ENV = 'mtvision2'
 CONDA_SCORE_ENV = 'brainscore'
 
 print('Pytorch version: ', torch.__version__)
