@@ -542,7 +542,7 @@ def acal_tdw_nopret_dis_scaling_240711():
     exp_config['experiment_name'] = 'acal_tdw_nopret_dis_scaling_240711'
     exp_config['model_archi'] = 'resnet50'
     exp_config['dataset_name'] = 'tdw_100m_20240222'
-    exp_config['max_batch'] = 3000000  # run thorugh the dataset ~2 times with batchsize 64
+    exp_config['max_batch'] = 3000000  # run thorugh the dataset ~2 times with batchsize 64, ~ 30h to run
     exp_config['eval_per'] = 30000
     exp_config['checkpoint_per'] = 5000
     exp_config['pretrain_init'] = False
