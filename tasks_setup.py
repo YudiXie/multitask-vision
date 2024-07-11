@@ -113,7 +113,7 @@ def get_output_info(dataset_name):
         # TDW small dataset and HvM dataset
         output_number = 84  # 8 + 64 + 3 + 1 + 2 + 6
         task2output_range = task2output_range_small
-    elif dataset_name in ['tdw_1m_20240206', 'tdw_10m_20240208']:
+    elif dataset_name in ['tdw_1m_20240206', 'tdw_10m_20240208', 'tdw_100m_20240222']:
         output_number = 674  # 117 + 548 + 1 + 2 + 6
         task2output_range = task2output_range_large_new
     else:
