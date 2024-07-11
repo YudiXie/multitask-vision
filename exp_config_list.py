@@ -535,3 +535,34 @@ def dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710():
     return change_config(dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306, 
                          'dis_scaling_tdw_10m20240208_resnet50_nopret_500kb_0710', 
                          change_kwargs)
+
+
+def acal_tdw_nopret_dis_scaling_240711():
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'acal_tdw_nopret_dis_scaling_240711'
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['dataset_name'] = 'tdw_100m_20240222'
+    exp_config['max_batch'] = 3000000  # run thorugh the dataset ~2 times with batchsize 64
+    exp_config['eval_per'] = 30000
+    exp_config['checkpoint_per'] = 5000
+    exp_config['pretrain_init'] = False
+    exp_config['tasks'] = ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg']
+    
+    seed_list = [0, 1, 2]
+    fractions = [1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001]
+
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for frac in fractions:
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = f'frac_{frac}'
+            cfg['train_dataset_fraction'] = frac
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
