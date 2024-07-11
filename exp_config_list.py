@@ -25,7 +25,7 @@ base_config = {
     'save_path': './experiments/',
     'pretrain_init': True,
     'train_dataset_fraction': 1.0,
-    'use_amp': True,
+    'use_amp': False,
     }
 
 
@@ -511,7 +511,6 @@ def dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306():
         'dataset_name': 'tdw_10m_20240208',
         'max_batch': 1000000,  # run thorugh the 10m dataset ~6 times
         'eval_per': 20000,
-        'use_amp': False,
     }
     return change_config(multi_task_tdw_large20230907_nopret_dis_scaling_0925, 
                          'dis_scaling_tdw_10m20240208_resnet50_nopret_1mb_0306', 
