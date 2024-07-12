@@ -27,7 +27,7 @@ if __name__ == '__main__':
     index_path = Path(args.index)
     dataset_path = index_path.parent
     # check if all images exist
-    assert dataset_path.joinpath("dataset_complete.txt").is_file(), "No complete check file found"
+    assert dataset_path.joinpath("dataset_scene_all_complete.txt").is_file(), "No complete check file found"
 
     index_df = pd.read_csv(index_path, names=['image_index', 'scene', 'wnid', 'model'], skiprows=1)
     meta_headers = dataset_path.joinpath('img_meta_headers.txt').read_text(encoding="utf-8").split("\n")
