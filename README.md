@@ -3,7 +3,7 @@ A repo for training vision models with multiple tasks
 
 ### Installing environment:
 
-```
+```bash
 conda create -n mtvision2 python=3.10
 conda activate mtvision2
 
@@ -29,7 +29,7 @@ To analyze model neural alignment, you would need to install Brain-Score as well
 First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
 
 Then, prepare the datset, by running:
-```
+```bash
 python dataset.py -n <dataset-name>
 ```
 
@@ -37,7 +37,7 @@ Train models, this will trained a group of neural network models with the datase
 
 Use `-c`, to run on the openmind cluster, this will submit many jobs, each for the training or scoring for one neural network model.
 
-```
+```bash
 python main.py -d train -n <experiment-name> -c
 ```
 
@@ -45,25 +45,30 @@ After the training is complete, check if all the train runs are finished success
 
 Use `-m`, to check for any runs that are not finished.
 
-```
+```bash
 python main.py -d train -n <experiment-name> -c -m
 ```
 
 Score models, this will calculate the Brain-Score for the group of neural network models.
-```
+```bash
 python main.py -d score -n <experiment-name> -c
 ```
 
 After the scoring is complete, check if all the score runs are finished successfully.
 
-```
+```bash
 python main.py -d score -n <experiment-name> -c -m
 ```
 
 Run the following to complie the scores into a consolidated csv file
 
-```
+```bash
 python score_model.py -n <experiment-name>
+```
+
+Preprocess the dataset for use
+```bash
+python tdw_dataset_preprocess.py --index <path-to-index>
 ```
 
 ## Examples:
