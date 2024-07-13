@@ -4,19 +4,17 @@ A repo for training vision models with multiple tasks
 ### Installing environment:
 
 ```bash
-conda create -n mtvision2 python=3.10
-conda activate mtvision2
+conda create -n mtvision3 python=3.10
+conda activate mtvision3
 
 conda install ipykernel pyyaml scikit-image pandas tqdm matplotlib
 
-# install pytorch, on linux with cuda 11.7
-conda install pytorch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 pytorch-cuda=12.1 -c pytorch -c nvidia
+# install pytorch, on linux with cuda
+conda install pytorch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 pytorch-cuda=12.1 -c pytorch -c nvidia
 # or on MacOS
 conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 -c pytorch
 
 # install weights and biases
-conda install wandb --channel conda-forge
-# or
 pip install wandb
 
 # then login to wandb
