@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import torch.nn as nn
 
 from transferscore.imagenet_acc import get_model_imagnet_acc
