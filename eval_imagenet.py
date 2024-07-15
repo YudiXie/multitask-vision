@@ -24,9 +24,10 @@ def eval_model_imagenet(config):
     model = model.to(DEVICE)
 
     start_time = datetime.now()
-    get_model_imagnet_acc(model, '/om/user/yu_xie/data/ImageNet', 
-                          save_path=Path(config['save_path']).joinpath('imagenet_acc.csv'))
+    b_acc1, b_acc5 = get_model_imagnet_acc(model, '/om/user/yu_xie/data/ImageNet',
+                                           save_path=Path(config['save_path']).joinpath('imagenet_acc.csv'))
     complete_time = datetime.now()
+    print(f'ImageNet top1 acc: {b_acc1:.3f}, top5 acc: {b_acc5:.3f}')
     print(f'ImageNet eval time: {str(complete_time - start_time)}')
     log_complete(config['save_path'], start_time, 'imneval')
 
