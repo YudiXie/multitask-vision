@@ -174,6 +174,11 @@ if __name__ == '__main__':
             elif args.do == 'score':
                 from score_model import prepare_and_score_model
                 prepare_and_score_model(config)
+            elif args.do == 'imneval':
+                from eval_imagenet import eval_model_imagenet
+                eval_model_imagenet(config)
+            else:
+                raise NotImplementedError(f'Operation {args.do} is not implemented')
         else:
             # submit jobs to the cluster
             if args.do == 'train':
@@ -182,6 +187,11 @@ if __name__ == '__main__':
             elif args.do == 'score':
                 python_cmd = f'python -c "import score_model; score_model.prepare_and_score_model_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_SCORE_ENV
+            elif args.do == 'imneval':
+                python_cmd = f'python -c "import eval_imagenet; eval_imagenet.eval_model_imagenet_slurm(\'{config_file_path}\')"'
+                conda_env = 'mtvision3'
+            else:
+                raise NotImplementedError(f'Operation {args.do} is not implemented')
 
             job_n = '-'.join([config['experiment_name'], args.do, config['model_archi'], f'run_{config["run_id"]:04d}'])
             output_path = os.path.join(ROOT_DIR, 'slurm_output')
