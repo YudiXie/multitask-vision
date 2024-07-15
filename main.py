@@ -154,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
-    assert args.do in ['train', 'score'], 'Unknown operation: ' + args.do
+    assert args.do in ['train', 'score', 'imneval'], 'Unknown operation: ' + args.do
 
     config_list = getattr(exp_config_list, args.name)()
 
