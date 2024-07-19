@@ -375,6 +375,10 @@ def train_model(config):
                     'best_object_accuracy': best_object_acc,
                     }, checkpoint_path)
             
+            # save model weight at intermediate stages
+            if config.save_inter_model and batch_n in [100000, 200000, 500000, 1000000, 1500000]:
+                torch.save(model.state_dict(), os.path.join(config.save_path, f'model_batch_n_{batch_n}.pth'))
+            
             if batch_n >= config.max_batch:
                 break
     
