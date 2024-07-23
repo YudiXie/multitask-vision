@@ -8,6 +8,7 @@ from sklearn import linear_model, svm
 from dataset import HVMDataset
 from config_global import DEVICE
 from scipy import stats
+from tqdm import tqdm
 
 
 def append_tuple(name, activity_dict, output):
@@ -82,11 +83,20 @@ def get_model_activations(dataset, model, layers,
 
     model = model.to(DEVICE)
     model.eval()
+
+    # assumming sequential loading
+    loader = torch.utils.data.DataLoader(dataset=dataset,
+                                         batch_size=64,
+                                         shuffle=False,
+                                         pin_memory=True,
+                                         num_workers=4,
+                                         drop_last=False,
+                                         )
+    
     with torch.inference_mode():
-        for i in range(len(dataset)):
-            image = dataset[i]['image'].to(DEVICE)
-            image = image.unsqueeze(0)
-            _ignore = model(image)
+        for data in tqdm(loader):
+            images = data['image'].to(DEVICE)
+            _ignore = model(images)
             remove_duplicates(all_activity)
 
     for k, v in all_activity.items():
