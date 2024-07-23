@@ -8,7 +8,7 @@ from sklearn import linear_model, svm
 from dataset import HVMDataset
 from config_global import DEVICE
 from scipy import stats
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 
 def append_tuple(name, activity_dict, output):
@@ -264,17 +264,16 @@ def cross_validate_on_target(activity, df, target_name,
     assert mode in ['regression', 'classification']
 
     performance_list = []
-    for i in range(num_cross_val):
-        train_test_data = create_train_test_split(activity, df, target_name)
-        
+    for i in trange(num_cross_val):
         # downsample neurons
-        if downsample_number is not None:
-            assert train_test_data['train_activity'].shape[1] == train_test_data['test_activity'].shape[1]
-            num_neurons = train_test_data['train_activity'].shape[1]
-            sample_ids = downsample_idx(num_neurons, downsample_number)
-            train_test_data['train_activity'] = train_test_data['train_activity'][:, sample_ids]
-            train_test_data['test_activity'] = train_test_data['test_activity'][:, sample_ids]
+        if downsample_number is None:
+            ds_activity = activity
+        else:
+            sample_ids = downsample_idx(activity.shape[1], downsample_number)
+            ds_activity = activity[:, sample_ids]
 
+        train_test_data = create_train_test_split(ds_activity, df, target_name)
+        
         if mode == 'regression':
             coef, pval = evaluate_regression(**train_test_data)
             performance_list.append(coef)
