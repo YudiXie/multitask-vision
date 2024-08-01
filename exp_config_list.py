@@ -650,3 +650,12 @@ def multi_task_tdw_1m20240206_0718():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+def multi_task_tdw_1m20240206_moresavings_0801():
+    change_kwargs = {
+        'save_inter_model': [20000, 40000, 60000, 80000, 100000, 150000, 200000, 500000],
+    }
+    return change_config(multi_task_tdw_1m20240206_0718, 
+                         'multi_task_tdw_1m20240206_moresavings_0801', 
+                         change_kwargs)
