@@ -26,7 +26,7 @@ base_config = {
     'pretrain_init': True,
     'train_dataset_fraction': 1.0,
     'use_amp': False,
-    'save_inter_model': False,
+    'save_inter_model': [],
     }
 
 
@@ -616,7 +616,7 @@ def multi_task_tdw_1m20240206_0718():
     exp_config['eval_per'] = 10000
     exp_config['checkpoint_per'] = 1000
     exp_config['pretrain_init'] = False
-    exp_config['save_inter_model'] = True
+    exp_config['save_inter_model'] = [100000, 200000, 500000, 1000000, 1500000]
 
     task_set_dict = {
         'distance_reg': ['distance_reg'],
