@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -378,6 +379,8 @@ def train_model(config):
             # save model weight at intermediate stages
             if batch_n in config.save_inter_model:
                 torch.save(model.state_dict(), os.path.join(config.save_path, f'model_batch_n_{batch_n}.pth'))
+                # save the most recent validation results
+                pd.DataFrame.from_dict(val_results, orient='index').to_csv(os.path.join(config.save_path, f'val_results_batch_n_{batch_n}.csv'))
             
             if batch_n >= config.max_batch:
                 break
