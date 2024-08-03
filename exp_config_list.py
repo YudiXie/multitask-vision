@@ -659,3 +659,50 @@ def multi_task_tdw_1m20240206_moresavings_0801():
     return change_config(multi_task_tdw_1m20240206_0718, 
                          'multi_task_tdw_1m20240206_moresavings_0801', 
                          change_kwargs)
+
+
+def multi_task_resnet50_tdw_10m20240208_0802():
+    # compare models with different training targets
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'multi_task_resnet50_tdw_10m20240208_0802'
+    exp_config['dataset_name'] = 'tdw_10m_20240208'
+    exp_config['max_batch'] = 1000000
+    exp_config['eval_per'] = 20000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['save_inter_model'] = [20000, 40000, 60000, 80000, 100000, 150000, 200000, 500000, 700000, 1000000]
+    exp_config['train_dataset_fraction'] = 0.3
+
+    task_set_dict = {
+        'distance_reg': ['distance_reg'],
+        'translation_reg': ['translation_reg'],
+        'rotation_reg': ['rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'distance_translation': ['distance_reg', 'translation_reg'],
+        'distance_rotation': ['distance_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+        'translation_rotation': ['translation_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'distance_translation_rotation': ['distance_reg', 'translation_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'category_class': ['category_class'],
+        'object_class': ['object_class'],
+        'cat_obj_class_all_latents': ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg'],
+    }
+    seed_list = [0, 1, 2, 3, 4, 5, 6, 7]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for group_n, task_set in task_set_dict.items():
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = group_n
+            cfg['tasks'] = task_set
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
