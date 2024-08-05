@@ -116,7 +116,7 @@ region_dict = {'V1': {'yticks': None, 'yticklabels': None, 'legend_loc': None},
                'V2': {'yticks': None, 'yticklabels': None, 'legend_loc': None},
                'V4': {'yticks': None, 'yticklabels': None, 'legend_loc': None},
                'IT': {'yticks': None, 'yticklabels': None, 'legend_loc': None},
-               'Behavior': {'yticks': None, 'yticklabels': None, 'legend_loc': 'best'},
+               'Behavior': {'yticks': None, 'yticklabels': None, 'legend_loc': None},
                }
 
 for region, figconfig in region_dict.items():
