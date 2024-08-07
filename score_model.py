@@ -196,7 +196,7 @@ def prepare_and_score_model_slurm(config_path):
     prepare_and_score_model(config)
 
 
-def save_model_scores(model: ModelCommitment, save_df, exp_group):
+def save_model_scores(model: ModelCommitment, save_df, exp_group, batch):
     """
     read model score on benchmarks and append to save_df
     """
@@ -215,7 +215,8 @@ def save_model_scores(model: ModelCommitment, save_df, exp_group):
                                     'score': score, 
                                     'error': error,
                                     'exp_group': exp_group,
-                                    }, 
+                                    'batch': batch,
+                                    },
                                     ignore_index=True)
         else:
             print(f'No score file found for {model.identifier} on {benchmark_id}')
@@ -243,15 +244,26 @@ def save_exp_scores(exp_name):
                                     'score',
                                     'error',
                                     'exp_group',
+                                    'batch',
                                     ])
 
     # save score for models specified by experiment config list
     for config in config_list:
-        model_save_path = os.path.join(config['save_path'], 'model.pth')
+        model_p_dict = {}
+        if len(config['score_model_nums']) == 0:
+            model_p_dict[str(-1)] = os.path.join(config['save_path'], 'model.pth')
+        else:
+            model_p_dict = {str(model_num): os.path.join(config['save_path'], f'model_batch_n_{model_num}.pth') for model_num in config['score_model_nums']}
+            if config['score_model_nums'][-1] != config['max_batch']:
+                model_p_dict[str(-1)] = os.path.join(config['save_path'], 'model.pth')
+
         out_dim, _ignore = get_output_info(config['dataset_name'])
-        model = prepare_model_commitment(config['model_archi'], get_model_id(config),
-                                         out_dim, model_save_path)
-        save_df = save_model_scores(model, save_df, exp_group=config['group_name'])
+
+        for model_n_str, model_p in model_p_dict.items():
+            model = prepare_model_commitment(config['model_archi'],
+                                             get_model_id(config) + f'-batch-{model_n_str}',
+                                             out_dim, model_p)
+            save_df = save_model_scores(model, save_df, exp_group=config['group_name'], batch=model_n_str)
     
     save_df.to_csv(os.path.join(EXP_DIR, config_list[0]['experiment_name'], 'brainscore_results.csv'))
 
