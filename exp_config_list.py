@@ -27,6 +27,7 @@ base_config = {
     'train_dataset_fraction': 1.0,
     'use_amp': False,
     'save_inter_model': [],
+    'score_model_nums': [],
     }
 
 
@@ -672,6 +673,7 @@ def multi_task_resnet50_tdw_10m20240208_0802():
     exp_config['pretrain_init'] = False
     exp_config['model_archi'] = 'resnet50'
     exp_config['save_inter_model'] = [20000, 40000, 60000, 80000, 100000, 150000, 200000, 500000, 700000, 1000000]
+    exp_config['score_model_nums'] = [20000, 40000, 60000, 80000, 100000, 150000, 200000, 500000, 700000, 1000000]
     exp_config['train_dataset_fraction'] = 0.3
 
     task_set_dict = {

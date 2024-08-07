@@ -169,14 +169,22 @@ def prepare_and_score_model(config):
     args:
         config: dict, an experimental config specifying a model
     """
-    model_save_path = os.path.join(config['save_path'], 'model.pth')
+    model_p_dict = {}
+    if len(config['score_model_nums']) == 0:
+        model_p_dict[str(-1)] = os.path.join(config['save_path'], 'model.pth')
+    else:
+        model_p_dict = {str(model_num): os.path.join(config['save_path'], f'model_batch_n_{model_num}.pth') for model_num in config['score_model_nums']}
+        if config['score_model_nums'][-1] != config['max_batch']:
+            model_p_dict[str(-1)] = os.path.join(config['save_path'], 'model.pth')
     out_dim, _ignore = get_output_info(config['dataset_name'])
-    model = prepare_model_commitment(config['model_archi'], get_model_id(config), 
-                                     out_dim, model_save_path)
-
+    
     start_time = datetime.now()
-    for region, benchmark_id in benchmark_dict.items():
-        score_model_on_a_benchmark(model, benchmark_id)
+    for model_n_str, model_p in model_p_dict.items():
+        model = prepare_model_commitment(config['model_archi'],
+                                         get_model_id(config) + f'-batch-{model_n_str}',
+                                         out_dim, model_p)
+        for region, benchmark_id in benchmark_dict.items():
+            score_model_on_a_benchmark(model, benchmark_id)
     
     complete_time = datetime.now()
     print(f'Scoring time for all benchmarks: {str(complete_time - start_time)}')
