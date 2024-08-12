@@ -27,6 +27,9 @@ pip install -e . --config-settings editable_mode=compat
 # to make plots, install easyfigs
 git clone https://github.com/YudiXie/easyfigs.git
 pip install -e . --config-settings editable_mode=compat
+
+# install rsatoolbox
+pip install rsatoolbox
 ```
 
 To analyze model neural alignment, you would need to install Brain-Score as well. See [here](https://github.com/brain-score/brain-score).
