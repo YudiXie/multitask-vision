@@ -38,51 +38,17 @@ IMN_transform = transforms.Compose([
 ])
 
 
-def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction=1.0):
+def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction):
     "Get a training dataloader"    
     if is_train:
         split = 'train'
     else:
         split = 'val'
-
-    if dataset_name == 'HvM':
-        assert dataset_fraction == 1.0, 'HvM dataset does not support dataset_fraction'
-        dataset = HVMDataset(split=split, transform=transform)
-    elif dataset_name == 'TDW':
-        dataset = TDWDataset(split=split, transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'TDW_large20230907':
-        dataset = TDWDataset(root_dir='./data/tdw_image_dataset_large_20230907', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'TDW_large20240112':
-        dataset = TDWDataset(root_dir='/om2/user/yu_xie/data/tdw_images/tdw_image_dataset_large', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'tdw_1m_20240206':
-        dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_image_dataset_1m_20240206', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'tdw_10m_20240208':
-        dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_image_dataset_10m_20240208', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'tdw_100m_20240222':
-        dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_image_dataset_100m_20240222', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    elif dataset_name == 'tdw_1m_1c_n03001627_20240711':
-        dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_image_dataset_1m_1c_n03001627_20240711', 
-                             split=split,
-                             transform=transform,
-                             fraction=dataset_fraction,)
-    else:
-        raise NotImplementedError(f'Unknown dataset: {dataset_name}')
+    
+    dataset = TDWDataset(root_dir=f'/om/user/yu_xie/data/tdw_images/{dataset_name}', 
+                         split=split,
+                         transform=transform,
+                         fraction=dataset_fraction,)
     
     loader = torch.utils.data.DataLoader(dataset=dataset, 
                                          batch_size=batch_size, 
@@ -265,7 +231,7 @@ def train_model(config):
                                 is_train=False,
                                 batch_size=config.batch_size,
                                 transform=IMN_transform,
-                                )
+                                dataset_fraction=1.0)
 
     # initialize
     batch_n = 0  # the numbder of batches the model has trained on so far

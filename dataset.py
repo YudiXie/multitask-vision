@@ -183,14 +183,13 @@ class TDWDataset(Dataset):
         """
         Arguments:
             root_dir (string, or Path): Directory with all the images.
-            fraction (float): fraction of the training dataset to use, 1.0 means use all the data
-                this is used to investigate the scaling of the training with the dataset size
-                fraction only has an impact on the training set.
+            fraction (float): fraction of the dataset to use, 1.0 means use all the data
         """
         if isinstance(root_dir, str):
             self.root_path: Path = Path(root_dir)
         else:
             self.root_path: Path = root_dir
+        self.dset_name = self.root_path.name + '_' + split + f'_{fraction}'.replace('.', '_')
         self.transform = transform
 
         with open(self.root_path.joinpath('mappings.yml'), 'r') as file:
@@ -209,15 +208,15 @@ class TDWDataset(Dataset):
         assert train_set_size > 0
 
         if split == 'all':
-            use_index = len(dataset_index)
+            pass
         elif split == 'train':
             dataset_index = dataset_index[:train_set_size]
-            use_index = round(len(dataset_index) * fraction)
         elif split == 'val':
             dataset_index = dataset_index[train_set_size:].reset_index(drop=True)
-            use_index = len(dataset_index)
         else:
             raise ValueError('split must be either all, train, or val')
+        
+        use_index = round(len(dataset_index) * fraction)
         self.dataset_index = dataset_index[:use_index]
 
     def __len__(self):
