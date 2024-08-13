@@ -35,12 +35,12 @@ pip install rsatoolbox
 To analyze model neural alignment, you would need to install Brain-Score as well. See [here](https://github.com/brain-score/brain-score).
 
 ### Using the code:
-First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
-
-Then, prepare the datset, by running:
+Preprocess the dataset for use. This will generate a shuffled dataset index for training and testing, create a mapping between label names and label indices, and calculate the mean and std of some of the targets, so that they can be used to normalize them during training and testing.
 ```bash
-python dataset.py -n <dataset-name>
+python tdw_dataset_preprocess.py --index <path-to-index>
 ```
+
+First, find the experiment to run or write new experimental conditions in `exp_config_list.py`
 
 Train models, this will trained a group of neural network models with the dataset specified in `exp_config_list.py`
 
@@ -73,11 +73,6 @@ Run the following to complie the scores into a consolidated csv file
 
 ```bash
 python score_model.py -n <experiment-name>
-```
-
-Preprocess the dataset for use
-```bash
-python tdw_dataset_preprocess.py --index <path-to-index>
 ```
 
 ## Examples:
