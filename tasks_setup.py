@@ -117,6 +117,7 @@ def get_output_info(dataset_name):
                           'tdw_10m_20240208', 
                           'tdw_100m_20240222',
                           'tdw_1m_1c_n03001627_20240711',
+                          'tdw_1m_obj_centered_20240812',
                           ]:
         output_number = 674  # 117 + 548 + 1 + 2 + 6
         task2output_range = task2output_range_large_new
