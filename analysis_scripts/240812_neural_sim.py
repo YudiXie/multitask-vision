@@ -4,6 +4,7 @@ import numpy as np
 import rsatoolbox
 import torchvision.transforms as transforms
 from sklearn.manifold import MDS
+from tqdm import trange
 
 from dataset import TDWDataset
 from utils import prepare_pytorch_model
@@ -116,9 +117,12 @@ rdms['imagenet'] = get_group_rdms('pretrain_and_random_resnet18_0220', [5, ], da
 # %%
 # need a node with 128GB mem, 80 GB mem will crash the kernel
 all_rdms = {}
-rdm_compare = {}
 for layer in record_layers:
     all_rdms[layer] = rsatoolbox.rdm.concat([rdms[key][layer] for key in rdms.keys()])
+
+# %%
+rdm_compare = {}
+for layer in record_layers:
     rdm_compare[layer] = rsatoolbox.rdm.compare_cosine_cov_weighted(all_rdms[layer], all_rdms[layer])
 
 # %%
@@ -208,24 +212,51 @@ for i, layer in enumerate(record_layers):
 
 
 # %%
-cat_matrix = np.concatenate([rdm_compare[layer] for layer in record_layers], axis=0)
-l_m_size = cat_matrix.shape[1]
-embedding = MDS(n_components=2, normalized_stress='auto')
-X_transformed = embedding.fit_transform(cat_matrix)
+# 216 x 216 RDMs comparision, takes less than 3 mins
+layer_cat_rdms = rsatoolbox.rdm.concat([all_rdms[layer] for layer in record_layers])
 
 # %%
-markers = ['o', 's', 'P', 'X', '*', 'p', 'd', '^']
-fig, axes = plt.subplots(1, 4, figsize=(14, 4), sharex=True, sharey=True)
-for i, layer in enumerate(record_layers):
-    ax = axes[i]
-    X_layer = X_transformed[i * l_m_size: (i + 1) * l_m_size]
-    for j, (task, indices) in enumerate(tasks_dict.items()):
-        ax.scatter(X_layer[indices, 0], X_layer[indices, 1],
-                   label=task, alpha=0.8, marker=markers[j], s=80)
-    ax.set_title(f'{layer}')
-ax.legend()
-fig.suptitle('MDS of model similarity')
-fig.supxlabel('MDS dim. 1')
-fig.supylabel('MDS dim. 2')
-fig.tight_layout()
-fig.savefig(f'./figures/mds_model_similarity.pdf', transparent=True)
+def plot_mds(X_transformed, slice_size, fig_suf):
+    markers = ['o', 's', 'P', 'X', '*', 'p', 'd', '^']
+    fig, axes = plt.subplots(1, 4, figsize=(14, 4), sharex=True, sharey=True)
+    for i, layer in enumerate(record_layers):
+        ax = axes[i]
+        X_layer = X_transformed[i * slice_size: (i + 1) * slice_size]
+        for j, (task, indices) in enumerate(tasks_dict.items()):
+            ax.scatter(X_layer[indices, 0], X_layer[indices, 1],
+                       label=task, alpha=0.8, marker=markers[j], s=80)
+        ax.set_title(f'{layer}')
+    axes[0].legend()
+    fig.suptitle('MDS of model similarity')
+    fig.supxlabel('MDS dim. 1')
+    fig.supylabel('MDS dim. 2')
+    fig.tight_layout()
+    fig.savefig(f'./figures/mds_model_rdm_compare_{fig_suf}.pdf', transparent=True)
+
+# %%
+# RDM comparator: euclidean distance
+all_m = layer_cat_rdms.get_matrices()
+dis_mat = []
+for i in trange(all_m.shape[0]):
+    dis_mat.append(np.linalg.norm(all_m - all_m[i], ord='fro', axis=(1, 2)))
+dis_mat = np.array(dis_mat)
+
+# %%
+l_m_size = dis_mat.shape[0] // len(record_layers)
+embedding = MDS(n_components=2, normalized_stress='auto', dissimilarity='precomputed')
+X_transformed = embedding.fit_transform(dis_mat)
+
+plot_mds(X_transformed, l_m_size, 'euclidean')
+
+# %%
+# use CKA score directly as features to compute MDS
+sim_mat = rsatoolbox.rdm.compare_cosine_cov_weighted(layer_cat_rdms, layer_cat_rdms)
+
+# %%
+l_m_size = dis_mat.shape[0] // len(record_layers)
+embedding = MDS(n_components=2, normalized_stress='auto')
+X_transformed = embedding.fit_transform(sim_mat)
+
+plot_mds(X_transformed, l_m_size, 'cosine_cov_weighted_sim_feature')
+
+
