@@ -708,3 +708,42 @@ def multi_task_resnet50_tdw_10m20240208_0802():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+# compare with a dataset that has little variations in translation
+def ctrl_trans_var_240814():
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'ctrl_trans_var_240814'
+
+    exp_config['max_batch'] = 200000  # run thorugh the dataset ~10 times with batchsize 64
+    exp_config['eval_per'] = 5000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    
+    dset_list = ['tdw_1m_20240206', 
+                 'tdw_1m_obj_centered_20240812']
+    task_set_dict = {
+        'distance_reg': ['distance_reg'],
+        'rotation_reg': ['rotation_reg_tdw_two_units_sin_cos_mse'], # rotation is affected in tdw_1m_obj_centered_20240812 but still adding it here
+        'category_class': ['category_class'],
+        'object_class': ['object_class'],
+    }
+    seed_list = [0, 1, 2, 3, 4]
+
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for dset in dset_list:
+        for task_set_n, task_set in task_set_dict.items():
+            for seed in seed_list:
+                cfg = copy.deepcopy(exp_config)
+                cfg['dataset_name'] = dset
+                cfg['task_set_name'] = task_set_n
+                cfg['tasks'] = task_set
+                cfg['seed'] = seed
+
+                cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+                cfg['run_id'] = run_id
+                config_list.append(cfg)
+                run_id += 1
+    return config_list
