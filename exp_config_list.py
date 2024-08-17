@@ -710,6 +710,19 @@ def multi_task_resnet50_tdw_10m20240208_0802():
     return config_list
 
 
+def multi_task_resnet50_tdw_10m20240208_earlier_0817():
+    change_kwargs = {
+        'max_batch': 10000,
+        'eval_per': 2000,
+        'checkpoint_per': 200,
+        'save_inter_model': [2000, 4000, 10000],
+        'score_model_nums': [2000, 4000, 10000],
+    }
+    return change_config(multi_task_resnet50_tdw_10m20240208_0802, 
+                         'multi_task_resnet50_tdw_10m20240208_earlier_0817', 
+                         change_kwargs)
+
+
 # compare with a dataset that has little variations in translation
 def ctrl_trans_var_240814():
     exp_config = copy.deepcopy(base_config)
