@@ -3,7 +3,7 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights, ResNet
 from collections import defaultdict
 import torchvision.transforms as transforms
-from sklearn import linear_model, svm
+from sklearn import linear_model, svm, random_projection
 
 from dataset import HVMDataset
 from config_global import DEVICE
@@ -241,6 +241,7 @@ def downsample_idx(num_neurons, downsample_number):
 
 
 def cross_validate_on_target(activity, df, target_name,
+                             downsample_method='select',
                              downsample_number=128,
                              num_cross_val=30,
                              mode='regression'
@@ -252,7 +253,9 @@ def cross_validate_on_target(activity, df, target_name,
         df: a pandas dataframe of the dataset
             that have num_images rows, each stores metadata of the stimulus
         target_name: a string of target name, eg. 's'
-        downsample_number: int, number of neurons to downsample to
+        downsample_method: string, 'select' or 'random', method to downsample neurons
+        downsample_number: int, number of neurons to downsample to, 
+            only used when downsample_method is 'select'
         num_cross_val: int, number of cross validation
         mode: string, 'regression' or 'classification'
     returns:
@@ -266,11 +269,18 @@ def cross_validate_on_target(activity, df, target_name,
     performance_list = []
     for i in trange(num_cross_val):
         # downsample neurons
-        if downsample_number is None:
+        if downsample_method == 'none':
             ds_activity = activity
-        else:
+        elif downsample_method == 'select':
             sample_ids = downsample_idx(activity.shape[1], downsample_number)
             ds_activity = activity[:, sample_ids]
+        elif downsample_method == 'random':
+            # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
+            # eg. 2000 samples -> 6515 dims
+            transformer = random_projection.GaussianRandomProjection()
+            ds_activity = transformer.fit_transform(activity)
+        else:
+            raise NotImplementedError('downsample method not implemented')
 
         train_test_data = create_train_test_split(ds_activity, df, target_name)
         
