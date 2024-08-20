@@ -291,7 +291,7 @@ def cross_validate_on_target(activity, df, target_name,
             acc = evaluate_classification(**train_test_data)
             performance_list.append(acc)
 
-    return np.mean(performance_list), np.std(performance_list)
+    return performance_list
 
 
 def target_direction_vector(activity, targets):
