@@ -65,8 +65,8 @@ def validate_act(activations, data_index, record_layers, save_path):
     results = {}
     for layer in record_layers:
         print(f'Validating layer: {layer}')
-        
         layer_act = activations[layer]
+
         random_red_dim = johnson_lindenstrauss_min_dim(layer_act.shape[0])
         if layer_act.shape[1] > random_red_dim:
             # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
@@ -77,7 +77,8 @@ def validate_act(activations, data_index, record_layers, save_path):
             # do not downsample
             reduce_met = 'none'
             reduce_dim = None
-        results[layer] = cross_validate_on_target(activations[layer], data_index, 'cat_labels',
+        
+        results[layer] = cross_validate_on_target(layer_act, data_index, 'cat_labels',
                                                   downsample_method=reduce_met,
                                                   downsample_number=reduce_dim,
                                                   num_cross_val=5,
