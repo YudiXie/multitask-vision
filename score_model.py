@@ -196,6 +196,35 @@ def prepare_and_score_model_slurm(config_path):
     prepare_and_score_model(config)
 
 
+def score_behaviorit(config):
+    start_time = datetime.now()
+
+    batch_num = 1000000
+    model_p = os.path.join(config['save_path'], f'model_batch_n_{batch_num}.pth')
+    out_dim, _ignore = get_output_info(config['dataset_name'])
+    
+    bs_csv = pd.read_csv(Path(config['save_path']).parent.joinpath('brainscore_results.csv'), index_col=0)
+    df1 = bs_csv[(bs_csv['batch'] == batch_num) & (bs_csv['benchmark_region'] == 'IT')]
+    it_layer_ser = df1[df1['model'] == get_model_id(config) + f'-batch-{batch_num}']['mapped_layer']
+    assert len(it_layer_ser) == 1
+    it_layer = it_layer_ser.iloc[0]
+    print(f'IT layer: {it_layer}')
+
+    model = prepare_model_commitment(config['model_archi'],
+                                     get_model_id(config) + '-behaviorit',
+                                     out_dim, model_p, behavioral_layer=it_layer)
+    score_model_on_a_benchmark(model, 'Rajalingham2018public-i2n')
+
+    complete_time = datetime.now()
+    print(f'Scoring time for Rajalingham2018public-i2n: {str(complete_time - start_time)}')
+    log_complete(config['save_path'], start_time, 'behaviorit')
+
+
+def score_behaviorit_slurm(config_path):
+    config = load_config(config_path)
+    score_behaviorit(config)
+
+
 def save_model_scores(model: ModelCommitment, save_df, exp_group, batch):
     """
     read model score on benchmarks and append to save_df
