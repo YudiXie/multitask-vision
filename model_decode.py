@@ -9,6 +9,7 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 from dataset import TDWDataset
 from activity import cross_validate_on_target, get_model_activations
 from utils import prepare_pytorch_model, load_config, log_complete
+from tasks_setup import task2output_range_large_new
 
 
 # model must be a resnet
@@ -99,7 +100,7 @@ def decode_from_model(config):
     ])
     dataset = TDWDataset(root_dir='/om/user/yu_xie/data/tdw_images/tdw_1m_20240206',
                         split='val', fraction=0.04, transform=transform)
-    record_layers = ['layer1.0.relu', 'layer2.0.relu', 'layer3.0.relu', 'layer4.0.relu', 'avgpool']
+    record_layers = ['layer1.0.relu', 'layer2.0.relu', 'layer3.0.relu', 'layer4.0.relu', 'avgpool', 'fc']
 
     dset_index = dataset.dataset_index.copy()
     cat_labels = [dataset.mappings['category_str2int'][wnid] for wnid in dset_index['wnid']]
@@ -107,6 +108,16 @@ def decode_from_model(config):
 
     run_path = Path(config['save_path'])
     model_act = get_model_act(run_path, dataset, record_layers)
+
+    if 'fc' in record_layers:
+        # only use the meaningful output units in the output layer of the model
+        output_idx_list = []
+        for task in config['tasks']:
+            output_range = task2output_range_large_new[task]
+            output_idx_list.append(np.arange(output_range[0], output_range[1]))
+        full_out_range = np.concatenate(output_idx_list)
+        model_act['fc'] = model_act['fc'][:, full_out_range]
+    
     validate_act(model_act, dset_index, record_layers, run_path.joinpath('cat_decoding_results_240820.csv'))
     
     complete_time = datetime.now()
