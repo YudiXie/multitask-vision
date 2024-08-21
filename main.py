@@ -154,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
-    assert args.do in ['train', 'score', 'imneval'], 'Unknown operation: ' + args.do
+    assert args.do in ['train', 'score', 'imneval', 'decode'], 'Unknown operation: ' + args.do
 
     config_list = getattr(exp_config_list, args.name)()
 
@@ -177,6 +177,9 @@ if __name__ == '__main__':
             elif args.do == 'imneval':
                 from eval_imagenet import eval_model_imagenet
                 eval_model_imagenet(config)
+            elif args.do == 'decode':
+                from model_decode import decode_from_model
+                decode_from_model(config)
         else:
             # submit jobs to the cluster
             if args.do == 'train':
@@ -187,6 +190,9 @@ if __name__ == '__main__':
                 conda_env = CONDA_SCORE_ENV
             elif args.do == 'imneval':
                 python_cmd = f'python -c "import eval_imagenet; eval_imagenet.eval_model_imagenet_slurm(\'{config_file_path}\')"'
+                conda_env = CONDA_ENV
+            elif args.do == 'decode':
+                python_cmd = f'python -c "import model_decode; model_decode.decode_from_model_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_ENV
 
             job_n = '-'.join([config['experiment_name'], args.do, config['model_archi'], f'run_{config["run_id"]:04d}'])
