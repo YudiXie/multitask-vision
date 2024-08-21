@@ -254,8 +254,7 @@ def cross_validate_on_target(activity, df, target_name,
             that have num_images rows, each stores metadata of the stimulus
         target_name: a string of target name, eg. 's'
         downsample_method: string, 'select' or 'random', method to downsample neurons
-        downsample_number: int, number of neurons to downsample to, 
-            only used when downsample_method is 'select'
+        downsample_number: int, number of neurons to downsample to, must be less than num_neurons (activity.shape[1])
         num_cross_val: int, number of cross validation
         mode: string, 'regression' or 'classification'
     returns:
@@ -275,9 +274,7 @@ def cross_validate_on_target(activity, df, target_name,
             sample_ids = downsample_idx(activity.shape[1], downsample_number)
             ds_activity = activity[:, sample_ids]
         elif downsample_method == 'random':
-            # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
-            # eg. 2000 samples -> 6515 dims
-            transformer = random_projection.GaussianRandomProjection()
+            transformer = random_projection.GaussianRandomProjection(n_components=downsample_number)
             ds_activity = transformer.fit_transform(activity)
         else:
             raise NotImplementedError('downsample method not implemented')

@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import torchvision.transforms as transforms
+from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from dataset import TDWDataset
 from activity import cross_validate_on_target, get_model_activations
@@ -64,8 +65,21 @@ def validate_act(activations, data_index, record_layers, save_path):
     results = {}
     for layer in record_layers:
         print(f'Validating layer: {layer}')
+        
+        layer_act = activations[layer]
+        random_red_dim = johnson_lindenstrauss_min_dim(layer_act.shape[0])
+        if layer_act.shape[1] > random_red_dim:
+            # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
+            # eg. 2000 samples -> 6515 dims
+            reduce_met = 'random'
+            reduce_dim = random_red_dim
+        else:
+            # do not downsample
+            reduce_met = 'none'
+            reduce_dim = None
         results[layer] = cross_validate_on_target(activations[layer], data_index, 'cat_labels',
-                                                  downsample_method='random',
+                                                  downsample_method=reduce_met,
+                                                  downsample_number=reduce_dim,
                                                   num_cross_val=5,
                                                   mode='classification')
     rt_results = pd.DataFrame.from_dict(results)
