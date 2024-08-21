@@ -107,7 +107,7 @@ def get_layer_commitment(model: ModelCommitment):
 
 
 def prepare_model_commitment(model_archi: str, model_identifier: str, 
-                             out_dim: int, load_path: str = '') -> ModelCommitment:
+                             out_dim: int, load_path: str = '', behavioral_layer: str = 'avgpool') -> ModelCommitment:
     """
     prepare model for benchmarking
     args:
@@ -126,7 +126,7 @@ def prepare_model_commitment(model_archi: str, model_identifier: str,
     model_commitment = ModelCommitment(identifier=model_identifier,
                                        activations_model=activations_model,
                                        layers=score_layers[model_archi],
-                                       behavioral_readout_layer='avgpool')
+                                       behavioral_readout_layer=behavioral_layer)
     return model_commitment
 
 
