@@ -760,3 +760,44 @@ def ctrl_trans_var_240814():
                 config_list.append(cfg)
                 run_id += 1
     return config_list
+
+
+def resnet50_tdw100m_scaling_240822():
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'resnet50_tdw100m_scaling_240822'
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['dataset_name'] = 'tdw_100m_20240222'
+    exp_config['max_batch'] = 1500000
+    exp_config['eval_per'] = 30000
+    exp_config['checkpoint_per'] = 5000
+    exp_config['pretrain_init'] = False
+    exp_config['tasks'] = ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg']
+    exp_config['save_inter_model'] = [100000, 200000, 500000, 1000000, 1500000]
+    
+    fractions = [1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001]
+    task_set_dict = {
+        'distance_reg': ['distance_reg'],
+        'translation_reg': ['translation_reg'],
+        'rotation_reg': ['rotation_reg_tdw_two_units_sin_cos_mse'],
+        'category_class': ['category_class'],
+        'cat_obj_class_all_latents': ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg'],
+    }
+    seed_list = [0, 1, 2]
+
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for frac in fractions:
+        for task_set_n, task_set in task_set_dict.items():
+            for seed in seed_list:
+                cfg = copy.deepcopy(exp_config)
+                cfg['train_dataset_fraction'] = frac
+                cfg['task_set_name'] = task_set_n
+                cfg['tasks'] = task_set
+                cfg['seed'] = seed
+
+                cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+                cfg['run_id'] = run_id
+                config_list.append(cfg)
+                run_id += 1
+    return config_list
