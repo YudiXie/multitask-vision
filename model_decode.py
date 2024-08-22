@@ -52,43 +52,6 @@ def get_model_act(run_path, dataset, record_layers):
         return all_activations
 
 
-def validate_act(activations, data_index, record_layers, save_path):
-    """
-    Validate the activations on the dataset
-    :param activations: dict, the activations of the model on the dataset, with keys as layer names in record_layers
-    :param data_index: pd.DataFrame, the index of the dataset
-    :param record_layers: list, the layers to validate
-    :param save_path: str, the path to save the validation results
-    """
-    if save_path.is_file():
-        save_path.unlink()
-
-    results = {}
-    for layer in record_layers:
-        print(f'Validating layer: {layer}')
-        layer_act = activations[layer]
-
-        random_red_dim = johnson_lindenstrauss_min_dim(layer_act.shape[0])
-        if layer_act.shape[1] > random_red_dim:
-            # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
-            # eg. 2000 samples -> 6515 dims
-            reduce_met = 'random'
-            reduce_dim = random_red_dim
-        else:
-            # do not downsample
-            reduce_met = 'none'
-            reduce_dim = None
-        
-        results[layer] = cross_validate_on_target(layer_act, data_index, 'cat_labels',
-                                                  downsample_method=reduce_met,
-                                                  downsample_number=reduce_dim,
-                                                  num_cross_val=5,
-                                                  mode='classification')
-    rt_results = pd.DataFrame.from_dict(results)
-    rt_results.to_csv(save_path)
-    return rt_results
-
-
 def decode_from_model(config):
     start_time = datetime.now()
 
@@ -118,7 +81,35 @@ def decode_from_model(config):
         full_out_range = np.concatenate(output_idx_list)
         model_act['fc'] = model_act['fc'][:, full_out_range]
     
-    validate_act(model_act, dset_index, record_layers, run_path.joinpath('cat_decoding_results_240820.csv'))
+    save_path = run_path.joinpath(f'cat_decoding_results_240820.csv')
+    targets = dset_index['cat_labels'].to_numpy(copy=True)
+
+    if save_path.is_file():
+        save_path.unlink()
+
+    results = {}
+    for layer in record_layers:
+        print(f'Validating layer: {layer}')
+        layer_act = model_act[layer]
+
+        random_red_dim = johnson_lindenstrauss_min_dim(layer_act.shape[0])
+        if layer_act.shape[1] > random_red_dim:
+            # use random projection to downsample, dimension is determined by the Johnson-Lindenstrauss lemma
+            # eg. 2000 samples -> 6515 dims
+            reduce_met = 'random'
+            reduce_dim = random_red_dim
+        else:
+            # do not downsample
+            reduce_met = 'none'
+            reduce_dim = None
+        
+        results[layer] = cross_validate_on_target(layer_act, targets,
+                                                  downsample_method=reduce_met,
+                                                  downsample_number=reduce_dim,
+                                                  num_cross_val=5,
+                                                  mode='classification')
+    rt_results = pd.DataFrame.from_dict(results)
+    rt_results.to_csv(save_path)
     
     complete_time = datetime.now()
     print(f'Decoding completed! total time: {str(complete_time - start_time)}')

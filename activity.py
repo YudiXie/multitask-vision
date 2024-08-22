@@ -148,15 +148,12 @@ def get_model_activations_on_dataset(model, record_layers: list):
     return all_activations, dataset.normed_data_frame
 
 
-def create_train_test_split(all_activity, data_frame, target_name,
-                            train_ratio=0.8):
+def create_train_test_split(all_activity, all_target, train_ratio=0.8):
     """
     create train and test split
     args:
         all_activity: a numpy array of shape (num_all_images, num_neurons)
-        data_frame: a pandas dataframe of the dataset
-            that have num_images rows, each stores metadata of the stimulus
-        target_name: a string of target name, eg. 's'
+        all_target: a numpy array of shape (num_all_images, )
         train_ratio: float, the ratio of train data in the whole dataset
     returns:
         data: a dict of train and test activities and targets
@@ -167,8 +164,9 @@ def create_train_test_split(all_activity, data_frame, target_name,
     """
     # create train and test split
     # train 4608 images, test 1152 images if train_ratio=0.8 and total 5760 images
-    assert all_activity.shape[0] == len(data_frame), 'number of images must match'
-    data_len = len(data_frame)
+    assert all_activity.shape[0] == all_target.shape[0], 'number of images must match'
+    
+    data_len = all_activity.shape[0]
     permuted_index = np.random.permutation(data_len)
     train_len = int(data_len * train_ratio)
     train_index = permuted_index[:train_len]
@@ -177,7 +175,6 @@ def create_train_test_split(all_activity, data_frame, target_name,
     train_activity = all_activity[train_index, :]
     test_activity = all_activity[test_index, :]
     
-    all_target = data_frame[target_name].to_numpy(copy=True)
     train_target = all_target[train_index]
     test_target = all_target[test_index]
 
@@ -240,7 +237,7 @@ def downsample_idx(num_neurons, downsample_number):
     return np.random.choice(num_neurons, downsample_number, replace=False)
 
 
-def cross_validate_on_target(activity, df, target_name,
+def cross_validate_on_target(activity, targets,
                              downsample_method='select',
                              downsample_number=128,
                              num_cross_val=30,
@@ -250,9 +247,7 @@ def cross_validate_on_target(activity, df, target_name,
     cross validate the regression or classification model on the dataset
     args:
         activity: a numpy array of shape (num_all_images, num_neurons)
-        df: a pandas dataframe of the dataset
-            that have num_images rows, each stores metadata of the stimulus
-        target_name: a string of target name, eg. 's'
+        targets: a numpy array of shape (num_all_images,) for a target value eg. 's'
         downsample_method: string, 'select' or 'random', method to downsample neurons
         downsample_number: int, number of neurons to downsample to, must be less than num_neurons (activity.shape[1])
         num_cross_val: int, number of cross validation
@@ -279,7 +274,7 @@ def cross_validate_on_target(activity, df, target_name,
         else:
             raise NotImplementedError('downsample method not implemented')
 
-        train_test_data = create_train_test_split(ds_activity, df, target_name)
+        train_test_data = create_train_test_split(ds_activity, targets)
         
         if mode == 'regression':
             coef, pval = evaluate_regression(**train_test_data)
