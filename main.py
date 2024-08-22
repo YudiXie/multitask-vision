@@ -185,11 +185,11 @@ if __name__ == '__main__':
             elif args.do == 'imneval':
                 python_cmd = f'python -c "import eval_imagenet; eval_imagenet.eval_model_imagenet_slurm(\'{config_file_path}\')"'
             elif args.do == 'decode_cat':
-                python_cmd = f'python mode_decode.py -m cat -p {config_file_path}'
+                python_cmd = f'python model_decode.py -m cat -p "{config_file_path}"'
             elif args.do == 'decode_x':
-                python_cmd = f'python mode_decode.py -m x -p {config_file_path}'
+                python_cmd = f'python model_decode.py -m x -p "{config_file_path}"'
             elif args.do == 'decode_y':
-                python_cmd = f'python mode_decode.py -m y -p {config_file_path}'
+                python_cmd = f'python model_decode.py -m y -p "{config_file_path}"'
             elif args.do == 'behaviorit':
                 python_cmd = f'python -c "import score_model; score_model.score_behaviorit_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_SCORE_ENV
