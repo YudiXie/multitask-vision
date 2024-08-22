@@ -20,7 +20,7 @@ def cat_decoding_plot(full_data_r, one_cat_data_r, title, suffix):
     x_offset = -0.1
     
     fig, ax = plt.subplots(figsize=(3.6, 2.7))
-    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full cat. var.', color='C3', alpha=0.8)
+    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full cat. var.', color='C1', alpha=0.8)
     ax.errorbar(x_axis, one_cat_data_r.mean(), yerr=one_cat_data_r.std(), fmt='o-', capsize=3, label='Reduced cat. var.', color='grey')
     ax.axhline(y=1.0/117, color='grey', linestyle='--', label='Chance')
     ax.set_xticks(x_axis, record_layers, rotation=-20)
@@ -45,7 +45,7 @@ def x_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     x_offset = -0.1
     
     fig, ax = plt.subplots(figsize=(3.6, 2.7))
-    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full tran. var.', color='C3', alpha=0.8)
+    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full tran. var.', color='C1', alpha=0.8)
     ax.errorbar(x_axis, no_tran_data_r.mean(), yerr=no_tran_data_r.std(), fmt='o-', capsize=3, label='Reduced tran. var.', color='grey')
     ax.set_xticks(x_axis, record_layers, rotation=-20)
     ax.set_ylabel('X decode performance')
@@ -69,7 +69,7 @@ def y_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     x_offset = -0.1
     
     fig, ax = plt.subplots(figsize=(3.6, 2.7))
-    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full tran. var.', color='C3', alpha=0.8)
+    ax.errorbar(x_axis + x_offset, full_data_r.mean(), yerr=full_data_r.std(), fmt='o-', capsize=3, label='Full tran. var.', color='C1', alpha=0.8)
     ax.errorbar(x_axis, no_tran_data_r.mean(), yerr=no_tran_data_r.std(), fmt='o-', capsize=3, label='Reduced tran. var.', color='grey')
     ax.set_xticks(x_axis, record_layers, rotation=-20)
     ax.set_ylabel('Y decode performance')
