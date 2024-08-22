@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from dataset import TDWDataset
 from activity import cross_validate_on_target, get_model_activations
-from utils import prepare_pytorch_model, load_config, log_complete
+from utils import prepare_pytorch_model, log_complete, load_config
 from tasks_setup import task2output_range_large_new
 
 
@@ -52,7 +53,11 @@ def get_model_act(run_path, dataset, record_layers):
         return all_activations
 
 
-def decode_from_model(config):
+def decode_from_model(config, mode):
+    """
+    Decode the model activations on the dataset
+    mode: 'cat', 'x', or 'y', for decoding of category, x, or y
+    """
     start_time = datetime.now()
 
     # Data preprocessing
@@ -81,9 +86,19 @@ def decode_from_model(config):
         full_out_range = np.concatenate(output_idx_list)
         model_act['fc'] = model_act['fc'][:, full_out_range]
     
-    save_path = run_path.joinpath(f'cat_decoding_results_240820.csv')
-    targets = dset_index['cat_labels'].to_numpy(copy=True)
-
+    if mode == 'cat':
+        targets = dset_index['cat_labels'].to_numpy(copy=True)
+        fit_mode = 'classification'
+    elif mode == 'x':
+        targets = dset_index['rel_pos_x'].to_numpy(copy=True)
+        fit_mode = 'regression'
+    elif mode == 'y':
+        targets = dset_index['rel_pos_y'].to_numpy(copy=True)
+        fit_mode = 'regression'
+    else:
+        raise ValueError('Invalid mode for decoding!')
+    
+    save_path = run_path.joinpath(f'{mode}_decoding_results_240820.csv')
     if save_path.is_file():
         save_path.unlink()
 
@@ -107,15 +122,20 @@ def decode_from_model(config):
                                                   downsample_method=reduce_met,
                                                   downsample_number=reduce_dim,
                                                   num_cross_val=5,
-                                                  mode='classification')
+                                                  mode=fit_mode)
     rt_results = pd.DataFrame.from_dict(results)
     rt_results.to_csv(save_path)
     
     complete_time = datetime.now()
-    print(f'Decoding completed! total time: {str(complete_time - start_time)}')
-    log_complete(config['save_path'], start_time, 'decode')
+    print(f'Decoding {mode} completed! total time: {str(complete_time - start_time)}')
+    log_complete(config['save_path'], start_time, f'decode_{mode}')
 
 
-def decode_from_model_slurm(config_path):
-    config = load_config(config_path)
-    decode_from_model(config)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--path', help='path to config file')
+    parser.add_argument('-m', '--mode', help='mode of decoding')
+    args = parser.parse_args()
+
+    decode_from_model(load_config(args.path), args.mode)
+    

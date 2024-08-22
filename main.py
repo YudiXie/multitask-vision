@@ -154,8 +154,6 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--missing', action='store_true', help='Run missing experiments')
     args = parser.parse_args()
 
-    assert args.do in ['train', 'score', 'imneval', 'decode', 'behaviorit'], 'Unknown operation: ' + args.do
-
     config_list = getattr(exp_config_list, args.name)()
 
     # check if experiments are finished
@@ -174,32 +172,29 @@ if __name__ == '__main__':
             elif args.do == 'score':
                 from score_model import prepare_and_score_model
                 prepare_and_score_model(config)
-            elif args.do == 'imneval':
-                from eval_imagenet import eval_model_imagenet
-                eval_model_imagenet(config)
-            elif args.do == 'decode':
-                from model_decode import decode_from_model
-                decode_from_model(config)
-            elif args.do == 'behaviorit':
-                from score_model import score_behaviorit
-                score_behaviorit(config)
+            else:
+                raise NotImplementedError(f'Unknown operation for local run: {args.do}')
         else:
             # submit jobs to the cluster
+            conda_env = CONDA_ENV
             if args.do == 'train':
                 python_cmd = f'python -c "import train; train.train_slurm(\'{config_file_path}\')"'
-                conda_env = CONDA_ENV
             elif args.do == 'score':
                 python_cmd = f'python -c "import score_model; score_model.prepare_and_score_model_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_SCORE_ENV
             elif args.do == 'imneval':
                 python_cmd = f'python -c "import eval_imagenet; eval_imagenet.eval_model_imagenet_slurm(\'{config_file_path}\')"'
-                conda_env = CONDA_ENV
-            elif args.do == 'decode':
-                python_cmd = f'python -c "import model_decode; model_decode.decode_from_model_slurm(\'{config_file_path}\')"'
-                conda_env = CONDA_ENV
+            elif args.do == 'decode_cat':
+                python_cmd = f'python mode_decode.py -m cat -p {config_file_path}'
+            elif args.do == 'decode_x':
+                python_cmd = f'python mode_decode.py -m x -p {config_file_path}'
+            elif args.do == 'decode_y':
+                python_cmd = f'python mode_decode.py -m y -p {config_file_path}'
             elif args.do == 'behaviorit':
                 python_cmd = f'python -c "import score_model; score_model.score_behaviorit_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_SCORE_ENV
+            else:
+                raise NotImplementedError(f'Unknown operation for cluster run: {args.do}')
 
             job_n = '-'.join([config['experiment_name'], args.do, config['model_archi'], f'run_{config["run_id"]:04d}'])
             output_path = os.path.join(ROOT_DIR, 'slurm_output')
