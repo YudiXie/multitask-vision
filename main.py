@@ -187,6 +187,7 @@ if __name__ == '__main__':
             elif args.do == 'decode_cat':
                 python_cmd = f'python model_decode.py -m cat -p "{config_file_path}"'
             elif args.do == 'decode_x':
+                # be careful to run decode_x and decode_y simultaneously, since they use the same data
                 python_cmd = f'python model_decode.py -m x -p "{config_file_path}"'
             elif args.do == 'decode_y':
                 python_cmd = f'python model_decode.py -m y -p "{config_file_path}"'
