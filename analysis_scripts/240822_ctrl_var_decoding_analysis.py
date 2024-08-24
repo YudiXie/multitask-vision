@@ -34,10 +34,10 @@ def cat_decoding_plot(full_data_r, one_cat_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_var_target_dist_240712_cat_decoding_model_target_{suffix}.pdf', transparent=True)
 
 read_cat_results = partial(read_results, exp_name='ctrl_var_target_dist_240712', decode_target='cat')
-cat_decoding_plot(read_cat_results(0, 3), read_cat_results(12, 15), 'Target: Dis. regression', 'dis')
-cat_decoding_plot(read_cat_results(3, 6), read_cat_results(15, 18), 'Target: Tran. regression', 'tran')
-cat_decoding_plot(read_cat_results(6, 9), read_cat_results(18, 21), 'Target: Rot. regression', 'rot')
-cat_decoding_plot(read_cat_results(9, 12), read_cat_results(21, 24), 'Target: Dis. Tran. Rot. regression', 'dis_tran_rot')
+cat_decoding_plot(read_cat_results(0, 3), read_cat_results(12, 15), 'Target: Distance', 'dis')
+cat_decoding_plot(read_cat_results(3, 6), read_cat_results(15, 18), 'Target: Translation', 'tran')
+cat_decoding_plot(read_cat_results(6, 9), read_cat_results(18, 21), 'Target: Rotation', 'rot')
+cat_decoding_plot(read_cat_results(9, 12), read_cat_results(21, 24), 'Target: Dis. Tran. Rot.', 'dis_tran_rot')
 
 # %%
 def x_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
@@ -58,10 +58,10 @@ def x_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_trans_var_240814_x_decoding_model_target_{suffix}.pdf', transparent=True)
 
 read_x_results = partial(read_results, exp_name='ctrl_trans_var_240814', decode_target='x')
-x_decoding_plot(read_x_results(0, 5), read_x_results(20, 25), 'Target: Dis. regression', 'dis')
-x_decoding_plot(read_x_results(5, 10), read_x_results(25, 30), 'Target: Rot. regression', 'rot')
-x_decoding_plot(read_x_results(10, 15), read_x_results(30, 35), 'Target: Obj. cat.', 'obj_cat')
-x_decoding_plot(read_x_results(15, 20), read_x_results(35, 40), 'Target: Obj. id.', 'obj_id')
+x_decoding_plot(read_x_results(0, 5), read_x_results(20, 25), 'Target: Distance', 'dis')
+x_decoding_plot(read_x_results(5, 10), read_x_results(25, 30), 'Target: Rotation', 'rot')
+x_decoding_plot(read_x_results(10, 15), read_x_results(30, 35), 'Target: Obj. category', 'obj_cat')
+x_decoding_plot(read_x_results(15, 20), read_x_results(35, 40), 'Target: Obj. identity', 'obj_id')
 
 # %%
 def y_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
@@ -82,10 +82,10 @@ def y_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_trans_var_240814_y_decoding_model_target_{suffix}.pdf', transparent=True)
 
 read_y_results = partial(read_results, exp_name='ctrl_trans_var_240814', decode_target='y')
-y_decoding_plot(read_y_results(0, 5), read_y_results(20, 25), 'Target: Dis. regression', 'dis')
-y_decoding_plot(read_y_results(5, 10), read_y_results(25, 30), 'Target: Rot. regression', 'rot')
-y_decoding_plot(read_y_results(10, 15), read_y_results(30, 35), 'Target: Obj. cat.', 'obj_cat')
-y_decoding_plot(read_y_results(15, 20), read_y_results(35, 40), 'Target: Obj. id.', 'obj_id')
+y_decoding_plot(read_y_results(0, 5), read_y_results(20, 25), 'Target: Distance', 'dis')
+y_decoding_plot(read_y_results(5, 10), read_y_results(25, 30), 'Target: Rotation', 'rot')
+y_decoding_plot(read_y_results(10, 15), read_y_results(30, 35), 'Target: Obj. category', 'obj_cat')
+y_decoding_plot(read_y_results(15, 20), read_y_results(35, 40), 'Target: Obj. identity', 'obj_id')
 
 # %%
 
