@@ -828,3 +828,36 @@ def imagenet1k_0902():
         config_list.append(cfg)
         run_id += 1
     return config_list
+
+
+def cat_tdw_1m_nc_20240902_0902():
+    # copy settings from multi_task_tdw_1m20240206_0718
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'cat_tdw_1m_nc_20240902_0902'
+    exp_config['max_batch'] = 500000  # run thorugh the dataset ~30 times with batchsize 64
+    exp_config['eval_per'] = 10000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['tasks'] = ['category_class', ]
+
+    dataset_list = ['tdw1m_2c_20240902',
+                    'tdw1m_4c_20240902',
+                    'tdw1m_6c_20240902',
+                    'tdw1m_8c_20240902',
+                    'tdw1m_16c_20240902',]
+    seed_list = [0, 1, 2, 3, 4, 5]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for dset_n in dataset_list:
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['dataset_name'] = dset_n
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
