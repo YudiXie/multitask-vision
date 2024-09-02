@@ -129,6 +129,21 @@ def get_output_info(dataset_name):
     elif dataset_name == 'ImageNet1K':
         output_number = 1000
         task2output_range = task2output_range_myimagenet
+    elif dataset_name == 'tdw1m_2c_20240902':
+        output_number = 2
+        task2output_range = {'category_class': [0, 2]}
+    elif dataset_name == 'tdw1m_4c_20240902':
+        output_number = 4
+        task2output_range = {'category_class': [0, 4]}
+    elif dataset_name == 'tdw1m_6c_20240902':
+        output_number = 6
+        task2output_range = {'category_class': [0, 6]}
+    elif dataset_name == 'tdw1m_8c_20240902':
+        output_number = 8
+        task2output_range = {'category_class': [0, 8]}
+    elif dataset_name == 'tdw1m_16c_20240902':
+        output_number = 16
+        task2output_range = {'category_class': [0, 16]}
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     
