@@ -814,7 +814,7 @@ def imagenet1k_0902():
     exp_config['pretrain_init'] = False
     exp_config['tasks'] = ['category_class', ]
     
-    seed_list = [0, 1, 2, 3, 4]
+    seed_list = [0, 1, 2, 3, 4, 5, 6, 7]
     
     # setting up config list
     config_list = []
