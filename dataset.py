@@ -10,6 +10,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.datasets.folder import pil_loader
 import yaml
+from torchvision.datasets import ImageNet
 
 
 def get_image_meta_path(index_df, idx, dataset_path):
@@ -245,3 +246,23 @@ class TDWDataset(Dataset):
             sample[column] = np.float32((image_meta[column] - self.means_stds[f'{column}_mean']) / self.means_stds[f'{column}_std'])
 
         return sample
+
+
+class MyImageNet(ImageNet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        imn_class_list = [class_tup[0] for class_tup in self.classes]
+        str2int_map = {}
+        for i, str_name in enumerate(imn_class_list):
+            str2int_map[str_name] = i
+        int2str_map = {v: k for k, v in str2int_map.items()}
+
+        self.mappings = {
+            'category_str2int': str2int_map,
+            'category_int2str': int2str_map,
+        }
+
+    def __getitem__(self, idx):
+        img, target = super().__getitem__(idx)
+        return {'image': img, 'category_label': target}

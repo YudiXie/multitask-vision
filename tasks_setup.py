@@ -97,6 +97,11 @@ task2output_range_large_new = {
     'rotation_reg_tdw_two_units_sin_cos_mse': [668, 674],
 }
 
+# for MyImageNet dataset
+task2output_range_myimagenet = {
+    'category_class': [0, 1000],
+}
+
 
 def get_output_info(dataset_name):
     """
@@ -121,6 +126,9 @@ def get_output_info(dataset_name):
                           ]:
         output_number = 674  # 117 + 548 + 1 + 2 + 6
         task2output_range = task2output_range_large_new
+    elif dataset_name == 'ImageNet1K':
+        output_number = 1000
+        task2output_range = task2output_range_myimagenet
     else:
         raise NotImplementedError(f'Unknown dataset: {dataset_name}')
     

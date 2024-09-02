@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 import wandb
 
 from config_global import DEVICE, NP_SEED, TCH_SEED
-from dataset import HVMDataset, TDWDataset
+from dataset import TDWDataset, MyImageNet
 from utils import load_config, log_complete
 from tasks_setup import cat_reduced_tasks, task2loss_func, task2targets_name, get_output_info
 from model_setup import model_setup_dict, model_pretrain_weights
@@ -45,18 +45,31 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
     else:
         split = 'val'
     
-    dataset = TDWDataset(root_dir=f'/om/user/yu_xie/data/tdw_images/{dataset_name}', 
-                         split=split,
-                         transform=transform,
-                         fraction=dataset_fraction,)
+    if dataset_name == 'ImageNet1K':
+        assert dataset_fraction == 1.0
+        dataset = MyImageNet(root='/om/user/yu_xie/data/ImageNet', split=split, transform=transform)
+        loader = torch.utils.data.DataLoader(dataset=dataset,
+                                             batch_size=batch_size,
+                                             shuffle=True if is_train else False,
+                                             pin_memory=True,
+                                             num_workers=16,
+                                             drop_last=True,
+                                             )
     
-    loader = torch.utils.data.DataLoader(dataset=dataset, 
-                                         batch_size=batch_size, 
-                                         shuffle=True if is_train else False, 
-                                         pin_memory=True, 
-                                         num_workers=16,
-                                         drop_last=True,
-                                         )
+    else:
+        dataset = TDWDataset(root_dir=f'/om/user/yu_xie/data/tdw_images/{dataset_name}',
+                             split=split,
+                             transform=transform,
+                             fraction=dataset_fraction,
+                             )
+        
+        loader = torch.utils.data.DataLoader(dataset=dataset,
+                                             batch_size=batch_size,
+                                             shuffle=True if is_train else False,
+                                             pin_memory=True,
+                                             num_workers=16,
+                                             drop_last=True,
+                                             )
     return loader
 
 
