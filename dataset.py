@@ -195,6 +195,7 @@ class TDWDataset(Dataset):
             self.root_path: Path = root_dir
         self.dset_name = self.root_path.name + '_' + split + f'_{fraction}'.replace('.', '_')
         self.transform = transform
+        self.shuffle_cat = shuffle_cat
 
         with open(self.root_path.joinpath('mappings.yml'), 'r') as file:
             mappings = yaml.safe_load(file)
@@ -223,9 +224,9 @@ class TDWDataset(Dataset):
         use_index = round(len(dataset_index) * fraction)
         self.dataset_index = dataset_index[:use_index]
 
-        if shuffle_cat:
-            self.dataset_index['wnid'] = self.dataset_index['wnid'].sample(frac=1.0).to_list()
-            self.dataset_index['model'] = self.dataset_index['model'].sample(frac=1.0).to_list()
+        if self.shuffle_cat:
+            self.dataset_index['wnid_s'] = self.dataset_index['wnid'].sample(frac=1.0).to_list()
+            self.dataset_index['model_s'] = self.dataset_index['model'].sample(frac=1.0).to_list()
 
     def __len__(self):
         return len(self.dataset_index)
@@ -239,8 +240,15 @@ class TDWDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         sample = {'image': image}
-        sample['category_label'] = self.mappings['category_str2int'][image_meta['wnid']]
-        sample['object_label'] = self.mappings['object_str2int'][image_meta['model']]
+
+        if self.shuffle_cat:
+            read_wnid = image_meta['wnid_s']
+            read_model = image_meta['model_s']
+        else:
+            read_wnid = image_meta['wnid']
+            read_model = image_meta['model']
+        sample['category_label'] = self.mappings['category_str2int'][read_wnid]
+        sample['object_label'] = self.mappings['object_str2int'][read_model]
         
         # for i in range(2, 9):
         #     # reduce the 8 category labels (0..7) to 2, 3, 4, 5, 6, 7, 8 category labels
