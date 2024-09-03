@@ -106,8 +106,13 @@ def get_layer_commitment(model: ModelCommitment):
     return layer_map
 
 
-def prepare_model_commitment(model_archi: str, model_identifier: str, 
-                             out_dim: int, load_path: str = '', behavioral_layer: str = 'avgpool') -> ModelCommitment:
+def prepare_model_commitment(model_archi: str,
+                             model_identifier: str,
+                             out_dim: int,
+                             load_path: str = '',
+                             behavioral_layer: str = 'avgpool',
+                             rl_map = None,
+                             ) -> ModelCommitment:
     """
     prepare model for benchmarking
     args:
@@ -115,6 +120,7 @@ def prepare_model_commitment(model_archi: str, model_identifier: str,
         model_identifier: str, unique model identifier for benchmarking
         load_path: str, path to load model weights, 
             if provided load weights, otherwise use pretrained weights
+        rl_map: dict, region-layer map, if provided, use manual layer assignment
     return:
         model: ModelCommitment object
     """
@@ -123,10 +129,20 @@ def prepare_model_commitment(model_archi: str, model_identifier: str,
     activations_model = PytorchWrapper(identifier=model_identifier, 
                                        model=pytorch_model,
                                        preprocessing=preprocessing)
-    model_commitment = ModelCommitment(identifier=model_identifier,
-                                       activations_model=activations_model,
-                                       layers=score_layers[model_archi],
-                                       behavioral_readout_layer=behavioral_layer)
+    
+    if rl_map is None:
+        # if rl_map is None, use the automatic layer assignment from score_layers
+        model_commitment = ModelCommitment(identifier=model_identifier,
+                                           activations_model=activations_model,
+                                           layers=score_layers[model_archi],
+                                           behavioral_readout_layer=behavioral_layer)
+    else:
+        # if rl_map is provided, use it instead of automatic layer assignment
+        model_commitment = ModelCommitment(identifier=model_identifier,
+                                           activations_model=activations_model,
+                                           layers=[],
+                                           behavioral_readout_layer=behavioral_layer,
+                                           region_layer_map=rl_map)
     return model_commitment
 
 
@@ -194,6 +210,43 @@ def prepare_and_score_model(config):
 def prepare_and_score_model_slurm(config_path):
     config = load_config(config_path)
     prepare_and_score_model(config)
+
+
+def prepare_and_score_model_manual_layer(config):
+    """
+    prepare and score model on all benchmarks
+    using manual layer assignment
+    args:
+        config: dict, an experimental config specifying a model
+    """
+    model_path = os.path.join(config['save_path'], 'model.pth')
+    out_dim, _ignore = get_output_info(config['dataset_name'])
+    
+    rlmap_num = 0
+    rlmap0 = {
+        'V1': 'layer1.0.relu',
+        'V2': 'layer2.0.relu',
+        'V4': 'layer3.0.relu',
+        'IT': 'layer4.0.relu',
+    }
+    
+    start_time = datetime.now()
+    model = prepare_model_commitment(config['model_archi'],
+                                     get_model_id(config) + f'-manuallayer-rlmap{rlmap_num}',
+                                     out_dim,
+                                     model_path,
+                                     rl_map=rlmap0)
+    for region, benchmark_id in benchmark_dict.items():
+        score_model_on_a_benchmark(model, benchmark_id)
+    
+    complete_time = datetime.now()
+    print(f'Scoring time for all benchmarks: {str(complete_time - start_time)}')
+    log_complete(config['save_path'], start_time, 'scoremanuallayer')
+
+
+def prepare_and_score_model_manual_layer_slurm(config_path):
+    config = load_config(config_path)
+    prepare_and_score_model_manual_layer(config)
 
 
 def score_behaviorit(config):

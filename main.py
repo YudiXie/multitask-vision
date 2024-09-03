@@ -195,6 +195,9 @@ if __name__ == '__main__':
             elif args.do == 'behaviorit':
                 python_cmd = f'python -c "import score_model; score_model.score_behaviorit_slurm(\'{config_file_path}\')"'
                 conda_env = CONDA_SCORE_ENV
+            elif args.do == 'scoremanuallayer':
+                python_cmd = f'python -c "import score_model; score_model.prepare_and_score_model_manual_layer_slurm(\'{config_file_path}\')"'
+                conda_env = CONDA_SCORE_ENV
             else:
                 raise NotImplementedError(f'Unknown operation for cluster run: {args.do}')
 
