@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Union
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -252,7 +253,15 @@ class MyImageNet(ImageNet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        imn_class_list = [class_tup[0] for class_tup in self.classes]
+        updated_classes = deepcopy(self.classes)
+        # resolve some duplicate class names in ImageNet
+        updated_classes[134] = ('crane bird',)
+        updated_classes[517] = ('crane machine',)
+        updated_classes[638] = ('maillot',)
+        updated_classes[639] = ('maillot tank suit',)
+
+        imn_class_list = [class_tup[0] for class_tup in updated_classes]
+        
         str2int_map = {}
         for i, str_name in enumerate(imn_class_list):
             str2int_map[str_name] = i
