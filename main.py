@@ -118,7 +118,7 @@ def get_jobfile(cmd,
             + f'#SBATCH --mem={mem}G\n'
             + f'#SBATCH --gres=gpu{gpu_name}:1\n'
             + constraint_line
-            + f'#SBATCH --exclude=node056,node066,node067,node068,node069,node072\n'
+            + f'#SBATCH --exclude=node[001-079]\n'
             + f'#SBATCH --partition={",".join(partition)}\n'
             + f'#SBATCH -e {output_path}/slurm-%j-{job_name}.out\n'
             + f'#SBATCH -o {output_path}/slurm-%j-{job_name}.out\n'
