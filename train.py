@@ -38,7 +38,7 @@ IMN_transform = transforms.Compose([
 ])
 
 
-def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction):
+def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fraction, shuffle_cat):
     "Get a training dataloader"    
     if is_train:
         split = 'train'
@@ -47,6 +47,7 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
     
     if dataset_name == 'ImageNet1K':
         assert dataset_fraction == 1.0
+        assert shuffle_cat == False
         dataset = MyImageNet(root='/om/user/yu_xie/data/ImageNet', split=split, transform=transform)
         loader = torch.utils.data.DataLoader(dataset=dataset,
                                              batch_size=batch_size,
@@ -61,6 +62,7 @@ def get_dataloader(dataset_name, is_train, batch_size, transform, dataset_fracti
                              split=split,
                              transform=transform,
                              fraction=dataset_fraction,
+                             shuffle_cat=shuffle_cat,
                              )
         
         loader = torch.utils.data.DataLoader(dataset=dataset,
@@ -239,12 +241,16 @@ def train_model(config):
                                   is_train=True, 
                                   batch_size=config.batch_size,
                                   transform=IMN_transform,
-                                  dataset_fraction=config.train_dataset_fraction)
+                                  dataset_fraction=config.train_dataset_fraction,
+                                  shuffle_cat=config.shuffle_train_cat,
+                                  )
     val_loader = get_dataloader(dataset_name=config.dataset_name,
                                 is_train=False,
                                 batch_size=config.batch_size,
                                 transform=IMN_transform,
-                                dataset_fraction=1.0)
+                                dataset_fraction=1.0,
+                                shuffle_cat=False,
+                                )
 
     # initialize
     batch_n = 0  # the numbder of batches the model has trained on so far

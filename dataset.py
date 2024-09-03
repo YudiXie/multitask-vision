@@ -181,11 +181,13 @@ class TDWDataset(Dataset):
                  split: str = 'train',
                  transform = None,
                  fraction: float = 1.0,
+                 shuffle_cat: bool = False,
                  ):
         """
         Arguments:
             root_dir (string, or Path): Directory with all the images.
             fraction (float): fraction of the dataset to use, 1.0 means use all the data
+            shuffle_cat (bool): whether to shuffle the object categry and identity labels
         """
         if isinstance(root_dir, str):
             self.root_path: Path = Path(root_dir)
@@ -220,6 +222,10 @@ class TDWDataset(Dataset):
         
         use_index = round(len(dataset_index) * fraction)
         self.dataset_index = dataset_index[:use_index]
+
+        if shuffle_cat:
+            self.dataset_index['wnid'] = self.dataset_index['wnid'].sample(frac=1.0).to_list()
+            self.dataset_index['model'] = self.dataset_index['model'].sample(frac=1.0).to_list()
 
     def __len__(self):
         return len(self.dataset_index)

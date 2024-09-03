@@ -28,6 +28,7 @@ base_config = {
     'use_amp': False,
     'save_inter_model': [],
     'score_model_nums': [],
+    'shuffle_train_cat': False,
     }
 
 
