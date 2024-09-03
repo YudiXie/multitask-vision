@@ -862,3 +862,39 @@ def cat_tdw_1m_nc_20240902_0902():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+def shuffled_cat_tdw_1m20240206_0903():
+    # compare models with different training targets
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'shuffled_cat_tdw_1m20240206_0903'
+    exp_config['dataset_name'] = 'tdw_1m_20240206'
+    exp_config['max_batch'] = 500000  # run thorugh the dataset ~30 times with batchsize 64
+    exp_config['eval_per'] = 10000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+
+    # shuffle the object category and identity labels during training
+    exp_config['shuffle_train_cat'] = True
+
+    task_set_dict = {
+        'category_class': ['category_class'],
+        'object_class': ['object_class'],
+    }
+    seed_list = [0, 1, 2, 3, 4, 5, 6, 7]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for group_n, task_set in task_set_dict.items():
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = group_n
+            cfg['tasks'] = task_set
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
