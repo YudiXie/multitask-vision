@@ -4,7 +4,7 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
-from config_global import EXP_DIR, FIG_DIR
+from config_global import EXP_DIR, FIG_DIR, DATA_DIR
 import easyfigs.basicplot as bp
 
 # %%
@@ -34,6 +34,30 @@ latent_task_list = ['distance_reg', # 1
                     'distance_translation_rotation', # 9
                    ]
 latent_output_num_list = [1, 2, 6, 3, 7, 8, 9]
+
+# %%
+# shuffled data, only the following runs are scored successfully
+run_list = [8, 9, 12, 13, 14]
+model_ids = [f'shuffled_cat_tdw_1m20240206_0903-resnet18-{i}-batch--1' for i in run_list]
+
+benchmark_dict = {
+    'V1': 'FreemanZiemba2013public.V1-pls',
+    'V2': 'FreemanZiemba2013public.V2-pls',
+    'V4': 'MajajHong2015public.V4-pls',
+    'IT': 'MajajHong2015public.IT-pls',
+    'Behavior': 'Rajalingham2018public-i2n',
+    }
+
+model_id_list = []
+benchmark_list = []
+score_list = []
+for model_id in model_ids:
+    for region, benchmark_id in benchmark_dict.items():
+        model_id_list.append(model_id)
+        benchmark_list.append(region)
+        score_list.append(pd.read_csv(Path(DATA_DIR).joinpath(f'{model_id}_{benchmark_id}_score.csv'), index_col=0).iloc[0]['score'])
+
+shuffle_df = pd.DataFrame.from_dict({'model_id': model_id_list, 'benchmark': benchmark_list, 'score': score_list}) 
 
 # %%
 df_mt_neural = df_mt[df_mt['benchmark_region'] != 'Behavior']
@@ -73,6 +97,10 @@ df_imn_neural = df_imn[df_imn['benchmark_region'] != 'Behavior']
 df_imn_neural_s = df_imn_neural.groupby('model')['score'].mean()
 imn_data, imn_error = df_imn_neural_s.mean(), df_imn_neural_s.std()
 
+# # shuffled object identiy trained models
+# shuffle_data = shuffle_df.groupby('model_id')['score'].mean().mean()
+# shuffle_error = shuffle_df.groupby('model_id')['score'].mean().std()
+
 
 data_dict = {
     'Latent variable reg. (TDW-117)': {
@@ -107,6 +135,12 @@ data_dict = {
         'error': [imn_error, ],
         'kwargs': {'color': 'r'},
     },
+    # 'Object identity cla. (TDW-117 shuffle)': {
+    #     'x': [548, ],
+    #     'y': [shuffle_data, ],
+    #     'error': [shuffle_error, ],
+    #     'kwargs': {'color': 'k'},
+    # },
 }
 
 fig, ax = plt.subplots(figsize=(5.5, 4.125))
@@ -158,6 +192,9 @@ for region in ['V1', 'V2', 'V4', 'IT', 'Behavior']:
     df_imn_neural_s = df_imn[df_imn['benchmark_region'] == region]['score']
     imn_data, imn_error = df_imn_neural_s.mean(), df_imn_neural_s.std()
 
+    # # shuffled object identiy trained models
+    # shuffle_data = shuffle_df[shuffle_df['benchmark'] == region]['score'].mean()
+    # shuffle_error = shuffle_df[shuffle_df['benchmark'] == region]['score'].std()
 
     data_dict = {
         'Latent variable reg. (TDW-117)': {
@@ -192,6 +229,12 @@ for region in ['V1', 'V2', 'V4', 'IT', 'Behavior']:
             'error': [imn_error, ],
             'kwargs': {'color': 'r'},
         },
+        # 'Object identity cla. (TDW-117 shuffle)': {
+        #     'x': [548, ],
+        #     'y': [shuffle_data, ],
+        #     'error': [shuffle_error, ],
+        #     'kwargs': {'color': 'k'},
+        # },
     }
 
     fig, ax = plt.subplots(figsize=(4.8, 3.6))
