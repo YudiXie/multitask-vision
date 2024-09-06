@@ -13,10 +13,11 @@ df_mt = pd.read_csv(Path(EXP_DIR).joinpath('multi_task_tdw_1m20240206_0718', 'br
 df_pt_rnd = pd.read_csv(Path(EXP_DIR).joinpath('pretrain_and_random_resnet18_0220', 'brainscore_results.csv'), index_col=0)
 
 # %%
+rlmap = 'rlmap1'
 def replace_score(df):
     manual_score_list = []
     for i in range(len(df)):
-        model_id = df.iloc[i]['model'] + '-manuallayer-rlmap1'
+        model_id = df.iloc[i]['model'] + '-manuallayer-' + rlmap
         benchmark_id = df.iloc[i]['benchmark_id']
         manual_score_list.append(pd.read_csv(Path(DATA_DIR).joinpath(f'{model_id}_{benchmark_id}_score.csv'), index_col=0).iloc[0]['score'])
     return df.assign(score=manual_score_list)
@@ -100,7 +101,7 @@ ax.set_xscale('log')
 ax.legend(loc=(0.4, 0.2), fontsize=9)
 bp.remove_top_right_spines(ax)
 fig.tight_layout()
-fig.savefig(Path(FIG_DIR).joinpath(f'brainscore_vs_output_num_resnset18_meanV1V2V4IT_rlmap0.pdf'), transparent=True)
+fig.savefig(Path(FIG_DIR).joinpath(f'brainscore_vs_output_num_resnset18_meanV1V2V4IT_{rlmap}.pdf'), transparent=True)
 
 # %%
 for region in ['V1', 'V2', 'V4', 'IT', 'Behavior']:
@@ -162,7 +163,7 @@ for region in ['V1', 'V2', 'V4', 'IT', 'Behavior']:
     ax.set_xscale('log')
     bp.remove_top_right_spines(ax)
     fig.tight_layout()
-    fig.savefig(Path(FIG_DIR).joinpath(f'brainscore_vs_output_num_resnset18_mean{region}_rlmap0.pdf'), transparent=True)
+    fig.savefig(Path(FIG_DIR).joinpath(f'brainscore_vs_output_num_resnset18_mean{region}_{rlmap}.pdf'), transparent=True)
 
 # %%
 
