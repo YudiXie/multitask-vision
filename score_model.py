@@ -222,12 +222,19 @@ def prepare_and_score_model_manual_layer(config):
     model_path = os.path.join(config['save_path'], 'model.pth')
     out_dim, _ignore = get_output_info(config['dataset_name'])
     
-    rlmap_num = 0
-    rlmap0 = {
+    # rlmap_num = 0
+    # rlmap = {
+    #     'V1': 'layer1.0.relu',
+    #     'V2': 'layer2.0.relu',
+    #     'V4': 'layer3.0.relu',
+    #     'IT': 'layer4.0.relu',
+    # }
+    rlmap_num = 1
+    rlmap = {
         'V1': 'layer1.0.relu',
         'V2': 'layer2.0.relu',
-        'V4': 'layer3.0.relu',
-        'IT': 'layer4.0.relu',
+        'V4': 'layer2.0.relu',
+        'IT': 'layer3.1.relu',
     }
     
     start_time = datetime.now()
@@ -235,7 +242,7 @@ def prepare_and_score_model_manual_layer(config):
                                      get_model_id(config) + f'-manuallayer-rlmap{rlmap_num}',
                                      out_dim,
                                      model_path,
-                                     rl_map=rlmap0)
+                                     rl_map=rlmap)
     for region, benchmark_id in benchmark_dict.items():
         score_model_on_a_benchmark(model, benchmark_id)
     
