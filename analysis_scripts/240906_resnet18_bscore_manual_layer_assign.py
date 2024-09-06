@@ -16,7 +16,7 @@ df_pt_rnd = pd.read_csv(Path(EXP_DIR).joinpath('pretrain_and_random_resnet18_022
 def replace_score(df):
     manual_score_list = []
     for i in range(len(df)):
-        model_id = df.iloc[i]['model'] + '-manuallayer-rlmap0'
+        model_id = df.iloc[i]['model'] + '-manuallayer-rlmap1'
         benchmark_id = df.iloc[i]['benchmark_id']
         manual_score_list.append(pd.read_csv(Path(DATA_DIR).joinpath(f'{model_id}_{benchmark_id}_score.csv'), index_col=0).iloc[0]['score'])
     return df.assign(score=manual_score_list)
