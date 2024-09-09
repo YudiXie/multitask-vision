@@ -898,3 +898,123 @@ def shuffled_cat_tdw_1m20240206_0903():
             config_list.append(cfg)
             run_id += 1
     return config_list
+
+
+def multi_task_resnet50_tdw_1m20240206_0908():
+    # compare models with different training targets
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'multi_task_resnet50_tdw_1m20240206_0908'
+    exp_config['dataset_name'] = 'tdw_1m_20240206'
+    exp_config['max_batch'] = 1000000
+    exp_config['eval_per'] = 20000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['save_inter_model'] = [20000, 40000, 60000, 80000, 100000, 200000, 500000, 1000000]
+    exp_config['score_model_nums'] = [20000, 40000, 60000, 80000, 100000, 200000, 500000, 1000000]
+
+    task_set_dict = {
+        'distance_reg': ['distance_reg'],
+        'translation_reg': ['translation_reg'],
+        'rotation_reg': ['rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'distance_translation': ['distance_reg', 'translation_reg'],
+        'distance_rotation': ['distance_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+        'translation_rotation': ['translation_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'distance_translation_rotation': ['distance_reg', 'translation_reg', 'rotation_reg_tdw_two_units_sin_cos_mse'],
+
+        'category_class': ['category_class'],
+        'object_class': ['object_class'],
+        'cat_obj_class_all_latents': ['category_class', 'object_class', 'rotation_reg_tdw_two_units_sin_cos_mse', 'distance_reg', 'translation_reg'],
+    }
+    seed_list = [0, 1, 2, 3, 4]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for group_n, task_set in task_set_dict.items():
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['group_name'] = group_n
+            cfg['tasks'] = task_set
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
+
+
+def multi_task_resnet50_tdw_1m20240206_earlier_0908():
+    change_kwargs = {
+        'max_batch': 10000,
+        'eval_per': 2000,
+        'checkpoint_per': 200,
+        'save_inter_model': [2000, 4000, 6000, 10000, 16000],
+        'score_model_nums': [2000, 4000, 6000, 10000, 16000],
+    }
+    return change_config(multi_task_resnet50_tdw_1m20240206_0908, 
+                         'multi_task_resnet50_tdw_1m20240206_earlier_0908', 
+                         change_kwargs)
+
+
+def cat_tdw_1m_nc_20240902_resnet50_0908():
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'cat_tdw_1m_nc_20240902_resnet50_0908'
+    exp_config['max_batch'] = 1000000
+    exp_config['eval_per'] = 20000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['tasks'] = ['category_class', ]
+
+    dataset_list = ['tdw1m_2c_20240902',
+                    'tdw1m_4c_20240902',
+                    'tdw1m_6c_20240902',
+                    'tdw1m_8c_20240902',
+                    'tdw1m_16c_20240902',]
+    seed_list = [0, 1, 2, 3, 4]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for dset_n in dataset_list:
+        for seed in seed_list:
+            cfg = copy.deepcopy(exp_config)
+            cfg['dataset_name'] = dset_n
+            cfg['seed'] = seed
+
+            cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+            cfg['run_id'] = run_id
+            config_list.append(cfg)
+            run_id += 1
+    return config_list
+
+
+def imagenet1k_resnet50_0908():
+    exp_config = copy.deepcopy(base_config)
+    exp_config['experiment_name'] = 'imagenet1k_resnet50_0908'
+    exp_config['dataset_name'] = 'ImageNet1K'
+    exp_config['max_batch'] = 1000000
+    exp_config['eval_per'] = 20000
+    exp_config['checkpoint_per'] = 1000
+    exp_config['pretrain_init'] = False
+    exp_config['model_archi'] = 'resnet50'
+    exp_config['tasks'] = ['category_class', ]
+    
+    seed_list = [0, 1, 2, 3, 4]
+    
+    # setting up config list
+    config_list = []
+    run_id = 0
+    for seed in seed_list:
+        cfg = copy.deepcopy(exp_config)
+        cfg['seed'] = seed
+
+        cfg['save_path'] = os.path.join(EXP_DIR, cfg['experiment_name'], f'run_{run_id:04d}')
+        cfg['run_id'] = run_id
+        config_list.append(cfg)
+        run_id += 1
+    return config_list
