@@ -52,14 +52,23 @@ pt_error = df_pt_rnd_neural_agg['std']['imagenet1k_pretrain']
 # all the scores for the pre-trained models are the same, so the error is 0
 
 # %%
+legend_names = {
+    'distance_reg': 'Distance reg.',
+    'translation_reg': 'Translation reg.',
+    'rotation_reg': 'Rotation reg.',
+    'category_class': 'Object category cla.',
+    'cat_obj_class_all_latents': 'All cla. + all reg.',
+}
+
+# %%
 fig, ax = plt.subplots(figsize=(4.8, 3.6))
 ax.set_xscale('log')
 for key, value in plot_data.items():
-    ax.errorbar(dataset_sizes, value[0], yerr=value[1], capsize=3, fmt='o-', label=key)
-ax.scatter([1.3e6, ], [pt_data, ], label='ImageNet-1K', color='r', marker='D'),
+    ax.errorbar(dataset_sizes, value[0], yerr=value[1], capsize=3, fmt='o-', label=legend_names[key])
+ax.scatter([1.3e6, ], [pt_data, ], label='ImageNet-1K cla.', color='r', marker='D'),
 ax.hlines(rnd_data, dataset_sizes[0], dataset_sizes[-1], linestyles='dashed', colors='k', label='Untrained')
 ax.fill_between([dataset_sizes[0], dataset_sizes[-1]], 2 * [rnd_data - rnd_error], 2 * [rnd_data + rnd_error], alpha=0.2, color='k')
-ax.legend(loc=(0.4, 0.17))
+ax.legend(loc=(0.43, 0.17))
 ax.set_xlim(5e3, 2e8)
 ax.set_xlabel('Dataset size, number of images')
 ax.set_ylabel('Mean Brain-Score \n (V1, V2, V4, IT)')
@@ -67,5 +76,8 @@ ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
 bp.remove_top_right_spines(ax)
 fig.tight_layout()
 fig.savefig(Path(FIG_DIR).joinpath('100m_model_scaling.pdf'), transparent=True)
+
+# %%
+
 
 
