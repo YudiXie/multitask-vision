@@ -79,20 +79,19 @@ r, p_val = stats.pearsonr(x, y)
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
-ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\np-value = {p_val:.1e}', transform=ax.transAxes)
+pv_str = f'p-value = {p_val:.1e}' if p_val > 1e-3 else 'p-value < 1e-10'
+ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\n{pv_str}', transform=ax.transAxes)
 ax.set_xlabel('Negative distance regression loss')
-ax.set_ylabel('Mean neural alignment')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_xticks([-1, -0.5, 0])
 ax.set_yticks([0.3, 0.4])
 bp.remove_top_right_spines(ax)
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/distance_reg_loss_vs_score.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/distance_reg_loss_vs_score.pdf'), transparent=True, bbox_inches='tight')
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 sc = ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
 cbar = fig.colorbar(sc, label='Num. of training batches')
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/distance_reg_loss_vs_score_colorbar.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/distance_reg_loss_vs_score_colorbar.pdf'), transparent=True, bbox_inches='tight')
 
 # %%
 data = df_neural[df_neural['exp_group'] == 'translation_reg'].groupby('model')[['score', 'val_translation_reg_loss', 'batch']].mean()
@@ -104,14 +103,14 @@ r, p_val = stats.pearsonr(x, y)
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
-ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\np-value = {p_val:.1e}', transform=ax.transAxes)
+pv_str = f'p-value = {p_val:.1e}' if p_val > 1e-3 else 'p-value < 1e-10'
+ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\n{pv_str}', transform=ax.transAxes)
 ax.set_xlabel('Negative translation regression loss')
-ax.set_ylabel('Mean neural alignment')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_xticks([-0.5, 0])
 ax.set_yticks([0.3, 0.4])
 bp.remove_top_right_spines(ax)
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/translation_reg_loss_vs_score.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/translation_reg_loss_vs_score.pdf'), transparent=True, bbox_inches='tight')
 
 # %%
 data = df_neural[df_neural['exp_group'] == 'rotation_reg'].groupby('model')[['score', 'val_rotation_reg_tdw_two_units_sin_cos_mse_loss', 'batch']].mean()
@@ -123,14 +122,14 @@ r, p_val = stats.pearsonr(x, y)
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
-ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\np-value = {p_val:.1e}', transform=ax.transAxes)
+pv_str = f'p-value = {p_val:.1e}' if p_val > 1e-3 else 'p-value < 1e-10'
+ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\n{pv_str}', transform=ax.transAxes)
 ax.set_xlabel('Negative rotation regression loss')
-ax.set_ylabel('Mean neural alignment')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_xticks([-0.1, 0])
 ax.set_yticks([0.2, 0.3, 0.4])
 bp.remove_top_right_spines(ax)
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/rotation_reg_loss_vs_score.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/rotation_reg_loss_vs_score.pdf'), transparent=True, bbox_inches='tight')
 
 # %%
 data = df_neural[df_neural['exp_group'] == 'category_class'].groupby('model')[['score', 'val_category_acc', 'batch']].mean()
@@ -142,14 +141,14 @@ r, p_val = stats.pearsonr(x, y)
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
-ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\np-value = {p_val:.1e}', transform=ax.transAxes)
+pv_str = f'p-value = {p_val:.1e}' if p_val > 1e-3 else 'p-value < 1e-10'
+ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\n{pv_str}', transform=ax.transAxes)
 ax.set_xlabel('Object category classification accuracy')
-ax.set_ylabel('Mean neural alignment')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_xticks([0.0, 0.5, 1.0])
 ax.set_yticks([0.2, 0.3, 0.4])
 bp.remove_top_right_spines(ax)
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/obj_cat_acc_vs_score.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/obj_cat_acc_vs_score.pdf'), transparent=True, bbox_inches='tight')
 
 # %%
 data = df_neural[df_neural['exp_group'] == 'object_class'].groupby('model')[['score', 'val_object_acc', 'batch']].mean()
@@ -161,13 +160,16 @@ r, p_val = stats.pearsonr(x, y)
 
 fig, ax = plt.subplots(figsize=(3.6, 2.7))
 ax.scatter(x, y, c=batch_num, alpha=0.8, cmap='cool', norm='log')
-ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\np-value = {p_val:.1e}', transform=ax.transAxes)
+pv_str = f'p-value = {p_val:.1e}' if p_val > 1e-3 else 'p-value < 1e-10'
+ax.text(0.5, 0.05, f'Pearson r = {r:.2f}\n{pv_str}', transform=ax.transAxes)
 ax.set_xlabel('Object identity classification accuracy')
-ax.set_ylabel('Mean neural alignment')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_xticks([0.0, 0.5, 1.0])
 ax.set_yticks([0.2, 0.3, 0.4])
 bp.remove_top_right_spines(ax)
-fig.tight_layout()
-fig.savefig(Path(ROOT_DIR).joinpath(f'figures/obj_id_acc_vs_score.pdf'), transparent=True)
+fig.savefig(Path(ROOT_DIR).joinpath(f'figures/obj_id_acc_vs_score.pdf'), transparent=True, bbox_inches='tight')
+
+# %%
+
 
 
