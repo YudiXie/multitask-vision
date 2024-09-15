@@ -171,14 +171,14 @@ for layer in record_layers:
             sim_matrix[i, j] = CKA_score
             sim_matrix[j, i] = sim_matrix[i, j]
 
-    np.save(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}.npy'), sim_matrix)
+    np.save(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'), sim_matrix)
 
 # %%
 for layer in record_layers:
     layer_name = layer.replace('.', '_')
 
     fig, ax = plt.subplots()
-    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}.npy'))
+    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'))
     im = ax.imshow(sim_matrix, cmap='viridis')
     cbar = fig.colorbar(im, ax=ax)
     ax.set_title(f'Similarity of RDMS at {layer}')
@@ -231,16 +231,17 @@ labels = list(tasks_dict.keys())
 # make the heatmap of the model similarity
 for i, layer in enumerate(record_layers):
     layer_name = layer.replace('.', '_')
-    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}.npy'))
+    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'))
     group_dis_mean, group_dis_std = get_model_group_dist(tasks_dict, sim_matrix)
+    group_dis_mean = np.tril(group_dis_mean)
 
     fig, ax = plt.subplots(figsize=(3.6, 2.7))
     sns.heatmap(group_dis_mean, vmin=0.0, vmax=1.0, cmap='Blues',
                 annot=True, fmt=".2f", annot_kws={'fontsize': 'xx-small'}, linewidths=0.5,
                 cbar_kws={'label': 'Mean similarity (CKA)'}, square=True,
                 xticklabels=labels, yticklabels=labels, ax=ax)
-    ax.xaxis.tick_top()
-    ax.set_xticks(np.arange(len(labels)) + 0.5, labels, rotation=-30, ha='right')
+    # ax.xaxis.tick_top()
+    ax.set_xticks(np.arange(len(labels)) + 0.5, labels, rotation=40, ha='right')
     ax.set_title(f'Model similarity at {layer}')
     fig.savefig(f'./figures/between_group_model_similarity_heat_{layer_name}.pdf', transparent=True, bbox_inches='tight')
 
@@ -248,14 +249,14 @@ for i, layer in enumerate(record_layers):
 # make figures that show individual rows in the matrix
 for i, layer in enumerate(record_layers):
     layer_name = layer.replace('.', '_')
-    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}.npy'))
+    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'))
     group_dis_mean, group_dis_std = get_model_group_dist(tasks_dict, sim_matrix)
     
     # make figures that show individual rows in the matrix
     x_axis = np.arange(len(labels))
-    fig, axes = plt.subplots(2, 4, figsize=(9, 5), sharex=True, sharey=True)
+    fig, axes = plt.subplots(8, 1, figsize=(3, 15), sharex=True, sharey=True)
     for i, task in enumerate(labels):
-        ax = axes[i // 4, i % 4]
+        ax = axes[i]
         ele1 = ax.errorbar(x_axis, group_dis_mean[i], yerr=group_dis_std[i], fmt='o', capsize=3, label='Between-group sim.')
 
         intra_mean = group_dis_mean[i, i]
@@ -264,10 +265,10 @@ for i, layer in enumerate(record_layers):
         ax.fill_between([x_axis[0], x_axis[-1]], 2 * [intra_mean - intra_std], 2 * [intra_mean + intra_std], alpha=0.2, color='k')
         
         ax.set_title(f'{task} vs. Others', fontsize=10)
-        if i // 4 == 1:
+        if i == 7:
             ax.set_xticks(x_axis, labels, rotation=90)
     
-    fig.legend(handles=[ele1, ele2], loc=(0.58, 0.02), ncols=2)
+    # fig.legend(handles=[ele1, ele2], loc=(0.58, 0.02), ncols=2)
     fig.suptitle(f'Model similarity at {layer}')
     fig.supxlabel('Training tasks')
     fig.supylabel('Representational similarity (CKA)')
@@ -278,7 +279,7 @@ for i, layer in enumerate(record_layers):
 X_transformed = {}
 for i, layer in enumerate(record_layers):
     layer_name = layer.replace('.', '_')
-    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}.npy'))
+    sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'))
 
     embedding = MDS(n_components=2, normalized_stress='auto')
     X_transformed[layer] = embedding.fit_transform(sim_matrix)
@@ -289,18 +290,21 @@ fig, axes = plt.subplots(1, 4, figsize=(10, 3.2))
 for i, layer in enumerate(record_layers):
     ax = axes[i]
     plot_data = X_transformed[layer]
+    eles = []
     for j, (task, indices) in enumerate(tasks_dict.items()):
-        ax.scatter(plot_data[indices, 0], plot_data[indices, 1],
-                   label=task, alpha=0.8, marker=markers[j], s=50)
+        ele1 = ax.scatter(plot_data[indices, 0], plot_data[indices, 1],
+                          label=task, alpha=0.8, marker=markers[j], s=50)
+        eles.append(ele1)
     ax.set_title(f'{layer}')
     ax.set_xticks([])
     ax.set_yticks([])
-axes[0].legend(fontsize='x-small')
+fig.legend(handles=eles, fontsize='x-small', ncols=4, loc=(0.59, 0.03))
+# fig.legend(handles=[ele1, ele2], loc=(0.58, 0.02), ncols=2)
 fig.suptitle('MDS of model similarity matrix')
 fig.supxlabel('MDS dim. 1')
 fig.supylabel('MDS dim. 2')
 fig.tight_layout()
-fig.savefig('./figures/mds_model_cka.pdf', transparent=True)
+fig.savefig('./figures/mds_model_cka.pdf', transparent=True, bbox_inches='tight')
 
 
 # %%
