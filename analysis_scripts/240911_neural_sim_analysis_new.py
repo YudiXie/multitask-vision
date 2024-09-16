@@ -222,7 +222,7 @@ tasks_dict = {'Dis. reg.': [i for i in range(8)],
               'Dis. Tra. Rot.': [i for i in range(24, 32)],
               'Cat. cla.': [i for i in range(32, 40)],
               'All cla. all reg.': [i for i in range(40, 48)],
-              'ImageNet': [i for i in range(48, 56)],
+              'ImageNet cla.': [i for i in range(48, 56)],
               'Untrained': [i for i in range(56, 61)],
               }
 labels = list(tasks_dict.keys())
@@ -276,6 +276,10 @@ for i, layer in enumerate(record_layers):
     fig.savefig(f'./figures/between_group_model_similarity_rows_{layer_name}.pdf', transparent=True, bbox_inches='tight')
 
 # %%
+markers = ['o', 's', 'P', 'X', '*', 'p', 'd', '^']
+color_list = ['448aff', '1565c0', '009688', '8bc34a', 'ffc107', 'ff9800', 'f44336', 'ad1457']
+
+# %%
 X_transformed = {}
 for i, layer in enumerate(record_layers):
     layer_name = layer.replace('.', '_')
@@ -285,7 +289,7 @@ for i, layer in enumerate(record_layers):
     X_transformed[layer] = embedding.fit_transform(sim_matrix)
 
 
-markers = ['o', 's', 'P', 'X', '*', 'p', 'd', '^']
+
 fig, axes = plt.subplots(1, 4, figsize=(10, 3.2))
 for i, layer in enumerate(record_layers):
     ax = axes[i]
@@ -293,12 +297,12 @@ for i, layer in enumerate(record_layers):
     eles = []
     for j, (task, indices) in enumerate(tasks_dict.items()):
         ele1 = ax.scatter(plot_data[indices, 0], plot_data[indices, 1],
-                          label=task, alpha=0.8, marker=markers[j], s=50)
+                          label=task, alpha=0.8, marker=markers[j], s=50, c=f'#{color_list[j]}')
         eles.append(ele1)
     ax.set_title(f'{layer}')
     ax.set_xticks([])
     ax.set_yticks([])
-fig.legend(handles=eles, fontsize='x-small', ncols=4, loc=(0.59, 0.03))
+fig.legend(handles=eles, fontsize='x-small', ncols=4, loc=(0.57, 0.03))
 # fig.legend(handles=[ele1, ele2], loc=(0.58, 0.02), ncols=2)
 fig.suptitle('MDS of model similarity matrix')
 fig.supxlabel('MDS dim. 1')
@@ -306,6 +310,67 @@ fig.supylabel('MDS dim. 2')
 fig.tight_layout()
 fig.savefig('./figures/mds_model_cka.pdf', transparent=True, bbox_inches='tight')
 
+
+# %%
+# visualize similarity to reference model
+def plot_dist_to_ref_group(ref_group):
+    ref_group_idx = labels.index(ref_group)
+
+    dis2ref_mean_list = []
+    dis2ref_std_list = []
+    for i, layer in enumerate(record_layers):
+        layer_name = layer.replace('.', '_')
+        sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_240911.npy'))
+        group_dis_mean, group_dis_std = get_model_group_dist(tasks_dict, sim_matrix)
+        
+        dis2ref_mean_list.append(group_dis_mean[ref_group_idx])
+        dis2ref_std_list.append(group_dis_std[ref_group_idx])
+
+    dis2ref_mean = np.stack(dis2ref_mean_list, axis=1)
+    dis2ref_std = np.stack(dis2ref_std_list, axis=1)
+
+
+    x_axis = np.arange(len(record_layers))
+    fig, ax = plt.subplots(figsize=(6, 2.8))
+    offset = 0.08
+    offset_step = 0
+    for i in range(len(labels)):
+        if i == ref_group_idx:
+            pass
+        else:
+            ax.errorbar(x_axis + offset_step * offset, dis2ref_mean[i], yerr=dis2ref_std[i], 
+                        fmt='o', capsize=3, label=labels[i], color=f'#{color_list[i]}')
+            offset_step += 1
+
+    # add the intra-group similarity as the reference 
+    x_end = x_axis + (len(labels) - 2) * offset
+    ax.hlines(dis2ref_mean[ref_group_idx], x_axis - offset, x_end + offset, 
+            linestyles='dashed', label=f'intra - {ref_group}', color='k')
+    for i in range(len(record_layers)):
+        ax.fill_between([x_axis[i] - offset, x_end[i] + offset], 
+                        2 * [dis2ref_mean[ref_group_idx][i] - dis2ref_std[ref_group_idx][i]], 
+                        2 * [dis2ref_mean[ref_group_idx][i] + dis2ref_std[ref_group_idx][i]], 
+                        alpha=0.2, color='k')
+
+    # add the vertical lines to separate the layers
+    tick_centers = x_axis + (len(labels) - 2) * offset / 2
+    ax.set_xticks(tick_centers, record_layers)
+    for i in range(len(tick_centers) - 1):
+        ax.vlines(tick_centers[i] + 0.5, 0, 1, linestyles=':', color='k', alpha=0.1)
+
+    ax.set_ylabel(f'Similarity (CKA) to {ref_group}')
+    ax.set_ylim(0, 1)
+    ax.set_yticks([0.0, 0.5, 1.0])
+    ax.set_xlim(tick_centers[0] - 0.5, tick_centers[-1] + 0.5)
+    ax.legend(fontsize='small', loc=(1.02, 0.15))
+    ref_group_save = ref_group.replace(' ', '_')
+    fig.savefig(f'./figures/dist_to_{ref_group_save}.pdf', transparent=True, bbox_inches='tight')
+
+# %%
+plot_dist_to_ref_group('Cat. cla.')
+
+# %%
+plot_dist_to_ref_group('ImageNet cla.')
 
 # %%
 
