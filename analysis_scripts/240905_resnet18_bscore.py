@@ -143,17 +143,17 @@ data_dict = {
     # },
 }
 
-fig, ax = plt.subplots(figsize=(5.5, 4.125))
+fig, ax = plt.subplots(figsize=(4.8, 3.6))
 bp.add_errorbars(ax, data_dict, fmt="o")
 # ax.scatter([1000, ], [pt_data, ], label='ImageNet-1K', color='r', marker='D')
 ax.hlines(rnd_data, 1, 1000, linestyles='dashed', label='Untrained', color='k')
 ax.fill_between([1, 1000], 2 * [rnd_data - rnd_error], 2 * [rnd_data + rnd_error], alpha=0.2, color='k')
 
 ax.set_xlabel('Number of supervised output units')
-ax.set_ylabel('Mean alignment score \n (V1, V2, V4, IT)')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
 ax.set_xscale('log')
-ax.legend(loc=(0.35, 0.17), fontsize=9)
+ax.legend(loc=(0.35, 0.17), fontsize=8)
 bp.remove_top_right_spines(ax)
 fig.tight_layout()
 fig.savefig(Path(FIG_DIR).joinpath(f'brainscore_vs_output_num_resnset18_meanV1V2V4IT.pdf'), transparent=True)
