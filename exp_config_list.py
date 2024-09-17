@@ -952,8 +952,8 @@ def multi_task_resnet50_tdw_1m20240206_earlier_0908():
         'max_batch': 10000,
         'eval_per': 2000,
         'checkpoint_per': 200,
-        'save_inter_model': [2000, 4000, 6000, 10000, 16000],
-        'score_model_nums': [2000, 4000, 6000, 10000, 16000],
+        'save_inter_model': [2000, 4000, 6000, 10000],
+        'score_model_nums': [2000, 4000, 6000, 10000],
     }
     return change_config(multi_task_resnet50_tdw_1m20240206_0908, 
                          'multi_task_resnet50_tdw_1m20240206_earlier_0908', 
