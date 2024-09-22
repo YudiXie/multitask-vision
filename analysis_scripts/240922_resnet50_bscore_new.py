@@ -82,17 +82,17 @@ data_dict = {
         'error': latent_error,
         'kwargs': {'color': '#448aff'},
     },
-    'Object category cla. (TDW-117)': {
-        'x': [117, ],
-        'y': cat_class_data,
-        'error': cat_class_error,
-        'kwargs': {'color': '#ff9800'},
-    },
     'Object category cla. (TDW-N)': {
         'x': nc_num_list,
         'y': nc_data,
         'error': nc_error,
         'kwargs': {'color': '#ffc107'},
+    },
+    'Object category cla. (TDW-117)': {
+        'x': [117, ],
+        'y': cat_class_data,
+        'error': cat_class_error,
+        'kwargs': {'color': '#ff9800'},
     },
     'Object identity cla. (TDW-117)': {
         'x': [548, ],
@@ -173,17 +173,17 @@ for region in ['V1', 'V2', 'V4', 'IT', 'Behavior']:
             'error': latent_error,
             'kwargs': {'color': '#448aff'},
         },
-        'Object category cla. (TDW-117)': {
-            'x': [117, ],
-            'y': cat_class_data,
-            'error': cat_class_error,
-            'kwargs': {'color': '#ff9800'},
-        },
         'Object category cla. (TDW-N)': {
             'x': nc_num_list,
             'y': nc_data,
             'error': nc_error,
             'kwargs': {'color': '#ffc107'},
+        },
+        'Object category cla. (TDW-117)': {
+            'x': [117, ],
+            'y': cat_class_data,
+            'error': cat_class_error,
+            'kwargs': {'color': '#ff9800'},
         },
         'Object identity cla. (TDW-117)': {
             'x': [548, ],
