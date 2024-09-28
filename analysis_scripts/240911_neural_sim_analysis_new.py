@@ -216,13 +216,13 @@ def get_model_group_dist(tasks_dict, model_dis_mat):
     return group_dis_mean, group_dis_std
 
 # %%
-tasks_dict = {'Dis. reg.': [i for i in range(8)],
-              'Tra. reg.': [i for i in range(8, 16)],
-              'Rot reg.': [i for i in range(16, 24)],
+tasks_dict = {'Distance': [i for i in range(8)],
+              'Translation': [i for i in range(8, 16)],
+              'Rotation': [i for i in range(16, 24)],
               'Dis. Tra. Rot.': [i for i in range(24, 32)],
-              'Cat. cla.': [i for i in range(32, 40)],
-              'All cla. all reg.': [i for i in range(40, 48)],
-              'ImageNet cla.': [i for i in range(48, 56)],
+              'Obj. Category': [i for i in range(32, 40)],
+              'All spatial + cla.': [i for i in range(40, 48)],
+              'ImageNet-1K': [i for i in range(48, 56)],
               'Untrained': [i for i in range(56, 61)],
               }
 labels = list(tasks_dict.keys())
@@ -277,7 +277,7 @@ for i, layer in enumerate(record_layers):
 
 # %%
 markers = ['o', 's', 'P', 'X', '*', 'p', 'd', '^']
-color_list = ['448aff', '1565c0', '009688', '8bc34a', 'ffc107', 'ff9800', 'f44336', 'ad1457']
+color_list = ['448aff', '1565c0', '009688', '8bc34a', 'ffc107', 'ff9800', 'f44336', '707078']
 
 # %%
 X_transformed = {}
@@ -302,7 +302,7 @@ for i, layer in enumerate(record_layers):
     ax.set_title(f'{layer}')
     ax.set_xticks([])
     ax.set_yticks([])
-fig.legend(handles=eles, fontsize='x-small', ncols=4, loc=(0.57, 0.03))
+fig.legend(handles=eles, fontsize='x-small', ncols=4, loc=(0.56, 0.03))
 # fig.legend(handles=[ele1, ele2], loc=(0.58, 0.02), ncols=2)
 fig.suptitle('MDS of model similarity matrix')
 fig.supxlabel('MDS dim. 1')
@@ -362,15 +362,15 @@ def plot_dist_to_ref_group(ref_group):
     ax.set_ylim(0, 1)
     ax.set_yticks([0.0, 0.5, 1.0])
     ax.set_xlim(tick_centers[0] - 0.5, tick_centers[-1] + 0.5)
-    ax.legend(fontsize='small', loc=(1.02, 0.15))
+    ax.legend(fontsize='small', loc=(1.02, 0.15), title='Training targets')
     ref_group_save = ref_group.replace(' ', '_')
     fig.savefig(f'./figures/dist_to_{ref_group_save}.pdf', transparent=True, bbox_inches='tight')
 
 # %%
-plot_dist_to_ref_group('Cat. cla.')
+plot_dist_to_ref_group('Obj. Category')
 
 # %%
-plot_dist_to_ref_group('ImageNet cla.')
+plot_dist_to_ref_group('ImageNet-1K')
 
 # %%
 
