@@ -53,22 +53,23 @@ pt_error = df_pt_rnd_neural_agg['std']['imagenet1k_pretrain']
 
 # %%
 legend_names = {
-    'distance_reg': 'Distance reg.',
-    'translation_reg': 'Translation reg.',
-    'rotation_reg': 'Rotation reg.',
-    'category_class': 'Object category cla.',
-    'cat_obj_class_all_latents': 'All cla. + all reg.',
+    'distance_reg': 'Distance',
+    'translation_reg': 'Translation',
+    'rotation_reg': 'Rotation',
+    'category_class': 'Obj. category',
+    'cat_obj_class_all_latents': 'All spatial + classification',
 }
 
 # %%
+color_list = ['448aff', '1565c0', '009688', 'ffc107', 'ff9800', 'f44336', '707078']
 fig, ax = plt.subplots(figsize=(4.8, 3.6))
 ax.set_xscale('log')
 for key, value in plot_data.items():
-    ax.errorbar(dataset_sizes, value[0], yerr=value[1], capsize=3, fmt='o-', label=legend_names[key])
-ax.scatter([1.3e6, ], [pt_data, ], label='ImageNet-1K cla.', color='r', marker='D'),
+    ax.errorbar(dataset_sizes, value[0], yerr=value[1], capsize=3, fmt='o-', label=legend_names[key], color='#' + color_list.pop(0))
+ax.scatter([1.3e6, ], [pt_data, ], label='ImageNet-1K', color='#' + color_list.pop(0), marker='D'),
 ax.hlines(rnd_data, dataset_sizes[0], dataset_sizes[-1], linestyles='dashed', colors='k', label='Untrained')
 ax.fill_between([dataset_sizes[0], dataset_sizes[-1]], 2 * [rnd_data - rnd_error], 2 * [rnd_data + rnd_error], alpha=0.2, color='k')
-ax.legend(loc=(0.43, 0.17))
+ax.legend(loc=(0.43, 0.17), fontsize='small', title='Training task')
 ax.set_xlim(5e3, 2e8)
 ax.set_xlabel('Dataset size, number of images')
 ax.set_ylabel('Mean Brain-Score \n (V1, V2, V4, IT)')
