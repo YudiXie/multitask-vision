@@ -74,37 +74,37 @@ df_imn_neural_s = df_imn_neural.groupby('model')['score'].mean()
 imn_data, imn_error = df_imn_neural_s.mean(), df_imn_neural_s.std()
 
 data_dict = {
-    'Spatial latent reg. (TDW-117)': {
+    'Spatial latents (TDW-117)': {
         'x': latent_output_num_list,
         'y': latent_data,
         'error': latent_error,
         'kwargs': {'color': '#448aff'},
     },
-    'Object category cla. (TDW-N)': {
+    'Object category (TDW-N)': {
         'x': nc_num_list,
         'y': nc_data,
         'error': nc_error,
         'kwargs': {'color': '#ffc107'},
     },
-    'Object category cla. (TDW-117)': {
+    'Object category (TDW-117)': {
         'x': [117, ],
         'y': cat_class_data,
         'error': cat_class_error,
         'kwargs': {'color': '#ff9800'},
     },
-    'Object identity cla. (TDW-117)': {
+    'Object identity (TDW-117)': {
         'x': [548, ],
         'y': obj_class_data,
         'error': obj_class_error,
         'kwargs': {'color': '#DA814E'},
     },
-    'All cla. + all reg. (TDW-117)': {
+    'All spatial + classification (TDW-117)': {
         'x': [674, ],
         'y': mlt_data,
         'error': mlt_error,
         'kwargs': {'color': '#8bc34a'},
     },
-    'Object category cla. (ImageNet-1K)': {
+    'Object category (ImageNet-1K)': {
         'x': [1000, ],
         'y': [imn_data, ],
         'error': [imn_error, ],
@@ -124,7 +124,7 @@ ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
 ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
 ax.set_xlim(x_left, x_right)
 ax.set_xscale('log')
-ax.legend(loc=(0.35, 0.17), fontsize=8)
+ax.legend(loc=(0.34, 0.17), fontsize=8, title='Training targets')
 bp.remove_top_right_spines(ax)
 fig.tight_layout()
 fig.savefig(Path(FIG_DIR).joinpath('brainscore_vs_output_num_resnset18_meanV1V2V4IT.pdf'), transparent=True, bbox_inches='tight')
