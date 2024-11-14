@@ -479,6 +479,8 @@ def pretrain_and_random_resnet50_0220():
     exp_config['experiment_name'] = 'pretrain_and_random_resnet50_0220'
     exp_config['dataset_name'] = 'tdw_1m_20240206'
     exp_config['model_archi'] = 'resnet50'
+    # just a placeholder, not used for training
+    exp_config['tasks'] = ['category_class', 'object_class', 'distance_reg', 'translation_reg', 'rotation_reg_tdw_two_units_sin_cos_mse']
 
     group_list = ['random', 'imagenet1k_pretrain']
     seed_list = [0, 1, 2, 3, 4]
