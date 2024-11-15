@@ -194,8 +194,8 @@ for layer in record_layers:
     sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_{matrix_suffix}.npy'))
 
     plot_model_spread_layer(sim_matrix, f'cat_var_layer_{layer_name}', layer,
-                            'full category', task_group_full,
-                            'reduced category', task_group_redu)
+                            'Full cat. var.', task_group_full,
+                            'Reduced cat. var.', task_group_redu)
 
 # %%
 # task group with full variability
@@ -218,8 +218,8 @@ for layer in record_layers:
     sim_matrix = np.load(Path(DATA_DIR).joinpath('rsa', f'matrix_cka_{layer_name}_{dataset_name}_{matrix_suffix}.npy'))
 
     plot_model_spread_layer(sim_matrix, f'tran_var_layer_{layer_name}', layer,
-                            'full translation', task_group_full,
-                            'reduced translation', task_group_redu)
+                            'Full tran. var.', task_group_full,
+                            'Reduced tran. var.', task_group_redu)
 
 # %%
 def plot_dist_to_ref_reduced_var(ref_group, ref_idx, task_group_full, task_group_redu, clist):
