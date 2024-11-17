@@ -42,10 +42,10 @@ def cat_decoding_plot(full_data_r, one_cat_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_cat_var_240927_cat_decoding_model_target_{suffix}.pdf', transparent=True, bbox_inches='tight')
 
 read_cat_results = partial(read_results, exp_name='ctrl_cat_var_240927', decode_target='cat')
-cat_decoding_plot(read_cat_results(0, 6), read_cat_results(24, 30), 'Target: Distance', 'dis')
-cat_decoding_plot(read_cat_results(6, 12), read_cat_results(30, 36), 'Target: Translation', 'tran')
-cat_decoding_plot(read_cat_results(12, 18), read_cat_results(36, 42), 'Target: Rotation', 'rot')
-cat_decoding_plot(read_cat_results(18, 24), read_cat_results(42, 48), 'Target: Dis. Tran. Rot.', 'dis_tran_rot')
+cat_decoding_plot(read_cat_results(0, 6), read_cat_results(24, 30), 'Model target: Distance', 'dis')
+cat_decoding_plot(read_cat_results(6, 12), read_cat_results(30, 36), 'Model target: Translation', 'tran')
+cat_decoding_plot(read_cat_results(12, 18), read_cat_results(36, 42), 'Model target: Rotation', 'rot')
+cat_decoding_plot(read_cat_results(18, 24), read_cat_results(42, 48), 'Model target: Dis. Tran. Rot.', 'dis_tran_rot')
 
 # %%
 cat_model_r = read_results(18, 24, 'ctrl_trans_var_240927', 'cat') # cateogry trained models
@@ -109,10 +109,10 @@ def x_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_trans_var_240927_x_decoding_model_target_{suffix}.pdf', transparent=True, bbox_inches='tight')
 
 read_x_results = partial(read_results, exp_name='ctrl_trans_var_240927', decode_target='x')
-x_decoding_plot(read_x_results(0, 6), read_x_results(24, 30), 'Target: Distance', 'dis')
-x_decoding_plot(read_x_results(6, 12), read_x_results(30, 36), 'Target: Rotation', 'rot')
-x_decoding_plot(read_x_results(12, 18), read_x_results(36, 42), 'Target: Dis. Rot.', 'dis_rot')
-x_decoding_plot(read_x_results(18, 24), read_x_results(42, 48), 'Target: Obj. category', 'obj_cat')
+x_decoding_plot(read_x_results(0, 6), read_x_results(24, 30), 'Model target: Distance', 'dis')
+x_decoding_plot(read_x_results(6, 12), read_x_results(30, 36), 'Model target: Rotation', 'rot')
+x_decoding_plot(read_x_results(12, 18), read_x_results(36, 42), 'Model target: Dis. Rot.', 'dis_rot')
+x_decoding_plot(read_x_results(18, 24), read_x_results(42, 48), 'Model target: Obj. category', 'obj_cat')
 
 # %%
 def y_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
@@ -141,10 +141,10 @@ def y_decoding_plot(full_data_r, no_tran_data_r, title, suffix):
     fig.savefig(f'figures/ctrl_trans_var_240927_y_decoding_model_target_{suffix}.pdf', transparent=True, bbox_inches='tight')
 
 read_y_results = partial(read_results, exp_name='ctrl_trans_var_240927', decode_target='y')
-y_decoding_plot(read_y_results(0, 6), read_y_results(24, 30), 'Target: Distance', 'dis')
-y_decoding_plot(read_y_results(6, 12), read_y_results(30, 36), 'Target: Rotation', 'rot')
-y_decoding_plot(read_y_results(12, 18), read_y_results(36, 42), 'Target: Dis. Rot.', 'dis_rot')
-y_decoding_plot(read_y_results(18, 24), read_y_results(42, 48), 'Target: Obj. category', 'obj_cat')
+y_decoding_plot(read_y_results(0, 6), read_y_results(24, 30), 'Model target: Distance', 'dis')
+y_decoding_plot(read_y_results(6, 12), read_y_results(30, 36), 'Model target: Rotation', 'rot')
+y_decoding_plot(read_y_results(12, 18), read_y_results(36, 42), 'Model target: Dis. Rot.', 'dis_rot')
+y_decoding_plot(read_y_results(18, 24), read_y_results(42, 48), 'Model target: Obj. category', 'obj_cat')
 
 # %%
 
