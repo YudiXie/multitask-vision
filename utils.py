@@ -121,3 +121,35 @@ def trim_diagonal(mat):
         trimmed_mat[i, i:] = mat[i, i+1:]  # elements after the diagonal
     
     return trimmed_mat
+
+
+def get_model_group_dist(tasks_dict, model_dis_mat):
+    """
+    calculate the mean and std of the distance between the activations of different tasks
+    :param tasks_dict: dict, the dict of tasks, the key is the task name, the value is the list of indices of the task
+    :param model_dis_mat: np.ndarray, the distance matrix of the model activations, must be a symmetric matrix
+    """
+    group_dis_mean = np.zeros((len(tasks_dict), len(tasks_dict)))
+    group_dis_std = np.zeros((len(tasks_dict), len(tasks_dict)))
+
+    for i, task1 in enumerate(tasks_dict.keys()):
+        for j, task2 in enumerate(tasks_dict.keys()):
+            dis_mat_sect = model_dis_mat[np.ix_(tasks_dict[task1], tasks_dict[task2])]
+            if i == j:
+                # calculate the intra-group similarity, use only the off-diagonal elements
+                self_dis = dis_mat_sect[np.where(~np.eye(dis_mat_sect.shape[0], dtype=bool))]
+                if len(self_dis) == 0:
+                    group_dis_mean[i, i] = 1
+                    group_dis_std[i, i] = 0
+                else:
+                    group_dis_mean[i, i] = np.mean(self_dis)
+                    group_dis_std[i, i] = np.std(self_dis, ddof=1)
+            else:
+                # calculate the inter-group similarity, use all elements
+                cross_dis = dis_mat_sect.flatten()
+                group_dis_mean[i, j] = np.mean(cross_dis)
+                if len(cross_dis) == 1:
+                    group_dis_std[i, j] = 0.0
+                else:
+                    group_dis_std[i, j] = np.std(cross_dis, ddof=1)
+    return group_dis_mean, group_dis_std
