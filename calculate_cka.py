@@ -16,15 +16,15 @@ if __name__ == '__main__':
     idx1 = args.do
 
     tasks_maps = {
-        'Dis. reg.': ('ctrl_cat_var_240927', [i for i in range(6)]),
-        'Tra. reg.': ('ctrl_cat_var_240927', [i for i in range(6, 12)]),
-        'Rot reg.': ('ctrl_cat_var_240927', [i for i in range(12, 18)]),
-        'Dis. Rot.': ('ctrl_trans_var_240927', [i for i in range(12, 18)]),
-        'Dis. Tra. Rot.': ('ctrl_cat_var_240927', [i for i in range(18, 24)]),
-        'Cat. cla.': ('ctrl_trans_var_240927', [i for i in range(18, 24)]),
-        'Reduced cat. var.': ('ctrl_cat_var_240927', [i for i in range(24, 48)]),
-        'Reduced tran. var.': ('ctrl_trans_var_240927', [i for i in range(24, 48)]),
-        }
+        'Dis. reg.': ('multi_task_tdw_1m20240206_0718', [i for i in range(8)]),
+        'Tra. reg.': ('multi_task_tdw_1m20240206_0718', [i for i in range(8, 16)]),
+        'Rot reg.': ('multi_task_tdw_1m20240206_0718', [i for i in range(16, 24)]),
+        'Dis. Tra. Rot.': ('multi_task_tdw_1m20240206_0718', [i for i in range(48, 56)]),
+        'Cat. cla.': ('multi_task_tdw_1m20240206_0718', [i for i in range(56, 64)]),
+        'All cla. all reg.': ('multi_task_tdw_1m20240206_0718', [i for i in range(72, 80)]),
+        'ImageNet cla.': ('imagenet1k_0902', [i for i in range(8)]),
+        'Untrained': ('pretrain_and_random_resnet18_0220', [i for i in range(5)]),
+    }
     
     task_name_list = []
     exp_name_list = []
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     matrix_suffix = '240928'
 
     dataset_name = 'tdw_1m_20240206_val_0_04'
-    record_layers = ['layer1.0.relu', 'layer2.0.relu', 'layer3.0.relu', 'layer4.0.relu']
+    record_layers = ['layer1.1.relu', 'layer2.1.relu', 'layer3.1.relu', 'layer4.1.relu', 'avgpool']
     for layer in record_layers:
         print(f'Processing layer {layer} ...')
         layer_name = layer.replace('.', '_')
