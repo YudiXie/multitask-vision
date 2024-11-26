@@ -122,7 +122,7 @@ ax.hlines(rnd_data, x_left, x_right, linestyles=':', label='Untrained', color='k
 ax.fill_between([x_left, x_right], 2 * [rnd_data - rnd_error], 2 * [rnd_data + rnd_error], alpha=0.1, color='k')
 
 ax.set_xlabel('Number of supervised output units')
-ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT)')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT public benchmarks)')
 ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
 ax.set_xlim(x_left, x_right)
 ax.set_xscale('log')
