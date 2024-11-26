@@ -72,7 +72,7 @@ ax.fill_between([dataset_sizes[0], dataset_sizes[-1]], 2 * [rnd_data - rnd_error
 ax.legend(loc=(0.43, 0.17), fontsize='small', title='Training task')
 ax.set_xlim(5e3, 2e8)
 ax.set_xlabel('Dataset size, number of images')
-ax.set_ylabel('Mean Brain-Score \n (V1, V2, V4, IT)')
+ax.set_ylabel('Mean neural alignment score\n(V1, V2, V4, IT public benchmarks)')
 ax.set_yticks([0.25, 0.30, 0.35, 0.40], ['0.25', '', '', '0.40'])
 bp.remove_top_right_spines(ax)
 fig.tight_layout()
