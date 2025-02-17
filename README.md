@@ -1,5 +1,7 @@
 # multitask-vision
-A repo for training vision models with multiple tasks
+Code for the paper: [Xie, Y., Huang, W., Alter, E., Schwartz, J., Tenenbaum, J.B. and DiCarlo, J.J., 2024. Vision CNNs trained to estimate spatial latents learned similar ventral-stream-aligned representations. arXiv preprint arXiv:2412.09115.](https://arxiv.org/abs/2412.09115)
+
+Link to code to generate dataset: [https://github.com/YudiXie/tdw_image_dataset](https://github.com/YudiXie/tdw_image_dataset)
 
 ### Installing environment:
 
