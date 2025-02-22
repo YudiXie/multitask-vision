@@ -1,6 +1,7 @@
-# multitask-vision
-Code for the paper: [Xie, Y., Huang, W., Alter, E., Schwartz, J., Tenenbaum, J.B. and DiCarlo, J.J., 2024. Vision CNNs trained to estimate spatial latents learned similar ventral-stream-aligned representations. arXiv preprint arXiv:2412.09115.](https://arxiv.org/abs/2412.09115)
+# Vision CNNs trained to estimate spatial latents learned similar ventral-stream-aligned representations
 
+Code for paper: Xie, Y., Huang, W., Alter, E., Schwartz, J., Tenenbaum, J.B. and DiCarlo, J.J., 2024. Vision CNNs trained to estimate spatial latents learned similar ventral-stream-aligned representations
+Link to paper: [https://openreview.net/forum?id=emMMa4q0qw](https://openreview.net/forum?id=emMMa4q0qw)
 Link to code to generate dataset: [https://github.com/YudiXie/tdw_image_dataset](https://github.com/YudiXie/tdw_image_dataset)
 
 ### Installing environment:
